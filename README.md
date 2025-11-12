@@ -8,6 +8,7 @@ Here’s the comprehensive code for CAD data processing that you can provide to 
 - Introduced an ESRI-aligned export helper and `scripts/audit_post_fix.py` to verify schema, mapping coverage, and mojibake in sample CSVs.
 - `scripts/01_validate_and_clean.py` now supports `--config`, `--reload-config`, `--raw-dir`, `--sampling-method` CLI flags plus a `reload_config()` helper so config edits take effect without restarting.
 - Validation reports are written to `data\02_reports\cad_validation\` (recommended) instead of cluttering the `scripts\` directory.
+- Added `scripts/list_unmapped_incidents.py` and a documented quick-add workflow so new CAD incident spellings (e.g., `BURGLARY - RESIDENCE - 2C: 18-2`) can be appended to `CallType_Categories.csv` and revalidated in minutes.
 
 ## **CAD Data Processing Class**
 

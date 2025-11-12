@@ -11,6 +11,7 @@
 - **Text Normalization:** `fix_mojibake` and whitespace collapse applied before mapping; CAD samples now keep UTF-8 punctuation.
 - **How Reported Guard:** Detects Excel date artifacts and collapses all 911 variants to `9-1-1`.
 - **Incident Mapping:** Uses normalized token (`normalize_incident_key`) and merges mapping response types only when empty.
+- **Call Type Maintenance:** Added helper script plus new mapping row for `BURGLARY - RESIDENCE - 2C: 18-2`, keeping CSV coverage in sync with current CAD exports.
 - **Config Hot Reload:** `CADDataValidator.reload_config()` and CLI `--config`/`--reload-config` options.
 - **ESRI Export & Audit:** `_build_esri_export()` enforces the 21-column layout; `scripts/audit_post_fix.py` checks schema, mojibake, 9-1-1 normalization, and response-type coverage.
 

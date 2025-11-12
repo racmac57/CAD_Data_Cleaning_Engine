@@ -9,6 +9,7 @@
 - **Text & Encoding:** `fix_mojibake` normalizes incidents, CAD notes, officer names, and dispositions; whitespace collapses across critical text fields.
 - **How Reported:** All 9-1-1 variants collapse to `9-1-1`, preventing Excel from reformatting exports as dates.
 - **Incident Mapping:** Matching uses a normalized key so legacy spellings map cleanly; response types are backfilled from `CallType_Categories.csv` only when missing.
+- **Mapping Maintenance:** `scripts/list_unmapped_incidents.py` plus the append workflow keeps `CallType_Categories.csv` current (latest addition: `BURGLARY - RESIDENCE - 2C: 18-2`).
 - **Config Reload:** `scripts/01_validate_and_clean.py` exposes CLI flags (`--config`, `--reload-config`, `--raw-dir`, `--sampling-method`) to run batches and test new JSON control lists quickly.
 - **Post-run Audit:** `scripts/audit_post_fix.py` inspects every sample CSV for schema compliance, mojibake, missing mappings, and 9-1-1 drift.
 
