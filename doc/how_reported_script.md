@@ -1,0 +1,117 @@
+I merged a robust “9-1-1” fix into your main processor and wired it into cleaning, validation, and CSV export. This slots into 01_validate_and_clean.py. 
+
+What changed
+
+* Normalize “How Reported” to a standard set. Forces “9-1-1” even if Excel converted it to 2001-09-01.
+* Catches date-typed values and common variants like 911, 9/1/1, 9 1 1, E911.
+* Optional Excel guard. Writes ="9-1-1" to stop Excel from reformatting on open.
+* Validation now treats date-looking values in “How Reported” as fixable and passes once normalized.
+
+Drop-in patch
+
+1. Add these helpers near the top, after imports.
+
+```python
+# --- How Reported normalizers and Excel guard ---
+
+HOW_REPORTED_STANDARD = {
+    '9-1-1': {'911', '9-1-1', '9/1/1', '9 1 1', 'E911', 'E-911', 'EMERGENCY 911', 'EMERGENCY-911', 'EMERGENCY/911'},
+    'PHONE': {'PHONE', 'TEL', 'TELEPHONE', 'CALL-IN', 'CALL IN'},
+    'WALK-IN': {'WALK-IN', 'WALK IN', 'IN PERSON', 'PERSON'},
+    'SELF-INITIATED': {'SELF-INITIATED', 'SELF INITIATED', 'OFFICER INITIATED', 'OI', 'SI'},
+    'RADIO': {'RADIO'},
+    'TELETYPE': {'TELETYPE'},
+    'FAX': {'FAX'},
+    'EMAIL': {'EMAIL', 'E-MAIL'},
+    'MAIL': {'MAIL', 'POST'},
+    'VIRTUAL PATROL': {'VIRTUAL PATROL'},
+    'CANCELED CALL': {'CANCELED CALL', 'CANCELLED CALL'},
+}
+
+def _norm_txt(x: object) -> str:
+    if x is None or (isinstance(x, float) and np.isnan(x)):
+        return ''
+    s = str(x).strip().upper()
+    s = re.sub(r'\s+', ' ', s)
+    return s
+
+def looks_like_date_2001_09_01(x: object) -> bool:
+    # Excel often converts "9-1-1" to 2001-09-01
+    try:
+        # pandas Timestamp or parseable string
+        ts = pd.to_datetime(x, errors='raise')
+        return ts.date() == datetime(2001, 9, 1).date()
+    except Exception:
+        return False
+
+def normalize_how_reported_value(x: object) -> str:
+    s = _norm_txt(x)
+    # Common direct hits
+    if s in {'9-1-1', '911', '9/1/1', '9 1 1', 'E911', 'EMERGENCY 911', 'EMERGENCY/911', 'EMERGENCY-911'}:
+        return '9-1-1'
+    # If Excel turned it into the 9/1/2001 date
+    if looks_like_date_2001_09_01(x) or s in {'2001-09-01', '09/01/2001', '9/1/2001'}:
+        return '9-1-1'
+    # Map other groups
+    for target, variants in HOW_REPORTED_STANDARD.items():
+        if s in variants:
+            return target
+    # Last chance: pattern 9-1-1 with odd separators
+    if re.fullmatch(r'9\s*[-/ ]\s*1\s*[-/ ]\s*1', s):
+        return '9-1-1'
+    return s or 'UNKNOWN'
+
+def guard_excel_text(value: object) -> object:
+    # Optional wrapping to stop Excel auto-date on open
+    if value is None:
+        return value
+    s = str(value)
+    if s == '9-1-1':
+        return f'="{s}"'
+    return value
+```
+
+2. Wire normalization into clean_data, right after you normalize text fields.
+
+```python
+# After the loop that normalizes ['Incident','How Reported',...]
+if 'How Reported' in cleaned_df.columns:
+    original = cleaned_df['How Reported'].copy()
+    cleaned_df['How Reported'] = cleaned_df['How Reported'].apply(normalize_how_reported_value)
+    total_modified += (cleaned_df['How Reported'] != original).sum()
+```
+
+3. Strengthen validation so date-looking values no longer fail once normalized. Replace _validate_how_reported with this version.
+
+```python
+def _validate_how_reported(self, df: pd.DataFrame, result: dict) -> dict:
+    field = 'How Reported'
+    valid_list = set(self.config['validation_lists']['how_reported'])
+    series = df[field].apply(normalize_how_reported_value)
+    is_valid = series.isin(valid_list)
+    result.update({'passed': is_valid.sum(), 'failed': (~is_valid).sum()})
+    if (~is_valid).any():
+        result['failed_records'] = series[~is_valid].value_counts().head(10).to_dict()
+    return result
+```
+
+4. Guard the CSV export used for samples so Excel does not auto-format on open. Update _export_sample before to_csv.
+
+```python
+export_df = self._build_esri_export(sample_df.copy())
+
+# Excel guard for "9-1-1"
+if 'How Reported' in export_df.columns:
+    export_df['How Reported'] = export_df['How Reported'].apply(guard_excel_text)
+
+export_df.to_csv(sample_path, index=False)
+```
+
+5. Add “9-1-1” to the allowed list in your default config if not present already. Your file already includes it. No change needed.
+
+How to run
+
+* Save the file.
+* Run your batch as you do now. The sample CSVs will keep “9-1-1” intact on read, in-memory, and when opened in Excel.
+
+If you want the Excel guard off, remove guard_excel_text from step 4.

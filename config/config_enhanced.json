@@ -1,0 +1,15 @@
+{
+  "address_abbreviations": {
+    " ST ": " STREET ",
+    " AVE ": " AVENUE ",
+    " BLVD ": " BOULEVARD "
+  },
+  "validation_lists": {
+    "valid_dispositions": ["COMPLETE", "ADVISED", "ARREST", "UNFOUNDED", "CANCELLED", "GOA", "UTL", "SEE REPORT", "REFERRED"],
+    "valid_zones": ["5", "6", "7", "8", "9"],
+    "emergency_incidents": ["ROBBERY", "ASSAULT", "BURGLARY", "SHOOTING", "STABBING"],
+    "non_emergency_incidents": ["NOISE COMPLAINT", "PARKING VIOLATION", "CIVIL DISPUTE"],
+    "how_reported": ["9-1-1", "WALK-IN", "PHONE", "SELF-INITIATED", "RADIO", "TELETYPE", "FAX", "OTHER - SEE NOTES", "EMAIL", "MAIL", "VIRTUAL PATROL", "CANCELED CALL"]
+  },
+  "min_stratum_size": 50
+}

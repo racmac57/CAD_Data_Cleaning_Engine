@@ -1,0 +1,76 @@
+{
+  "validation_metadata": {
+    "timestamp": "2025-10-17T19:11:00.822307",
+    "validator_version": "CAD_Validator_2025.08.10",
+    "total_records_validated": 91217
+  },
+  "validation_summary": {
+    "overall_quality_score": 76.36916666666667,
+    "recommendations_count": 8
+  },
+  "recommended_actions": [
+    "CRITICAL: Time of Call must be valid datetime within reasonable range - Pass rate: 0.0% (threshold: 95.0%)",
+    "  Fix suggestion: Validate datetime parsing, check for timezone issues",
+    "IMPORTANT: Address should be present and not generic - Pass rate: 57.6% (threshold: 85.0%)",
+    "  Fix suggestion: Validate address completeness, flag generic addresses",
+    "IMPORTANT: Disposition should be from approved list - Pass rate: 56.1% (threshold: 85.0%)",
+    "  Fix suggestion: Standardize disposition values, create lookup table",
+    "OPTIONAL: PD Zone should be valid zone identifier - Pass rate: 0.0% (threshold: 70.0%)",
+    "  Fix suggestion: Validate against zone master list"
+  ],
+  "validation_details": {
+    "total_records": 91217,
+    "rules_passed": {},
+    "rules_failed": {},
+    "sample_analysis": {},
+    "data_quality_score": 0.0,
+    "recommended_actions": [
+      "CRITICAL: Time of Call must be valid datetime within reasonable range - Pass rate: 0.0% (threshold: 95.0%)",
+      "  Fix suggestion: Validate datetime parsing, check for timezone issues",
+      "IMPORTANT: Address should be present and not generic - Pass rate: 57.6% (threshold: 85.0%)",
+      "  Fix suggestion: Validate address completeness, flag generic addresses",
+      "IMPORTANT: Disposition should be from approved list - Pass rate: 56.1% (threshold: 85.0%)",
+      "  Fix suggestion: Standardize disposition values, create lookup table",
+      "OPTIONAL: PD Zone should be valid zone identifier - Pass rate: 0.0% (threshold: 70.0%)",
+      "  Fix suggestion: Validate against zone master list"
+    ],
+    "critical_rules": {
+      "case_number_format": {
+        "rule_id": "case_number_format",
+        "description": "Case number must follow format: YY-XXXXXX or YY-XXXXXX[A-Z] for supplements",
+        "severity": "critical",
+        "sample_passed": "1000",
+        "sample_failed": "0",
+        "sample_pass_rate": 1.0,
+        "estimated_full_passed": 91217,
+        "estimated_full_failed": 0,
+        "estimated_full_pass_rate": 1.0,
+        "failed_records": {},
+        "fix_suggestion": "Standardize case number format, pad with zeros if needed"
+      },
+      "case_number_uniqueness": {
+        "rule_id": "case_number_uniqueness",
+        "description": "Case numbers must be unique within dataset",
+        "severity": "critical",
+        "sample_passed": 999,
+        "sample_failed": 1,
+        "sample_pass_rate": 0.999,
+        "estimated_full_passed": 91125,
+        "estimated_full_failed": 91,
+        "estimated_full_pass_rate": 0.999,
+        "failed_records": {
+          "19-012485": 2
+        },
+        "fix_suggestion": "Remove duplicates, investigate duplicate sources"
+      },
+      "call_datetime_validity": {
+        "rule_id": "call_datetime_validity",
+        "description": "Time of Call must be valid datetime within reasonable range",
+        "severity": "critical",
+        "sample_passed": "0",
+        "sample_failed": "1000",
+        "sample_pass_rate": 0.0,
+        "estimated_full_passed": 0,
+        "estimated_full_failed": 91217,
+        "estimated_full_pass_rate": 0.0,
+        "failed_records": {

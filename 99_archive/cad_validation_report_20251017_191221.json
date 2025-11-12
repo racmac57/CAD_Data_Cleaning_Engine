@@ -1,0 +1,394 @@
+{
+  "validation_metadata": {
+    "timestamp": "2025-10-17T19:12:21.295587",
+    "validator_version": "CAD_Validator_2025.08.10",
+    "total_records_validated": 91217
+  },
+  "validation_summary": {
+    "overall_quality_score": 76.36916666666667,
+    "recommendations_count": 8
+  },
+  "recommended_actions": [
+    "CRITICAL: Time of Call must be valid datetime within reasonable range - Pass rate: 0.0% (threshold: 95.0%)",
+    "  Fix suggestion: Validate datetime parsing, check for timezone issues",
+    "IMPORTANT: Address should be present and not generic - Pass rate: 57.6% (threshold: 85.0%)",
+    "  Fix suggestion: Validate address completeness, flag generic addresses",
+    "IMPORTANT: Disposition should be from approved list - Pass rate: 56.1% (threshold: 85.0%)",
+    "  Fix suggestion: Standardize disposition values, create lookup table",
+    "OPTIONAL: PD Zone should be valid zone identifier - Pass rate: 0.0% (threshold: 70.0%)",
+    "  Fix suggestion: Validate against zone master list"
+  ],
+  "validation_details": {
+    "total_records": 91217,
+    "rules_passed": {},
+    "rules_failed": {},
+    "sample_analysis": {},
+    "data_quality_score": 0.0,
+    "recommended_actions": [
+      "CRITICAL: Time of Call must be valid datetime within reasonable range - Pass rate: 0.0% (threshold: 95.0%)",
+      "  Fix suggestion: Validate datetime parsing, check for timezone issues",
+      "IMPORTANT: Address should be present and not generic - Pass rate: 57.6% (threshold: 85.0%)",
+      "  Fix suggestion: Validate address completeness, flag generic addresses",
+      "IMPORTANT: Disposition should be from approved list - Pass rate: 56.1% (threshold: 85.0%)",
+      "  Fix suggestion: Standardize disposition values, create lookup table",
+      "OPTIONAL: PD Zone should be valid zone identifier - Pass rate: 0.0% (threshold: 70.0%)",
+      "  Fix suggestion: Validate against zone master list"
+    ],
+    "critical_rules": {
+      "case_number_format": {
+        "rule_id": "case_number_format",
+        "description": "Case number must follow format: YY-XXXXXX or YY-XXXXXX[A-Z] for supplements",
+        "severity": "critical",
+        "sample_passed": 1000,
+        "sample_failed": 0,
+        "sample_pass_rate": 1.0,
+        "estimated_full_passed": 91217,
+        "estimated_full_failed": 0,
+        "estimated_full_pass_rate": 1.0,
+        "failed_records": {},
+        "fix_suggestion": "Standardize case number format, pad with zeros if needed"
+      },
+      "case_number_uniqueness": {
+        "rule_id": "case_number_uniqueness",
+        "description": "Case numbers must be unique within dataset",
+        "severity": "critical",
+        "sample_passed": 999,
+        "sample_failed": 1,
+        "sample_pass_rate": 0.999,
+        "estimated_full_passed": 91125,
+        "estimated_full_failed": 91,
+        "estimated_full_pass_rate": 0.999,
+        "failed_records": {
+          "19-012485": 2
+        },
+        "fix_suggestion": "Remove duplicates, investigate duplicate sources"
+      },
+      "call_datetime_validity": {
+        "rule_id": "call_datetime_validity",
+        "description": "Time of Call must be valid datetime within reasonable range",
+        "severity": "critical",
+        "sample_passed": 0,
+        "sample_failed": 1000,
+        "sample_pass_rate": 0.0,
+        "estimated_full_passed": 0,
+        "estimated_full_failed": 91217,
+        "estimated_full_pass_rate": 0.0,
+        "failed_records": {
+          "2019-01-02 09:54:58": 1,
+          "2019-12-04 06:08:50": 1,
+          "2019-06-10 15:37:18": 1,
+          "2019-11-19 13:45:37": 1,
+          "2019-08-23 13:35:13": 1,
+          "2019-01-04 19:25:44": 1,
+          "2019-04-05 07:18:12": 1,
+          "2019-03-24 08:26:23": 1,
+          "2019-06-23 14:30:17": 1,
+          "2019-11-05 15:16:20": 1
+        },
+        "fix_suggestion": "Validate datetime parsing, check for timezone issues"
+      },
+      "incident_type_presence": {
+        "rule_id": "incident_type_presence",
+        "description": "Incident type must not be null or empty",
+        "severity": "critical",
+        "sample_passed": 1000,
+        "sample_failed": 0,
+        "sample_pass_rate": 1.0,
+        "estimated_full_passed": 91217,
+        "estimated_full_failed": 0,
+        "estimated_full_pass_rate": 1.0,
+        "failed_records": {},
+        "fix_suggestion": "Map null values to \"Unknown\" or investigate missing data"
+      }
+    },
+    "important_rules": {
+      "address_completeness": {
+        "rule_id": "address_completeness",
+        "description": "Address should be present and not generic",
+        "severity": "important",
+        "sample_passed": 576,
+        "sample_failed": 424,
+        "sample_pass_rate": 0.576,
+        "estimated_full_passed": 52540,
+        "estimated_full_failed": 38676,
+        "estimated_full_pass_rate": 0.576,
+        "failed_records": {
+          "HOME & , HACKENSACK, NJ, 07601": 33,
+          "HUDSON STREET & , HACKENSACK, NJ, 07601": 27,
+          "CENTRAL AVENUE & , HACKENSACK, NJ, 07601": 27,
+          "ANDERSON STREET & , HACKENSACK, NJ, 07601": 24,
+          "500 RIVER STREET SOUTH, HACKENSACK, NJ, 07601": 20,
+          "405 ROUTE 17 SOUTH, HACKENSACK, NJ, 07601": 15,
+          "CARVER PARK & , HACKENSACK, NJ, 07601": 11,
+          "AREA A (GARAGE) & , HACKENSACK, NJ, 07601": 7,
+          "120 EAST BROADWAY, HACKENSACK, NJ, 07601": 5,
+          "ROWLAND AVENUE PARK & , HACKENSACK, NJ, 07601": 5
+        },
+        "fix_suggestion": "Validate address completeness, flag generic addresses"
+      },
+      "officer_assignment": {
+        "rule_id": "officer_assignment",
+        "description": "Officer field should not be null for dispatched calls",
+        "severity": "important",
+        "sample_passed": 1000,
+        "sample_failed": 0,
+        "sample_pass_rate": 1.0,
+        "estimated_full_passed": 91217,
+        "estimated_full_failed": 0,
+        "estimated_full_pass_rate": 1.0,
+        "failed_records": {},
+        "fix_suggestion": "Check officer assignment logic, validate against roster"
+      },
+      "disposition_consistency": {
+        "rule_id": "disposition_consistency",
+        "description": "Disposition should be from approved list",
+        "severity": "important",
+        "sample_passed": 561,
+        "sample_failed": 439,
+        "sample_pass_rate": 0.561,
+        "estimated_full_passed": 51172,
+        "estimated_full_failed": 40044,
+        "estimated_full_pass_rate": 0.561,
+        "failed_records": {
+          "ASSISTED": 179,
+          "RECORD ONLY": 55,
+          "SEE OCA# (IN NOTES)": 50,
+          "ISSUED": 36,
+          "CHECKED OK": 27,
+          "G.O.A.": 22,
+          "DISPERSED": 19,
+          "CANCELED": 19,
+          "TOT - SEE NOTES": 13,
+          "TEMP. SETTLED": 9
+        },
+        "fix_suggestion": "Standardize disposition values, create lookup table"
+      },
+      "time_sequence_validity": {
+        "rule_id": "time_sequence_validity",
+        "description": "Time sequence should be logical (Call -> Dispatch -> Out -> In)",
+        "severity": "important",
+        "sample_passed": 990,
+        "sample_failed": 10,
+        "sample_pass_rate": 0.99,
+        "estimated_full_passed": 90304,
+        "estimated_full_failed": 912,
+        "estimated_full_pass_rate": 0.99,
+        "failed_records": [
+          {
+            "Time of Call": "2019-09-18T08:00:57",
+            "Time Dispatched": "2019-09-18T08:00:23",
+            "Time Out": "2019-09-18T08:00:32",
+            "Time In": "2019-09-18T14:47:24"
+          },
+          {
+            "Time of Call": "2019-08-27T07:02:07",
+            "Time Dispatched": "2019-08-27T07:02:50",
+            "Time Out": "2019-08-27T07:02:48",
+            "Time In": "2019-08-27T07:02:52"
+          },
+          {
+            "Time of Call": "2019-06-09T11:13:30",
+            "Time Dispatched": "2019-06-09T11:18:18",
+            "Time Out": "2019-06-09T11:18:16",
+            "Time In": "2019-06-09T12:01:21"
+          },
+          {
+            "Time of Call": "2019-09-12T12:19:29",
+            "Time Dispatched": "2019-09-12T12:19:29",
+            "Time Out": "2019-09-12T12:26:21",
+            "Time In": "2019-09-12T12:19:29"
+          },
+          {
+            "Time of Call": "2019-06-24T18:26:34",
+            "Time Dispatched": "2019-06-24T18:42:25",
+            "Time Out": "2019-06-24T18:37:23",
+            "Time In": "2019-06-24T18:44:51"
+          },
+          {
+            "Time of Call": "2019-04-10T12:27:01",
+            "Time Dispatched": "2019-04-10T13:18:28",
+            "Time Out": "2019-04-10T12:31:45",
+            "Time In": "2019-04-10T16:55:17"
+          },
+          {
+            "Time of Call": "2019-04-02T13:39:16",
+            "Time Dispatched": "2019-04-02T13:46:50",
+            "Time Out": "2019-04-02T13:46:47",
+            "Time In": "2019-04-02T14:31:26"
+          },
+          {
+            "Time of Call": "2019-04-15T12:14:16",
+            "Time Dispatched": "2019-04-15T12:22:43",
+            "Time Out": "2019-04-15T12:22:42",
+            "Time In": "2019-04-15T13:19:38"
+          },
+          {
+            "Time of Call": "2019-03-22T09:14:41",
+            "Time Dispatched": "2019-03-22T09:18:05",
+            "Time Out": "2019-03-22T09:54:18",
+            "Time In": "2019-03-22T09:52:50"
+          },
+          {
+            "Time of Call": "2019-08-25T13:58:43",
+            "Time Dispatched": "2019-08-25T13:59:05",
+            "Time Out": "2019-08-25T13:59:02",
+            "Time In": "2019-08-25T14:43:49"
+          }
+        ],
+        "fix_suggestion": "Validate time sequence logic, flag outliers"
+      },
+      "datetime_duration_validity": {
+        "rule_id": "datetime_duration_validity",
+        "description": "Durations between datetime fields must be non-negative",
+        "severity": "important",
+        "sample_passed": 990,
+        "sample_failed": 10,
+        "sample_pass_rate": 0.99,
+        "estimated_full_passed": 90304,
+        "estimated_full_failed": 912,
+        "estimated_full_pass_rate": 0.99,
+        "failed_records": [
+          {
+            "Time of Call": "2019-09-18T08:00:57",
+            "Time Dispatched": "2019-09-18T08:00:23",
+            "Time Out": "2019-09-18T08:00:32",
+            "Time In": "2019-09-18T14:47:24"
+          },
+          {
+            "Time of Call": "2019-08-27T07:02:07",
+            "Time Dispatched": "2019-08-27T07:02:50",
+            "Time Out": "2019-08-27T07:02:48",
+            "Time In": "2019-08-27T07:02:52"
+          },
+          {
+            "Time of Call": "2019-06-09T11:13:30",
+            "Time Dispatched": "2019-06-09T11:18:18",
+            "Time Out": "2019-06-09T11:18:16",
+            "Time In": "2019-06-09T12:01:21"
+          },
+          {
+            "Time of Call": "2019-09-12T12:19:29",
+            "Time Dispatched": "2019-09-12T12:19:29",
+            "Time Out": "2019-09-12T12:26:21",
+            "Time In": "2019-09-12T12:19:29"
+          },
+          {
+            "Time of Call": "2019-06-24T18:26:34",
+            "Time Dispatched": "2019-06-24T18:42:25",
+            "Time Out": "2019-06-24T18:37:23",
+            "Time In": "2019-06-24T18:44:51"
+          },
+          {
+            "Time of Call": "2019-04-10T12:27:01",
+            "Time Dispatched": "2019-04-10T13:18:28",
+            "Time Out": "2019-04-10T12:31:45",
+            "Time In": "2019-04-10T16:55:17"
+          },
+          {
+            "Time of Call": "2019-04-02T13:39:16",
+            "Time Dispatched": "2019-04-02T13:46:50",
+            "Time Out": "2019-04-02T13:46:47",
+            "Time In": "2019-04-02T14:31:26"
+          },
+          {
+            "Time of Call": "2019-04-15T12:14:16",
+            "Time Dispatched": "2019-04-15T12:22:43",
+            "Time Out": "2019-04-15T12:22:42",
+            "Time In": "2019-04-15T13:19:38"
+          },
+          {
+            "Time of Call": "2019-03-22T09:14:41",
+            "Time Dispatched": "2019-03-22T09:18:05",
+            "Time Out": "2019-03-22T09:54:18",
+            "Time In": "2019-03-22T09:52:50"
+          },
+          {
+            "Time of Call": "2019-08-25T13:58:43",
+            "Time Dispatched": "2019-08-25T13:59:05",
+            "Time Out": "2019-08-25T13:59:02",
+            "Time In": "2019-08-25T14:43:49"
+          }
+        ],
+        "fix_suggestion": "Correct negative durations or investigate data entry errors"
+      },
+      "time_spent_validity": {
+        "rule_id": "time_spent_validity",
+        "description": "Time Spent must be a positive duration",
+        "severity": "important",
+        "sample_passed": 998,
+        "sample_failed": 2,
+        "sample_pass_rate": 0.998,
+        "estimated_full_passed": 91034,
+        "estimated_full_failed": 182,
+        "estimated_full_pass_rate": 0.998,
+        "failed_records": {
+          "-0:06:52": 1,
+          "-0:01:28": 1
+        },
+        "fix_suggestion": "Validate duration format and ensure positive values"
+      }
+    },
+    "optional_rules": {
+      "how_reported_standardization": {
+        "rule_id": "how_reported_standardization",
+        "description": "How Reported should be from standardized list",
+        "severity": "optional",
+        "sample_passed": 998,
+        "sample_failed": 2,
+        "sample_pass_rate": 0.998,
+        "estimated_full_passed": 91034,
+        "estimated_full_failed": 182,
+        "estimated_full_pass_rate": 0.998,
+        "failed_records": {
+          "NAN": 2
+        },
+        "fix_suggestion": "Map variations to standard values (9-1-1, Phone, Walk-in, etc.)"
+      },
+      "zone_validity": {
+        "rule_id": "zone_validity",
+        "description": "PD Zone should be valid zone identifier",
+        "severity": "optional",
+        "sample_passed": 0,
+        "sample_failed": 1000,
+        "sample_pass_rate": 0.0,
+        "estimated_full_passed": 0,
+        "estimated_full_failed": 91217,
+        "estimated_full_pass_rate": 0.0,
+        "failed_records": {},
+        "fix_suggestion": "Validate against zone master list"
+      },
+      "response_type_consistency": {
+        "rule_id": "response_type_consistency",
+        "description": "Response Type should align with incident severity",
+        "severity": "optional",
+        "sample_passed": 998,
+        "sample_failed": 2,
+        "sample_pass_rate": 0.998,
+        "estimated_full_passed": 91034,
+        "estimated_full_failed": 182,
+        "estimated_full_pass_rate": 0.998,
+        "failed_records": [
+          {
+            "Incident": "NOISE COMPLAINT",
+            "Response Type": "NAN"
+          },
+          {
+            "Incident": "NOISE COMPLAINT",
+            "Response Type": "NAN"
+          }
+        ],
+        "fix_suggestion": "Create response type validation matrix"
+      }
+    },
+    "overall_quality_score": 76.36916666666667
+  },
+  "sampling_configuration": {
+    "stratified_sample_size": 1000,
+    "systematic_interval": 100,
+    "quality_thresholds": {
+      "critical": 0.95,
+      "important": 0.85,
+      "optional": 0.7
+    }
+  }
+}

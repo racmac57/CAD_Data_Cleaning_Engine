@@ -1,0 +1,13 @@
+value,description,notes
+9-1-1,Emergency call received via 9-1-1,
+Walk-In,Citizen appeared in person at desk or HQ,
+Phone,Non-emergency phone call,
+Self-Initiated,Officer initiated activity without external request,
+Radio,Dispatch or unit-generated radio traffic,
+Teletype,Message received via teletype,
+Fax,Fax transmission from external agency or unit,
+Other - See Notes,Other source documented in narrative,
+Mail,Physical mail received and logged,
+Virtual Patrol,Virtual/online patrol observation,
+Canceled Call,Call canceled before response,
+eMail,Electronic mail submission,

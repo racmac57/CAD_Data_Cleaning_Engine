@@ -1,0 +1,523 @@
+﻿Call Type,Response
+9-1-1 Call,Emergency
+Abandoned 9-1-1 Emergency,Emergency
+Abandoned Auto,Routine
+ABC Inspection,Routine
+ABC Liquor License Applicant,Routine
+ABC Violation,Routine
+Academy Assignment,Routine
+A.C.O.R.N. Test,Routine
+Administrative Assignment,Routine
+Alarm - Burglar,Emergency
+Alarm - Fire,Emergency
+Alarm - Other,Urgent
+Alarm - Panic,Emergency
+Animal Bite Incident,Urgent
+Animal Cruelty,Routine
+Animal Complaint,Routine
+Applicant All Others,Routine
+Applicant ABC License,Routine
+Applicant Firearm(s),Routine
+Applicant Landscaper,Routine
+Applicant AD Material License,Routine
+Applicant Police Auxiliary,Routine
+Applicant Solicitor,Routine
+Applicant Limo,Routine
+Applicant Towing,Routine
+Applicant Vending License,Routine
+Arrest and JV Complaints,Routine
+Arrest Process,Routine
+Assist Motorist,Routine
+Assist Own Agency (Backup),Urgent
+Assist Other Agency,Routine
+A.T.R.A.,Urgent
+Aviation Accident,Emergency
+Bias Incident,Urgent
+Blocked Driveway,Routine
+Boating Incident,Urgent
+Bomb Scare,Emergency
+BOLO,Urgent
+Canvassing / Peddling Permit,Routine
+Car Wash,Routine
+Car Seat Installation,Routine
+CCH / III Request,Routine
+Checked Road Conditions (Weather),Routine
+Child Abuse - Title 9,Urgent
+Child Custody Dispute,Urgent
+Church Crossing,Routine
+Civil Defense Test,Routine
+City Ordinance,Routine
+City Ordinance Warning,Routine
+Coffee Break,Routine
+Computer Issue - Vehicle,Routine
+Computer Issue -  Desktop,Routine
+Controlled CDS Purchase,Urgent
+Cooperative Arrest - Little Ferry,Urgent
+Cooperative Arrest - Maywood,Urgent
+Cooperative Arrest - Ridgefield Park,Urgent
+Cooperative Arrest - So. Hackensack,Urgent
+Court - Municipal,Routine
+Court- Municipal Prisoner,Routine
+Court - Superior,Routine
+Court - Federal,Routine
+Court - Other Municipality,Routine
+Courtesy Transport,Routine
+Counterfeit Money,Routine
+DARE Assignment,Routine
+Dead Animal,Routine
+Desk Coverage,Routine
+Detective Bureau Detail,Routine
+Disabled Motor Vehicle,Urgent
+Disarm a Law Enforcement Officer,Emergency
+Disarm a Law Enforcement Officer - Attempt,Emergency
+Discovery - Criminal,Routine
+Discovery - Motor Vehicle,Routine
+Discovery - Non Specific,Routine
+Dispute,Urgent
+Disturbance,Urgent
+DNA Sample,Routine
+D.O.A,Emergency
+Docket – Drop Off,Routine
+Docket – Pick up,Routine
+D.P.W. Assist,Routine
+Drinking in Public,Routine
+Embezzlment,Routine
+Escort - Money,Routine
+Evidence Retrieval,Routine
+Field Contact/ Information,Routine
+Fight - Armed,Emergency
+Fight - Unarmed,Emergency
+Fingerprints,Routine
+Fireworks Complaint,Routine
+Fire,Emergency
+Fire Department Call,Urgent
+Funeral Escort,Routine
+General Information,Routine
+General Investigation,Routine
+Generated in Error,Routine
+Generator Test,Routine
+Good Conduct Letter Request,Routine
+Group,Routine
+Hazard All Other,Urgent
+Hazardous Condition - Health / Welfare,Urgent
+Hazardous Condition - Sewer Call,Urgent
+Hazardous Road Condition - General,Urgent
+Hazardous Road Condition - Flooding,Urgent
+Hazardous Road Condition - Ice,Urgent
+HAZ-MAT Incident,Emergency
+Hostage Situation,Emergency
+HQ Assignment,Routine
+ICE Notification,Routine
+Identity Theft,Routine
+Illegal Dumping,Routine
+Improper Records,Routine
+Information,Routine
+Injured On Duty,Urgent
+Intoxicated Person,Routine
+Insecure Building,Urgent
+Investigation - Follow-Up,Routine
+Juvenile Complaint (Criminal),Urgent
+Juvenile Complaint (Non-Criminal),Routine
+Juvenile Investigation,Routine
+Landlord / Tenant Dispute,Urgent
+Lock-Out Residence,Routine
+Lo-Jack Hit - Tracking Signal,Urgent
+Meal Break,Routine
+Medical Call,Routine
+Medical Call/Injury,Urgent
+Medical Call - Oxygen,Emergency
+Megan's Law Violation,Urgent
+Meeting,Routine
+Motor Vehicle Complaint,Routine
+Motor Vehicle Crash,Urgent
+Motor Vehicle Crash - Hit and Run,Emergency
+Motor Vehicle Crash -  w/injury,Emergency
+Motor Vehicle Crash - Pedestrian Struck,Emergency
+Motor Vehicle Impound,Routine
+Motor Vehicle Lock-out,Routine
+Motor Vehicle Violation,Routine
+Motor Vehicle Violation - Commercial Vehicle,Routine
+Motor Vehicle Violation - Private Property,Routine
+Motor Vehicle Stop,Urgent
+Municipal Property/Building Check,Routine
+Mutual Aid - Police,Routine
+Mutual Aid - E.M.S.,Routine
+Mutual Aid - Fire,Routine
+Narcotics Investigation,Urgent
+NCIC Record,Routine
+Noise Complaint,Routine
+Non-Emergency Assist,Routine
+Notification Request,Routine
+Obstruction of Govermental Function,Urgent
+Off the Air,Routine
+Overnight Parking,Routine
+Parking Complaint,Routine
+Parking Offense,Routine
+Parks Department Needed,Routine
+Parole/Probation Registry,Routine
+Patrol Check,Routine
+Pawned Item(s),Routine
+Peace Officer,Routine
+Photography,Routine
+Police Assist,Routine
+Presentation Community Policing,Routine
+Prisoner Log ,Routine
+Property Damage - Police Vehicle,Routine
+Property Damage - City Property,Routine
+Property Damage - Non-Criminal,Routine
+Property Disposition,Routine
+Property - Lost,Routine
+Property - Found,Routine
+Property Recovered - Stolen,Routine
+Property Returned - Court Ordered,Routine
+Property Returned - Lost and Found,Routine
+Pursuit - Motor Vehicle,Emergency
+Pursuit - Foot,Emergency
+Prisoner Transport,Routine
+Radar Detail,Routine
+Radar Trailer Deployed,Routine
+Recovered Stolen - Article,Routine
+Recovered Stolen - Firearm,Routine
+Recovered Stolen License Plate,Routine
+Recovered Stolen Vehicle,Routine
+Relief / Personal,Routine
+Records Request,Routine
+Refuel Vehicle,Routine
+Repossessed Motor Vehicle,Routine
+Road Job/Outside Assignment,Routine
+School Crossing,Routine
+School Detail,Routine
+Sex Offender- Address Verification,Routine
+Sex Offender Registration,Routine
+Sex Offender-Serve Tier Papers,Routine
+Shooting,Emergency
+Shopping Cart,Routine
+Shots Fired Investigation,Emergency
+Special Assignment,Routine
+Stabbing,Emergency
+Stationhouse Adjustment,Routine
+Stranded Party,Routine
+Street Light,Routine
+Structure Damage,Urgent
+Stolen Article,Routine
+Sudden Death Investigation,Emergency
+Suicide,Emergency
+Suicidal Party,Emergency
+Surrender of Ammunition,Routine
+Surrender of Weapon,Routine
+Suspicious Incident,Urgent
+Suspicious Person,Urgent
+Suspicious Vehicle,Urgent
+Task Assignment,Routine
+Temporary Parking,Routine
+Time Check,Routine
+Traffic Bureau Report,Routine
+Traffic Detail,Routine
+Traffic Enforcement Detail,Routine
+Traffic Hazard,Urgent
+Traffic Sign / Signal Malfunction,Urgent
+Training,Routine
+Training Record,Routine
+Transportation,Routine
+Tree limb down,Routine
+Truancy,Routine
+Unfounded Incident,Routine
+Unknown Investigation,Routine
+Unwanted Person,Urgent
+Urinating in Public,Urgent
+Utility Incident,Urgent
+Vacant House,Routine
+Vacation,Routine
+Validation,Routine
+Violation of Court Order,Urgent
+Vehicle Maintenance,Routine
+Warrant Arrest,Urgent
+Warrant Recall,Routine
+Weather Alerts,Routine
+Welfare Check,Urgent
+Wire Down,Urgent
+Alarm Ordinance,Routine
+Alcoholic Beverage - Hours of Sale,Routine
+Alcoholic Beverage -  New Years Day Hours of Sale,Routine
+Alcoholic Beverage - Serving Underage,Routine
+Alcoholic Beverage - Sunday Hours of Sale,Routine
+Alcoholic Beverage - Unlicensed Bartender,Routine
+Canvassing without Permit,Routine
+Construction Hours,Routine
+Dogs at Large,Routine
+Dogs Defecating,Routine
+Smoking Prohibited,Routine
+Snow Removal,Routine
+Snow Plowed onto Public Street,Routine
+Aggravated Assault - 2C:12-1b,Emergency
+Aggravated Sexual Assault - 2C:14-2a,Emergency
+Aiding Suicide - 2C:11-6,Emergency
+Alcohol/School Property - 2C:33-16,Urgent
+Annoying Phone Calls - 2C:33-4a,Routine
+Arson - 2C:17-1,Emergency
+Attempted Burglary - 2C:18-2,Routine
+Background Checks,Routine
+Bad Checks - 2C:21-5,Routine
+Breath Test - Refusal - 39:4-50.2,Routine
+Bribery - 2C:27-2,Routine
+Burglar Tools - 2C:5-5,Routine
+Carjacking - 2C:15-2,Emergency
+CDS/Dist.; School Property - 2C:35-7,Urgent
+CDS/Distribution - 2C:35-5,Urgent
+CDS/Employing Juvenile - 2C:35-6,Urgent
+CDS/Possession: Influence - 2C:35-10,Urgent
+CDS: Obtain by Fraud - 2C:35-13,Urgent
+Compensation/Public Servant - 2C:27-7,Routine
+Compensation - 2C:27-4,Routine
+Compounding - 2C:29-4,Routine
+Compulsory School Attend. - Title 18A:38-2,Routine
+Conspiracy - 2C:5-2,Routine
+Contempt of Court -  2C:29-9,Urgent
+Creating a Hazard - 2C:40-1,Emergency
+Credit Cards - Unlawful Use - 2C:21-6,Routine
+Credit Practices - 2C:21-19,Routine
+Criminal Attempt - 2C:5-1,Routine
+Criminal Coercion - 2C:13-5,Routine
+Criminal Homicide - 2C:11-2,Emergency
+Criminal Mischief - 2C:17-3,Routine
+Criminal Restraint - 2C:13-2,Routine
+Criminal Sexual Contact - 2C:14-3a,Routine
+Criminal Simulation - 2C:21-2,Routine
+Criminal Trespass - 2C:18-3,Routine
+Damage to Property: Threats - 2C:33-11,Routine
+Deceased Person/Sexual Pen. - 2C:34-5,Routine
+Desecration/Venerated Obj. - 2C:33-9,Routine
+Disorderly Conduct - 2C:33-2,Urgent
+Disrupting Meet/Procession - 2C:33-8s,Urgent
+Domestic Violence - 2C:25-21,Emergency
+Driving While Intoxicated - 39:4-50,Emergency
+Drug Paraphernalia - 2C:36-2,Routine
+Endangering Welfare - 2C:24-4,Routine
+Endangering Welfare - 2C:24-7,Routine
+Endangering Welfare - 2C:24-8,Routine
+Enticing a Child - 2C:13-6,Routine
+Escape - 2C:29-5,Emergency
+Evidence Tampering - 2C:28-6,Routine
+False Imprisonment - 2C:13-3,Emergency
+False Public Alarm - 2C:33-3,Routine
+False Reports - 2C:28-4,Routine
+False Swearing - 2C:28-2,Routine
+Fear of Bodily Violence - 2C:33-10,Emergency
+Fencing - 2C:20-7.1,Routine
+Fish and Game Violation  Title 23,Routine
+Food/Drug Tampering - 2C:40-17,Routine
+Forgery - 2C:21-1,Routine
+Fraud,Routine
+Fugitive from Justice,Emergency
+Gifts/Public Servant - 2C:27-6,Routine
+Harassment - 2C:33-4,Routine
+Hindering Apprehension - 2C:29-3,Routine
+Hypodermic/Possession - 2C:36-6,Routine
+Imitation CDS - 2C:35-11,Routine
+Impersonating Public Servant - 2C:28-9,Routine
+Implements for Escape - 2C:29-6,Routine
+Injury/Law Enforce. Animals - 2C:29-3.1,Routine
+Interception/Emerg. Comm. - 2C:33-21,Routine
+Interference w/Transport. - 2C:33-14,Routine
+Interference With Custody - 2C:13-4,Routine
+Interference/Railway Signals - 2C:33-14.1,Routine
+Interference  - 2C:29-1,Routine
+Kidnapping - 2C:13-1,Emergency
+Leaving Scene of an Acc. -  39:4-129,Routine
+Lewdness - 2C:14-4,Routine
+Loitering/CDS Offense - 2C:33-2.1,Routine
+M.V. Master Keys - 2C:5-6,Routine
+Maintaining a Nuisance - 2C:33-12,Routine
+Manslaughter - 2C:11-4,Emergency
+Motor Vehicle Theft - 2C:20-3,Routine
+Murder - 2C:11-3,Emergency
+Non-Support - 2C:24-5,Routine
+Obscenity - Over 18 yrs. - 2C:34-2,Routine
+Obscenity - Under 18 yrs. - 2C:34-3,Routine
+Obscenity Public Comm. - 2C:34-4,Routine
+Obscenity Retail Display - 2C:34-3.2,Routine
+Obstructing Highways/Pass. - 2C:33-7,Emergency
+Official Misconduct - 2C:30-2,Routine
+Paging Device/Illicit Use - 2C:33-20,Routine
+Paging Device/Minors - 2C:33-18,Routine
+Paging Device/Student - 2C:33-19,Routine
+Perjury 2C:28-1,Routine
+Poss. CDS in MV - 39:4-49.1,Routine
+Prohibited Weapons - 2C:39-3,Emergency
+Prostitution - 2C:34-1,Routine
+Public Safety/Sr. Citizens - 2C:24-8,Routine
+Receiving Stolen Property - 2C:20-7,Routine
+Reckless Endangerment - 2C:12-2,Routine
+Resisting Arrest/Eluding - 2C:29-2,Emergency
+Retaliation/Official Action - 2C:27-5,Routine
+Riot - Failure to Disperse - 2C:33-1,Emergency
+Robbery - 2C:15-1,Emergency
+Sale of Cigarettes to Minors - 2A:170-51,Routine
+Serving Alcohol to Minors - 2C:33-17,Routine
+Sexual Assault - 2C:14-2b,Emergency
+Shoplifting - 2C:20-11,Routine
+Simple Assault - 2C:12-1a,Routine
+Slugs - 2C:21-18,Routine
+Stalking - 2C:12-10,Routine
+Suspended Drivers License - 39:3-40,Routine
+Suspended Registration - 39:3-40,Routine
+Tampering: Public Records - 2C:28-7,Routine
+Terroristic Threats - 2C:12-3,Routine
+Theft by Deception - 2C:20-4,Routine
+Theft by Extortion - 2C:20-5,Routine
+Theft of Identity - 2C:21-17,Routine
+Theft of Services - 2C:20-8,Routine
+Theft/Disposition - 2C:20-9,Routine
+Theft - 2C:20-3,Routine
+Theft of Lost/Mislaid Property - 2C:20-6,Routine
+Unauthorized Intercept./Comm. - 2C:33-22,Routine
+Uninsured Vehicle - 39:6b-2,Routine
+Unlawful Possess./Weapons - 2C:39-5,Emergency
+Unlawful Taking - 2C:20-10,Routine
+Unlawful Use Of 9-1-1 Sys. - 2C:33-3e,Routine
+Unregistered Vehicle - 39:3-4,Routine
+Unsworn Falsification - 2C:28-3,Routine
+Vehicular Homicide - 2C:11-5,Emergency
+Vending Without Permit,Routine
+Violation: TRO/ FRO - 2C:29-9b,Urgent
+Wagering/Official Action - 2C:30-3,Routine
+Weapons Seizure - 2C:25-21d.,Routine
+Weapons - Unlawful Purposes - 2C:39-4,Emergency
+Widespread Damage - 2C:17-2,Emergency
+Witness Tampering - 2C:28-5,Routine
+Wrongful Impersonating - 2C:21-1,Routine
+Money Laundering,Routine
+Motor Vehicle Crash - Police Vehicle,Routine
+Applicant Handicapped Permit,Routine
+Court Order,Routine
+Applicant Jewelry,Routine
+Expungement,Routine
+Hazard - Pothole,Routine
+Sex Offender - Intent to Move,Routine
+Sex Offender Investigation,Routine
+OPRA Request,Routine
+DCPP (DYFS),Routine
+Applicant City Employee,Routine
+Applicant Police Officer,Routine
+Applicant Spa Therapy,Routine
+Records Request - DCPP (DYFS),Routine
+Surrendered Firearm ID Card,Routine
+Applicant Ice Cream Vendor,Routine
+Suspicious Activity Submission,Routine
+Suspicious Activity Report,Routine
+Motor Vehicle Crash - Bicyclist Struck,Emergency
+Sex Offender Registration - School Enrollment,Routine
+Sex Offender Registration - Employment,Routine
+License Plate-Lost/Stolen,Routine
+PRD Activation,Emergency
+RDF Deployment,Emergency
+U-Visa,Routine
+Controlled Buy,Routine
+Undercover Buy,Routine
+Sex Offender-Removal Order,Routine
+Code Blue,Routine
+Surrendered License Plates,Routine
+Conditional Dismissal Process,Routine
+Sex Offender - Travel,Routine
+Sex Offender - General,Routine
+Sex Offender - Serve Documents,Routine
+Emergency Access Card Use,Emergency
+ESU - Training,Routine
+ESU - Response,Emergency
+UAS Operation,Routine
+Service - FERPO,Emergency
+Service - TERPO,Emergency
+Canceled Call,Routine
+Catalytic Converter Theft,Routine
+Unintentional Discharge,Emergency
+Cyber Harassment - 2C:33-4.1,Routine
+FTO Documentation,Routine
+Applicant Snow Removal ,Routine
+Applicant Peddling License,Routine
+Applicant Taxi,Routine
+Applicant Concealed Carry,Routine
+Applicant Pistol Permit,Routine
+ABC Advisory Check,Routine
+Suspicious Item,Routine
+Evidence Delivery,Routine
+Traffic Light Malfunction,Routine
+ALPR Flag,Routine
+ALPR Analysis,Routine
+Criminal Mischief - Graffiti - 2C:17-3,Routine
+Community Engagement - Community Policing,Routine
+Community Engagement - School Outreach,Routine
+Community Engagement - Crisis Intervention ,Routine
+Community Engagement - Crime Prevention,Routine
+Community Engagement - Traffic Safety,Routine
+Community Engagement - Victim Support,Routine
+Community Engagement - Emergency Response ,Routine
+Community Engagement - Online Engagement,Routine
+Community Engagement - Public Education,Routine
+RDT Deployment,Emergency
+Court Officer,Routine
+Invasion of Privacy - Observing,Routine
+Motor Vehicle - Private Property Tow,Routine
+Constable - Secured Park Facilities,Routine
+Burglary - Auto - 2C:18-2,Emergency
+Burglary - Commercial - 2C:18-2,Emergency
+Burglary - Residence - 2C:18-2,Emergency
+Criminal Mischief - School - 2C:17-3,Routine
+Criminal Mischief - Vehicle - 2C:17-3,Routine
+Search Warrant Execution- Structure,Urgent
+Search Warrant Execution - Vehicle,Urgent
+Search Warrant Execution - CDW,Urgent
+Handle With Care - Notification,Emergency
+Homicide - 2C:11-2,Emergency
+Mental Health Incident,Emergency
+Missing Person - Adult,Urgent
+Missing Person - Return - Adult,Routine
+Missing Person - Juvenile,Urgent
+Missing Person - Return - Juvenile,Routine
+NARCAN Deployment - Adult - Aid,Emergency
+NARCAN Deployment - Juvenile - Aid,Emergency
+Overdose - Adult - Aid,Emergency
+Overdose - Juvenile - Aid,Emergency
+Service - Subpoena,Routine
+Service - Summons,Routine
+TAPS - Business,Routine
+TAPS - ESU - Business,Routine
+TAPS - ESU - Medical Facility,Routine
+TAPS - ESU - Park,Routine
+TAPS - ESU - Parking Garage,Routine
+TAPS - ESU - School,Routine
+TAPS - ESU - Religious Facility,Routine
+TAPS - Housing,Routine
+TAPS - Medical Facility,Routine
+TAPS - Park,Routine
+TAPS - Parking Garage,Routine
+TAPS - School,Routine
+TAPS - Religious Facility,Routine
+Duty to Warn - Notification,Routine
+Service - TRO,Routine
+Service - FRO,Routine
+Criminal Mischief - Park - 2C:17-3,Routine
+TAPS - Other,Routine
+Facial Recognition Request,Routine
+Patrol Check - Extra Duty Detail,Routine
+Cleared-Arrest,Routine
+Exceptionally Cleared/Closed,Routine
+Unfounded/Closed,Routine
+Complaint Signed,Routine
+Active/Administratively Closed,Routine
+Summons,Routine
+Juvenile Complaint Signed,Routine
+TOT DCP&P,Routine
+Stabbing,Emergency
+No Investigation ,Routine
+Warning Issued,Routine
+Radio Coverage,Routine
+TAS Alert - Stolen License Plate,Urgent
+Virtual - Patrol,Routine
+Traffic Detail - Road Closure,Urgent
+Gang Intelligence,Routine
+Service - Warrant,Routine
+Underage Possession/Consumption - 2C:33-15,Routine
+OOPS Investigation,Routine
+TAS Alert - Wanted Person,Urgent
+TAS Alert - Stolen Vehicle,Urgent
+TAS Alert - Missing Person,Urgent

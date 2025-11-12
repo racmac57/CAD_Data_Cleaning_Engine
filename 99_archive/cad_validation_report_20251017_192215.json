@@ -1,0 +1,375 @@
+{
+  "validation_metadata": {
+    "timestamp": "2025-10-17T19:22:15.046766",
+    "validator_version": "CAD_Validator_2025.08.10",
+    "total_records_validated": 91477
+  },
+  "validation_summary": {
+    "overall_quality_score": 88.95416666666667,
+    "recommendations_count": 6
+  },
+  "recommended_actions": [
+    "IMPORTANT: Address should be present and not generic - Pass rate: 54.5% (threshold: 85.0%)",
+    "  Fix suggestion: Validate address completeness, flag generic addresses",
+    "IMPORTANT: Disposition should be from approved list - Pass rate: 61.6% (threshold: 85.0%)",
+    "  Fix suggestion: Standardize disposition values, create lookup table",
+    "OPTIONAL: PD Zone should be valid zone identifier - Pass rate: 0.0% (threshold: 70.0%)",
+    "  Fix suggestion: Validate against zone master list"
+  ],
+  "validation_details": {
+    "total_records": 91477,
+    "rules_passed": {},
+    "rules_failed": {},
+    "sample_analysis": {},
+    "data_quality_score": 0.0,
+    "recommended_actions": [
+      "IMPORTANT: Address should be present and not generic - Pass rate: 54.5% (threshold: 85.0%)",
+      "  Fix suggestion: Validate address completeness, flag generic addresses",
+      "IMPORTANT: Disposition should be from approved list - Pass rate: 61.6% (threshold: 85.0%)",
+      "  Fix suggestion: Standardize disposition values, create lookup table",
+      "OPTIONAL: PD Zone should be valid zone identifier - Pass rate: 0.0% (threshold: 70.0%)",
+      "  Fix suggestion: Validate against zone master list"
+    ],
+    "critical_rules": {
+      "case_number_format": {
+        "rule_id": "case_number_format",
+        "description": "Case number must follow format: YY-XXXXXX or YY-XXXXXX[A-Z] for supplements",
+        "severity": "critical",
+        "sample_passed": 1000,
+        "sample_failed": 0,
+        "sample_pass_rate": 1.0,
+        "estimated_full_passed": 91477,
+        "estimated_full_failed": 0,
+        "estimated_full_pass_rate": 1.0,
+        "failed_records": {},
+        "fix_suggestion": "Standardize case number format, pad with zeros if needed"
+      },
+      "case_number_uniqueness": {
+        "rule_id": "case_number_uniqueness",
+        "description": "Case numbers must be unique within dataset",
+        "severity": "critical",
+        "sample_passed": 997,
+        "sample_failed": 3,
+        "sample_pass_rate": 0.997,
+        "estimated_full_passed": 91202,
+        "estimated_full_failed": 274,
+        "estimated_full_pass_rate": 0.997,
+        "failed_records": {
+          "21-058210": 2,
+          "21-061114": 2,
+          "21-045634": 2
+        },
+        "fix_suggestion": "Remove duplicates, investigate duplicate sources"
+      },
+      "call_datetime_validity": {
+        "rule_id": "call_datetime_validity",
+        "description": "Time of Call must be valid datetime within reasonable range",
+        "severity": "critical",
+        "sample_passed": 1000,
+        "sample_failed": 0,
+        "sample_pass_rate": 1.0,
+        "estimated_full_passed": 91477,
+        "estimated_full_failed": 0,
+        "estimated_full_pass_rate": 1.0,
+        "failed_records": {},
+        "fix_suggestion": "Validate datetime parsing, check for timezone issues"
+      },
+      "incident_type_presence": {
+        "rule_id": "incident_type_presence",
+        "description": "Incident type must not be null or empty",
+        "severity": "critical",
+        "sample_passed": 1000,
+        "sample_failed": 0,
+        "sample_pass_rate": 1.0,
+        "estimated_full_passed": 91477,
+        "estimated_full_failed": 0,
+        "estimated_full_pass_rate": 1.0,
+        "failed_records": {},
+        "fix_suggestion": "Map null values to \"Unknown\" or investigate missing data"
+      }
+    },
+    "important_rules": {
+      "address_completeness": {
+        "rule_id": "address_completeness",
+        "description": "Address should be present and not generic",
+        "severity": "important",
+        "sample_passed": 545,
+        "sample_failed": 455,
+        "sample_pass_rate": 0.545,
+        "estimated_full_passed": 49854,
+        "estimated_full_failed": 41622,
+        "estimated_full_pass_rate": 0.545,
+        "failed_records": {
+          "HUDSON STREET & , HACKENSACK, NJ, 07601": 37,
+          "CENTRAL AVENUE & , HACKENSACK, NJ, 07601": 35,
+          "405 ROUTE 17 SOUTH, HACKENSACK, NJ, 07601": 25,
+          "500 RIVER STREET SOUTH, HACKENSACK, NJ, 07601": 24,
+          "CARVER PARK & , HACKENSACK, NJ, 07601": 19,
+          "HOME & , HACKENSACK, NJ, 07601": 19,
+          "ROWLAND AVENUE PARK & , HACKENSACK, NJ, 07601": 17,
+          "ANDERSON STREET & , HACKENSACK, NJ, 07601": 15,
+          "ACKERSON STREET & , HACKENSACK, NJ, 07601": 14,
+          "AREA A (GARAGE) & , HACKENSACK, NJ, 07601": 11
+        },
+        "fix_suggestion": "Validate address completeness, flag generic addresses"
+      },
+      "officer_assignment": {
+        "rule_id": "officer_assignment",
+        "description": "Officer field should not be null for dispatched calls",
+        "severity": "important",
+        "sample_passed": 1000,
+        "sample_failed": 0,
+        "sample_pass_rate": 1.0,
+        "estimated_full_passed": 91477,
+        "estimated_full_failed": 0,
+        "estimated_full_pass_rate": 1.0,
+        "failed_records": {},
+        "fix_suggestion": "Check officer assignment logic, validate against roster"
+      },
+      "disposition_consistency": {
+        "rule_id": "disposition_consistency",
+        "description": "Disposition should be from approved list",
+        "severity": "important",
+        "sample_passed": 616,
+        "sample_failed": 384,
+        "sample_pass_rate": 0.616,
+        "estimated_full_passed": 56349,
+        "estimated_full_failed": 35127,
+        "estimated_full_pass_rate": 0.616,
+        "failed_records": {
+          "ASSISTED": 172,
+          "RECORD ONLY": 62,
+          "TOT - SEE NOTES": 33,
+          "DISPERSED": 20,
+          "ISSUED": 19,
+          "G.O.A.": 18,
+          "CANCELED": 16,
+          "CHECKED OK": 12,
+          "TEMP. SETTLED": 10,
+          "NAN": 8
+        },
+        "fix_suggestion": "Standardize disposition values, create lookup table"
+      },
+      "time_sequence_validity": {
+        "rule_id": "time_sequence_validity",
+        "description": "Time sequence should be logical (Call -> Dispatch -> Out -> In)",
+        "severity": "important",
+        "sample_passed": 990,
+        "sample_failed": 10,
+        "sample_pass_rate": 0.99,
+        "estimated_full_passed": 90562,
+        "estimated_full_failed": 914,
+        "estimated_full_pass_rate": 0.99,
+        "failed_records": [
+          {
+            "Time of Call": "2021-09-02T00:46:33",
+            "Time Dispatched": "2021-09-02T00:46:33",
+            "Time Out": "2021-09-02T00:46:55",
+            "Time In": "2021-09-02T00:46:33"
+          },
+          {
+            "Time of Call": "2021-09-29T13:10:51",
+            "Time Dispatched": "2021-09-29T13:10:01",
+            "Time Out": "2021-09-29T13:10:02",
+            "Time In": "2021-09-29T14:11:50"
+          },
+          {
+            "Time of Call": "2021-10-13T16:06:13",
+            "Time Dispatched": "2021-10-13T15:30:36",
+            "Time Out": "2021-10-13T15:30:10",
+            "Time In": "2021-10-13T16:41:41"
+          },
+          {
+            "Time of Call": "2021-07-27T10:55:19",
+            "Time Dispatched": "2021-07-27T10:56:02",
+            "Time Out": "2021-07-27T10:56:00",
+            "Time In": "2021-07-27T12:00:41"
+          },
+          {
+            "Time of Call": "2021-07-30T11:55:35",
+            "Time Dispatched": "2021-07-30T11:59:35",
+            "Time Out": "2021-07-30T11:59:04",
+            "Time In": "2021-07-30T12:58:04"
+          },
+          {
+            "Time of Call": "2021-04-12T11:53:08",
+            "Time Dispatched": "2021-04-12T11:58:55",
+            "Time Out": "2021-04-12T11:58:50",
+            "Time In": "2021-04-12T12:43:52"
+          },
+          {
+            "Time of Call": "2021-08-06T18:33:33",
+            "Time Dispatched": "2021-08-06T18:33:39",
+            "Time Out": "2021-08-06T18:33:45",
+            "Time In": "2021-08-06T18:33:33"
+          },
+          {
+            "Time of Call": "2021-06-01T13:40:45",
+            "Time Dispatched": "2021-06-01T13:45:48",
+            "Time Out": "2021-06-01T13:45:46",
+            "Time In": "2021-06-01T14:30:18"
+          },
+          {
+            "Time of Call": "2021-07-23T11:45:44",
+            "Time Dispatched": "2021-07-23T13:20:57",
+            "Time Out": "2021-07-23T13:20:59",
+            "Time In": "2021-07-23T11:45:44"
+          },
+          {
+            "Time of Call": "2021-12-28T03:01:27",
+            "Time Dispatched": "2021-12-28T03:01:29",
+            "Time Out": "2021-12-28T03:01:23",
+            "Time In": "2021-12-28T04:01:25"
+          }
+        ],
+        "fix_suggestion": "Validate time sequence logic, flag outliers"
+      },
+      "datetime_duration_validity": {
+        "rule_id": "datetime_duration_validity",
+        "description": "Durations between datetime fields must be non-negative",
+        "severity": "important",
+        "sample_passed": 990,
+        "sample_failed": 10,
+        "sample_pass_rate": 0.99,
+        "estimated_full_passed": 90562,
+        "estimated_full_failed": 914,
+        "estimated_full_pass_rate": 0.99,
+        "failed_records": [
+          {
+            "Time of Call": "2021-09-02T00:46:33",
+            "Time Dispatched": "2021-09-02T00:46:33",
+            "Time Out": "2021-09-02T00:46:55",
+            "Time In": "2021-09-02T00:46:33"
+          },
+          {
+            "Time of Call": "2021-09-29T13:10:51",
+            "Time Dispatched": "2021-09-29T13:10:01",
+            "Time Out": "2021-09-29T13:10:02",
+            "Time In": "2021-09-29T14:11:50"
+          },
+          {
+            "Time of Call": "2021-10-13T16:06:13",
+            "Time Dispatched": "2021-10-13T15:30:36",
+            "Time Out": "2021-10-13T15:30:10",
+            "Time In": "2021-10-13T16:41:41"
+          },
+          {
+            "Time of Call": "2021-07-27T10:55:19",
+            "Time Dispatched": "2021-07-27T10:56:02",
+            "Time Out": "2021-07-27T10:56:00",
+            "Time In": "2021-07-27T12:00:41"
+          },
+          {
+            "Time of Call": "2021-07-30T11:55:35",
+            "Time Dispatched": "2021-07-30T11:59:35",
+            "Time Out": "2021-07-30T11:59:04",
+            "Time In": "2021-07-30T12:58:04"
+          },
+          {
+            "Time of Call": "2021-04-12T11:53:08",
+            "Time Dispatched": "2021-04-12T11:58:55",
+            "Time Out": "2021-04-12T11:58:50",
+            "Time In": "2021-04-12T12:43:52"
+          },
+          {
+            "Time of Call": "2021-08-06T18:33:33",
+            "Time Dispatched": "2021-08-06T18:33:39",
+            "Time Out": "2021-08-06T18:33:45",
+            "Time In": "2021-08-06T18:33:33"
+          },
+          {
+            "Time of Call": "2021-06-01T13:40:45",
+            "Time Dispatched": "2021-06-01T13:45:48",
+            "Time Out": "2021-06-01T13:45:46",
+            "Time In": "2021-06-01T14:30:18"
+          },
+          {
+            "Time of Call": "2021-07-23T11:45:44",
+            "Time Dispatched": "2021-07-23T13:20:57",
+            "Time Out": "2021-07-23T13:20:59",
+            "Time In": "2021-07-23T11:45:44"
+          },
+          {
+            "Time of Call": "2021-12-28T03:01:27",
+            "Time Dispatched": "2021-12-28T03:01:29",
+            "Time Out": "2021-12-28T03:01:23",
+            "Time In": "2021-12-28T04:01:25"
+          }
+        ],
+        "fix_suggestion": "Correct negative durations or investigate data entry errors"
+      },
+      "time_spent_validity": {
+        "rule_id": "time_spent_validity",
+        "description": "Time Spent must be a positive duration",
+        "severity": "important",
+        "sample_passed": 996,
+        "sample_failed": 4,
+        "sample_pass_rate": 0.996,
+        "estimated_full_passed": 91111,
+        "estimated_full_failed": 365,
+        "estimated_full_pass_rate": 0.996,
+        "failed_records": {
+          "-0:00:22": 1,
+          "-0:00:12": 1,
+          "3 days, 19:09:53": 1,
+          "-1:35:15": 1
+        },
+        "fix_suggestion": "Validate duration format and ensure positive values"
+      }
+    },
+    "optional_rules": {
+      "how_reported_standardization": {
+        "rule_id": "how_reported_standardization",
+        "description": "How Reported should be from standardized list",
+        "severity": "optional",
+        "sample_passed": 996,
+        "sample_failed": 4,
+        "sample_pass_rate": 0.996,
+        "estimated_full_passed": 91111,
+        "estimated_full_failed": 365,
+        "estimated_full_pass_rate": 0.996,
+        "failed_records": {
+          "NAN": 3,
+          "SELF": 1
+        },
+        "fix_suggestion": "Map variations to standard values (9-1-1, Phone, Walk-in, etc.)"
+      },
+      "zone_validity": {
+        "rule_id": "zone_validity",
+        "description": "PD Zone should be valid zone identifier",
+        "severity": "optional",
+        "sample_passed": 0,
+        "sample_failed": 1000,
+        "sample_pass_rate": 0.0,
+        "estimated_full_passed": 0,
+        "estimated_full_failed": 91477,
+        "estimated_full_pass_rate": 0.0,
+        "failed_records": {},
+        "fix_suggestion": "Validate against zone master list"
+      },
+      "response_type_consistency": {
+        "rule_id": "response_type_consistency",
+        "description": "Response Type should align with incident severity",
+        "severity": "optional",
+        "sample_passed": 1000,
+        "sample_failed": 0,
+        "sample_pass_rate": 1.0,
+        "estimated_full_passed": 91477,
+        "estimated_full_failed": 0,
+        "estimated_full_pass_rate": 1.0,
+        "failed_records": [],
+        "fix_suggestion": "Create response type validation matrix"
+      }
+    },
+    "overall_quality_score": 88.95416666666667
+  },
+  "sampling_configuration": {
+    "stratified_sample_size": 1000,
+    "systematic_interval": 100,
+    "quality_thresholds": {
+      "critical": 0.95,
+      "important": 0.85,
+      "optional": 0.7
+    }
+  }
+}

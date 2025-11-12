@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+~$*
+*.tmp
+logs/
+*.log
+data/01_raw/sample/
+data/02_reports/cad_validation/*.json
+data/02_reports/cad_validation/missing_CallTypes_seed.csv
+*.xlsx
+*.csv
+!ref/**/*.csv
+/.idea/
+/.vscode/
+
