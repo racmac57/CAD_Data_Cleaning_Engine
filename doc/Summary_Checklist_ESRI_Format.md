@@ -5,7 +5,11 @@
 - Incident mapping backs fills `Response Type` only when blank and logs unmapped items for CallType updates.  
 - Cross-fill should combine CAD samples with RMS data (addresses, zones, grids) and optional GIS geocoding to minimize blanks before delivery to the dashboard.
 
-### Latest Enhancements (2025-11-12)
+### Latest Enhancements (2025-11-13)
+- **Repository Trim:** Removed legacy `gis/geocoder/NJ_Geocode` binaries (>300 MB) from history so pushes stay under GitHub’s 100 MB cap. Automations should no longer expect those files on disk.
+- **Follow-up Tracking:** Added `doc/reminder_tomorrow.md` as a lightweight place to capture next-day QA and delivery reminders alongside the checklist.
+
+### Enhancements Prior to 2025-11-13
 - **Text & Encoding:** `fix_mojibake` normalizes incidents, CAD notes, officer names, and dispositions; whitespace collapses across critical text fields.
 - **How Reported:** All 9-1-1 variants collapse to `9-1-1`, preventing Excel from reformatting exports as dates.
 - **Incident Mapping:** Matching uses a normalized key so legacy spellings map cleanly; response types are backfilled from `CallType_Categories.csv` only when missing.

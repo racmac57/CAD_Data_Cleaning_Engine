@@ -1,5 +1,18 @@
 # CAD Data Pipeline - Changelog
 
+# CAD Data Pipeline - Changelog
+
+## [2025-11-13] - Repository Cleanup and Reminder Tracking
+
+### Summary
+- Removed oversized `gis/geocoder/NJ_Geocode` artifacts from history to keep the GitHub repository within the 100 MB per-file cap.
+- Documented the new daily follow-up tracker at `doc/reminder_tomorrow.md` for operational next steps.
+- Updated README and ESRI summary checklist to reflect the new repository layout (`CAD_Data_Cleaning_Engine`) and documentation locations.
+
+### Notes for Users
+- Local clones should prune or reclone to ensure the large binaries are gone; see README for current working directory guidance.
+- Any automation that referenced `gis/geocoder/NJ_Geocode` should be pointed to the external source or Git LFS if those assets are still required.
+
 ## [2025-11-12] - Mojibake Cleanup, Config Reload, ESRI Audit
 
 ### Summary
