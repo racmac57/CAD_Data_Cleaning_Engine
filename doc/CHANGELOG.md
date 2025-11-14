@@ -26,6 +26,18 @@
 - `ref/clean_calltypes.py` (new helper)
 - `README.md`, `doc/Summary_Checklist_ESRI_Format.md`
 
+## [2025-11-13-c] - Call Type Master Mapping Draft
+
+### Summary
+- Added `scripts/build_calltype_master.py`, producing `CallType_Master_Mapping.csv` and audit companions (`duplicates_review.csv`, `anomalies.csv`, `mapping_changes.csv`, `unmapped_incidents.csv`, `suggested_clean_edits.csv`) from the cleaned mapping workbook plus historical incidents.
+- Stored the shared Claude planning notes at `doc/2025_11_13_CLAUDE_chat.json` alongside the historical incident snapshot (`ref/2019_2025_10_Call_Types_Incidents.csv.txt`) for reproducible rebuilds.
+
+### Updated Files
+- `scripts/build_calltype_master.py` (new)
+- `README.md`, `doc/Summary_Checklist_ESRI_Format.md`
+- `ref/CallType_Master_Mapping.csv` and supporting review CSVs
+- `doc/2025_11_13_CLAUDE_chat.json`, `ref/2019_2025_10_Call_Types_Incidents.csv.txt`
+
 ## [2025-11-12] - Mojibake Cleanup, Config Reload, ESRI Audit
 
 ### Summary

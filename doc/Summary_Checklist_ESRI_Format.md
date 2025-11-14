@@ -9,6 +9,7 @@
 - **Repository Trim:** Removed legacy `gis/geocoder/NJ_Geocode` binaries (>300 MB) from history so pushes stay under GitHub’s 100 MB cap. Automations should no longer expect those files on disk.
 - **Follow-up Tracking:** Added `doc/reminder_tomorrow.md` as a lightweight place to capture next-day QA and delivery reminders alongside the checklist.
 - **Incident Formatting & Export Polish:** `scripts/01_validate_and_clean.py` now preserves the exact `Incident_Norm`/`Response_Type` from `CallType_Categories.csv`, title-cases display columns (How Reported, addresses, dispositions, response types), guards `9-1-1` with `="9-1-1"` and emits UTF-8 BOM CSVs so Excel shows en dashes correctly. A helper (`ref/clean_calltypes.py`) keeps the mapping workbook tidy.
+- **Master Mapping Pipeline:** `scripts/build_calltype_master.py` compiles `CallType_Master_Mapping.csv` and companion reviews (`duplicates_review.csv`, `anomalies.csv`, `mapping_changes.csv`, `unmapped_incidents.csv`, `suggested_clean_edits.csv`) by combining the cleaned workbook with historical incidents—this drives the new authoritative lookup for CAD normalization.
 
 ### Enhancements Prior to 2025-11-13
 - **Text & Encoding:** `fix_mojibake` normalizes incidents, CAD notes, officer names, and dispositions; whitespace collapses across critical text fields.
