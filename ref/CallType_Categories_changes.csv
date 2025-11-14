@@ -1,0 +1,15 @@
+Incident,Incident_Norm,Category_Type,Response_Type
+Docket - Drop Off,Docket - Drop Off,Administrative and Support,Routine
+Docket - Pick up,Docket - Pick up,Administrative and Support,Routine
+Alcoholic Beverage - New Years Day Hours of Sale,"""Alcoholic Beverage - New Years Day Hours of Sale""",Regulatory and Ordinance,Routine
+Applicant Snow Removal,"""Applicant Snow Removal """,Administrative and Support,Routine
+Community Engagement - Crisis Intervention,"""Community Engagement - Crisis Intervention """,Community Engagement and Services,Routine
+Community Engagement - Emergency Response,"""Community Engagement - Emergency Response """,Community Engagement and Services,Routine
+Computer Issue - Desktop,"""Computer Issue - Desktop""",Administrative and Support,Routine
+Contempt of Court - 2C:29-9,"""Contempt of Court - 2C:29-9""",Criminal Incidents,Urgent
+Fish and Game Violation Title 23,"""Fish and Game Violation Title 23""",Regulatory and Ordinance,Routine
+Interference - 2C:29-1,"""Interference - 2C:29-1""",Criminal Incidents,Routine
+Leaving Scene of an Acc. - 39:4-129,"""Leaving Scene of an Acc. - 39:4-129""",Traffic and Motor Vehicle,Routine
+Motor Vehicle Crash - w/injury,"""Motor Vehicle Crash - w/injury""",Traffic and Motor Vehicle,Emergency
+No Investigation,"""No Investigation """,Administrative and Support,Routine
+Prisoner Log,"""Prisoner Log """,Administrative and Support,Routine
