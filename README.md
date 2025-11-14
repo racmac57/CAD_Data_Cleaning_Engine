@@ -5,7 +5,7 @@ Here’s the comprehensive code for CAD data processing that you can provide to 
 ## Recent Updates (2025-11-13)
 - Trimmed the repository history and working tree by removing legacy `NJ_Geocode` assets that exceeded GitHub’s 100 MB cap.
 - Added `doc/reminder_tomorrow.md` to track upcoming delivery tasks and QA follow-ups.
-- Reconfirmed mojibake cleanup, 9-1-1 normalization, and incident mapping updates from 2025-11-12; see changelog for full details.
+- ESRI sample exports now pull `Incident` text and `Response Type` directly from `CallType_Categories.csv`, title-case key human-readable fields, wrap `9-1-1` with an Excel guard, and write with a UTF-8 BOM so en dashes render correctly. A helper script (`ref/clean_calltypes.py`) keeps the mapping workbook’s casing and punctuation consistent.
 
 > **Heads up:** The local working directory now lives at `CAD_Data_Cleaning_Engine`. Update any automation or shortcuts that referenced the previous folder name.
 

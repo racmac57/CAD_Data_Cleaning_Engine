@@ -13,6 +13,19 @@
 - Local clones should prune or reclone to ensure the large binaries are gone; see README for current working directory guidance.
 - Any automation that referenced `gis/geocoder/NJ_Geocode` should be pointed to the external source or Git LFS if those assets are still required.
 
+## [2025-11-13-b] - Incident Formatting & Sample Export Polish
+
+### Summary
+- CAD samples now use the authoritative casing and punctuation from `CallType_Categories.csv` (`Incident_Norm`/`Response_Type`) instead of the upper-cased CAD source.
+- New smart title-casing keeps display columns human-friendly while preserving acronyms (GOA, NJ, ESU, etc.).
+- Sample CSVs ship with a UTF-8 BOM and wrap `9-1-1` as `="9-1-1"` so Excel no longer replaces en dashes or converts emergency calls to dates.
+- Added `ref/clean_calltypes.py` to normalize the CallType workbook (dash cleanup, statute suffix formatting) before re-ingesting it.
+
+### Updated Files
+- `scripts/01_validate_and_clean.py`
+- `ref/clean_calltypes.py` (new helper)
+- `README.md`, `doc/Summary_Checklist_ESRI_Format.md`
+
 ## [2025-11-12] - Mojibake Cleanup, Config Reload, ESRI Audit
 
 ### Summary

@@ -37,6 +37,7 @@ ENCODING_REPLACEMENTS = {
     "â€¢": "•",
     "â€¦": "…",
     "â€": "”",
+    "\ufffd": "-"
 }
 
 
@@ -103,7 +104,32 @@ def normalize_how_reported_value(x: object) -> str:
 def guard_excel_text(value: object) -> object:
     if value is None:
         return value
-    return str(value)
+    s = str(value)
+    if s == '9-1-1':
+        return f'="{s}"'
+    return s
+
+
+PRESERVE_TOKENS = {
+    'NJ', 'GOA', 'UTL', 'OCA#', 'TOT', 'ESU', 'UAS', 'EMS', 'HQ', 'PD', 'PO', 'FD', 'CAD', 'RMS',
+    'ABC', 'USA', 'CPR', 'DWI', 'DUI', 'FTO', 'OCA', 'ID', 'POA'
+}
+
+
+def smart_title(value: object) -> object:
+    if value is None or (isinstance(value, float) and np.isnan(value)):
+        return value
+    s = str(value).strip()
+    if not s:
+        return s
+    titled = s.title()
+    for token in PRESERVE_TOKENS:
+        pattern = re.compile(r'\b' + re.escape(token.title()) + r'\b')
+        titled = pattern.sub(token, titled)
+    # Handle tokens adjacent to punctuation
+    for token in ['NJ', 'GOA', 'UTL', 'OCA#', 'TOT', 'ESU', 'UAS', 'EMS', 'HQ']:
+        titled = titled.replace(f"{token.title()}-", f"{token}-")
+    return titled
 
 
 def normalize_incident_key(value: object) -> str:
@@ -313,7 +339,8 @@ class CADDataValidator:
         for col in ['Incident', 'How Reported', 'Response Type', 'Disposition', 'Officer', 'CADNotes']:
             if col in cleaned_df.columns:
                 original = cleaned_df[col].copy()
-                cleaned_df[col] = cleaned_df[col].apply(_normalize_text)
+                uppercase = col not in {'Incident'}
+                cleaned_df[col] = cleaned_df[col].apply(lambda v: _normalize_text(v, uppercase=uppercase))
                 total_modified += (cleaned_df[col] != original).sum()
 
         if 'How Reported' in cleaned_df.columns:
@@ -519,8 +546,8 @@ class CADDataValidator:
 
         esri_df['ReportNumberNew'] = get_series('ReportNumberNew')
         esri_df['Incident'] = get_series('Incident')
-        esri_df['How Reported'] = get_series('How Reported')
-        esri_df['FullAddress2'] = get_series('FullAddress2')
+        esri_df['How Reported'] = get_series('How Reported').apply(normalize_how_reported_value).apply(smart_title)
+        esri_df['FullAddress2'] = get_series('FullAddress2').apply(smart_title)
         esri_df['PDZone'] = pd.to_numeric(get_series('PDZone'), errors='coerce')
         esri_df['Grid'] = get_series('Grid')
 
@@ -543,18 +570,14 @@ class CADDataValidator:
         esri_df['Time Response'] = time_response.apply(lambda x: None if pd.isna(x) else str(x))
 
         esri_df['Officer'] = get_series('Officer')
-        esri_df['Disposition'] = get_series('Disposition')
+        esri_df['Disposition'] = get_series('Disposition').apply(smart_title)
         esri_df['latitude'] = np.nan
         esri_df['longitude'] = np.nan
-        esri_df['Response Type'] = get_series('Response Type')
+        esri_df['Response Type'] = get_series('Response Type').apply(smart_title)
         esri_df = esri_df[esri_columns]
 
         if 'How Reported' in esri_df.columns:
-            esri_df['How Reported'] = (
-                esri_df['How Reported']
-                .apply(normalize_how_reported_value)
-                .apply(guard_excel_text)
-            )
+            esri_df['How Reported'] = esri_df['How Reported'].apply(guard_excel_text)
 
         return esri_df
 
@@ -575,12 +598,8 @@ class CADDataValidator:
 
         export_df = self._build_esri_export(sample_df.copy())
         if 'How Reported' in export_df.columns:
-            export_df['How Reported'] = (
-                export_df['How Reported']
-                .apply(normalize_how_reported_value)
-                .apply(guard_excel_text)
-            )
-        export_df.to_csv(sample_path, index=False)
+            export_df['How Reported'] = export_df['How Reported'].apply(guard_excel_text)
+        export_df.to_csv(sample_path, index=False, encoding='utf-8-sig')
         logger.info("Sample exported to %s", sample_path)
         self.validation_results['sample_output_path'] = str(sample_path)
 
