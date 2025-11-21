@@ -1,4 +1,4 @@
-﻿Incident,Incident_Norm,Category_Type,Response_Type
+Incident,Incident_Norm,Category_Type,Response_Type
 9-1-1 Call,9-1-1 Call,Emergency Response,Emergency
 A.C.O.R.N. Test,A.C.O.R.N. Test,Administrative and Support,Routine
 A.T.R.A.,A.T.R.A.,Special Operations and Tactical,Urgent
@@ -197,8 +197,8 @@ Disorderly Conduct - 2C:33-2,Disorderly Conduct - 2C:33-2,Criminal Incidents,Urg
 Dispute,Dispute,Public Safety and Welfare,Urgent
 Disrupting Meet/Procession - 2C:33-8s,Disrupting Meet/Procession - 2C:33-8s,Criminal Incidents,Urgent
 Disturbance,Disturbance,Public Safety and Welfare,Urgent
-Docket – Drop Off,Docket - Drop Off,Administrative and Support,Routine
-Docket – Pick up,Docket - Pick up,Administrative and Support,Routine
+Docket - Drop Off,Docket - Drop Off,Administrative and Support,Routine
+Docket - Pick up,Docket - Pick up,Administrative and Support,Routine
 Dogs Defecating,Dogs Defecating,Regulatory and Ordinance,Routine
 Dogs at Large,Dogs at Large,Regulatory and Ordinance,Routine
 Domestic Dispute,Domestic Dispute,Criminal Investigation,Urgent
@@ -612,19 +612,19 @@ shoplifting 2C:20-11,shoplifting 2C:20-11,Criminal Investigation,Urgent
 simple Assault 2C:12-1a,simple Assault 2C:12-1a,Criminal Investigation,Urgent
 targeted Area Patrol,targeted Area Patrol,Patrol and Prevention,Routine
 terroristic Threats 2C:12-3,terroristic Threats 2C:12-3,Criminal Investigation,Urgent
-Alcoholic Beverage -  New Years Day Hours of Sale,"""Alcoholic Beverage -  New Years Day Hours of Sale""",Regulatory and Ordinance,Routine
-"Applicant Snow Removal ","""Applicant Snow Removal """,Administrative and Support,Routine
-"Community Engagement - Crisis Intervention ","""Community Engagement - Crisis Intervention """,Community Engagement and Services,Routine
-"Community Engagement - Emergency Response ","""Community Engagement - Emergency Response """,Community Engagement and Services,Routine
-Computer Issue -  Desktop,"""Computer Issue -  Desktop""",Administrative and Support,Routine
-Contempt of Court -  2C:29-9,"""Contempt of Court -  2C:29-9""",Criminal Incidents,Urgent
-Fish and Game Violation  Title 23,"""Fish and Game Violation  Title 23""",Regulatory and Ordinance,Routine
-Interference  - 2C:29-1,"""Interference  - 2C:29-1""",Criminal Incidents,Routine
-Leaving Scene of an Acc. -  39:4-129,"""Leaving Scene of an Acc. -  39:4-129""",Traffic and Motor Vehicle,Routine
-Motor Vehicle Crash -  w/injury,"""Motor Vehicle Crash -  w/injury""",Traffic and Motor Vehicle,Emergency
-"No Investigation ","""No Investigation """,Administrative and Support,Routine
+Alcoholic Beverage - New Years Day Hours of Sale,"""Alcoholic Beverage - New Years Day Hours of Sale""",Regulatory and Ordinance,Routine
+Applicant Snow Removal,"""Applicant Snow Removal """,Administrative and Support,Routine
+Community Engagement - Crisis Intervention,"""Community Engagement - Crisis Intervention """,Community Engagement and Services,Routine
+Community Engagement - Emergency Response,"""Community Engagement - Emergency Response """,Community Engagement and Services,Routine
+Computer Issue - Desktop,"""Computer Issue - Desktop""",Administrative and Support,Routine
+Contempt of Court - 2C:29-9,"""Contempt of Court - 2C:29-9""",Criminal Incidents,Urgent
+Fish and Game Violation Title 23,"""Fish and Game Violation Title 23""",Regulatory and Ordinance,Routine
+Interference - 2C:29-1,"""Interference - 2C:29-1""",Criminal Incidents,Routine
+Leaving Scene of an Acc. - 39:4-129,"""Leaving Scene of an Acc. - 39:4-129""",Traffic and Motor Vehicle,Routine
+Motor Vehicle Crash - w/injury,"""Motor Vehicle Crash - w/injury""",Traffic and Motor Vehicle,Emergency
+No Investigation,"""No Investigation """,Administrative and Support,Routine
 OOPS Investigation,"""OOPS Investigation""",Investigations and Follow-Ups,Routine
-"Prisoner Log ","""Prisoner Log """,Administrative and Support,Routine
+Prisoner Log,"""Prisoner Log """,Administrative and Support,Routine
 TAS Alert - Missing Person,"""TAS Alert - Missing Person""",Public Safety and Welfare,Urgent
 TAS Alert - Stolen Vehicle,"""TAS Alert - Stolen Vehicle""",Public Safety and Welfare,Urgent
 TAS Alert - Wanted Person,"""TAS Alert - Wanted Person""",Public Safety and Welfare,Urgent

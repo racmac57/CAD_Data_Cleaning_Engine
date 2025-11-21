@@ -1,0 +1,20 @@
+Unmapped_Call_Type,Raw_Call_Type,Response,Notes
+Relief / Personal,Relief/Personal,Routine,
+Targeted Area Patrol,,Routine,"Was expanded to include:  TAPS - Business, TAPS - Housing, TAPS - Medical Facility, TAPS - Other, TAPS - Park, TAPS - Parking Garage, TAPS - Religious Facility, TAPS - School"
+ESU - Targeted Patrol,,Routine,"Was expanded to include:  TAPS - ESU - Business, TAPS - ESU - Medical Facility, TAPS - ESU - Park, TAPS - ESU - Parking Garage, TAPS - ESU - Religious Facility, TAPS - ESU - School"
+Motor Vehicle Violation – Private Property,Motor Vehicle Violation - Private Property,Routine,
+Theft 2C:20-3,Theft - 2C:20-3,Routine,
+Domestic Dispute,,Urgent,In the updated version this Unampped value was replaced with Dispute
+Applicant ABC License,,Routine,"Was expanded to include: Applicant ABC License (Server), Applicant ABC Liquor License (Business)"
+Harassment 2C:33-4,Harassment - 2C:33-4,Routine,
+Medical Call –Oxygen,Medical Call - Oxygen,Emergency,
+Motor Vehicle Crash – Hit and Run,Motor Vehicle Crash - Hit and Run,Emergency,
+dispute,Dispute,Urgent,
+Motor Vehicle Crash - w/injury,Motor Vehicle Crash - w/injury,Emergency,
+Service of TRO / FRO,,Routine,"Was expanded to include: Service - TRO, Service - FRO"
+Investigation-Follow up,Investigation - Follow-Up,Routine,
+Shoplifting 2C:20-11,Shoplifting - 2C:20-11,Routine,
+group,Group,Routine,
+Medical Call,Medical Call,Routine,
+Criminal Mischief 2C:17-3,Criminal Mischief - 2C:17-3,Routine,
+Property – Lost,Property - Lost,Routine,

@@ -1,6 +1,111 @@
 # CAD Data Pipeline - Changelog
 
-# CAD Data Pipeline - Changelog
+## [2025-11-21] - FullAddress2 Manual Corrections Integration
+
+### Summary
+- Integrated a rule-based `FullAddress2` correction layer into `CADDataValidator.clean_data()` driven by `doc/updates_corrections_FullAddress2.csv` (or `paths.fulladdress2_corrections` in `config_enhanced.json`).
+- Rules can optionally filter on `Incident` and are applied prior to generic address normalization and zone/grid backfill, improving address validity and PDZone/Grid coverage.
+
+### Technical Details
+- Added `CADDataValidator._load_fulladdress2_corrections()` to load and normalize correction rules at initialization and config reload.
+- Added `CADDataValidator._apply_fulladdress2_corrections()` and wired it into the start of `clean_data()` to overwrite `FullAddress2` where rules match.
+- Exposed an optional `paths.fulladdress2_corrections` entry in `config_enhanced.json`; when unset, the validator falls back to `doc/updates_corrections_FullAddress2.csv` in the repo.
+
+---
+
+## [2025-11-17-b] - ESRI Production Deployment Final
+
+### Summary
+Completed final ESRI production deployment with comprehensive data cleaning achieving 99.55% Response_Type coverage and 96.91% data quality score. Created optimized vectorized processing script for 701,115 records. Resolved all Notion blockers and standardized all Response_Type values to clean Routine/Urgent/Emergency.
+
+### Added
+- **scripts/esri_production_deploy.py**: Optimized vectorized data cleaning script for production deployment
+  - Case-insensitive Response_Type mapping
+  - TAPS variant resolution based on address keywords
+  - Domestic Dispute/Violence classification via DV report join
+  - TRO/FRO splitting via RMS narrative parsing
+  - Disposition normalization with standard mappings
+  - Address backfill from RMS data
+  - Response_Type value cleanup (removes garbage entries)
+  - Data quality flagging system
+
+### Output Files
+- **data/ESRI_CADExport/CAD_ESRI_Final_20251117.xlsx**: Production-ready export (701,115 records)
+- **data/02_reports/esri_deployment_report.md**: Validation report with metrics
+- **data/02_reports/tro_fro_manual_review.csv**: 96 TRO/FRO records needing manual review
+
+### Processing Results
+| Task | Records Processed |
+|------|-------------------|
+| Response_Type Mapped | 160,022 |
+| TAPS Variants Resolved (Blocker #8) | 21,201 |
+| Domestic Violence Reclassified | 458 |
+| Disputes Reclassified | 1,327 |
+| TRO/FRO Split (Blocker #10) | 257 |
+| Disposition Normalized | 58,604 |
+| Address Backfilled from RMS | 2,362 |
+| Garbage Response_Type Cleared | 107 |
+
+### Data Quality
+- **Response_Type Coverage**: 99.55% (PASS)
+- **Data Quality Score**: 96.91% (PASS)
+- **Status**: PRODUCTION READY
+
+### Response_Type Distribution
+- Routine: 425,335 (60.67%)
+- Urgent: 239,170 (34.11%)
+- Emergency: 33,455 (4.77%)
+
+### Technical Improvements
+- Vectorized pandas operations for 700K+ record processing (5 min vs 30+ min)
+- Case-insensitive mapping with lowercase key normalization
+- Comprehensive garbage value cleanup for Response_Type field
+- Modular function design for maintainability
+
+### Remaining Items
+- 148 unmapped incident types (mostly trailing spaces/naming variations)
+- 21,681 records flagged for review (missing address/disposition/Response_Type)
+- 96 TRO/FRO records requiring manual narrative review
+
+---
+
+## [2025-11-17] - ESRI Production Deployment Prep
+
+### Summary
+Final data cleaning for ESRI Crime Dashboard deployment. Achieved 97.82% Response_Type coverage with manual top-20 mappings. Updated CAD and DV source files with manual corrections. Resolved Notion blockers 8-10 (TAPS, Domestic Violence, TRO/FRO).
+
+### Changed
+- **CAD Source**: Updated to `ref/2019_2025_11_17_Updated_CAD_Export.xlsx` with manual corrections
+- **DV Source**: Updated to `ref/2025_11_17_DV_Offense_Report_Updated.xlsx`, renamed `Case #` → `Case_Number`
+- **Response_Type**: Backfilled using `RAW_CAD_CALL_TYPE_EXPORT.xlsx` + top-20 manual mappings from `Unmapped_Response_Type.csv`
+
+### Added
+- **scripts/backfill_incidents_from_rms.py**: RMS cross-reference for null Incident values (249 records)
+- **scripts/classify_burglary_ollama.py**: AI classification for generic Burglary records
+- **Unmapped_Response_Type.csv**: Manual Response_Type mappings for top unmapped incidents
+
+### Fixed
+- **Blocker #8 (TAPS)**: Mapped legacy 'ESU - Targeted Patrol' and 'Targeted Area Patrol' to specific variants
+- **Blocker #9 (Domestic Violence)**: DV report join distinguishes 'Domestic Violence - 2C:25-21' vs 'Dispute'
+- **Blocker #10 (TRO/FRO)**: RMS Narrative parsing splits 'Violation: TRO/ FRO' based on text content
+- **Disposition**: Normalized capitalization (ASSISTED→Assisted, CANCELED→Cancelled)
+- **FullAddress2**: Backfilled invalid addresses from RMS where available
+
+### Data Quality
+- Response_Type coverage: 76.58% → 97.82% (148,819 records filled)
+- Remaining unmapped: 15,259 records (2.18%) across 297 incident types
+- Top unmapped: Relief/Personal (4,615), Targeted Area Patrol (2,608), ESU Patrol (617)
+
+### Files
+- `ref/response_type_update_needed.csv`: 823 rows (526 existing + 297 needing review)
+- `data/ESRI_CADExport/CAD_Clean_ResponseType_Complete.xlsx`: 97.82% complete export
+- `data/02_reports/incident_backfill_log.csv`: RMS join results
+- `data/02_reports/address_backfill_log.csv`: Address improvement tracking
+
+### Integration
+- dv_doj pipeline integration (`C:\...\dv_doj\etl_scripts\backfill_dv.py`)
+- Cross-project validation using DV offense reports
+- RMS narrative parsing for incident classification
 
 ## [2025-11-13] - Repository Cleanup and Reminder Tracking
 

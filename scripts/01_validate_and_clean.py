@@ -26,6 +26,38 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 
+# --- Path expansion helpers ---
+def expand_config_paths(config: dict) -> dict:
+    """Expand path templates in config using {key} substitution.
+
+    Args:
+        config (dict): Configuration dictionary with paths section.
+
+    Returns:
+        dict: Config with expanded paths.
+    """
+    if 'paths' not in config:
+        return config
+
+    paths = config['paths'].copy()
+    # Iteratively expand paths until no more substitutions needed
+    max_iterations = 10
+    for _ in range(max_iterations):
+        changed = False
+        for key, value in paths.items():
+            if isinstance(value, str) and '{' in value:
+                # Expand any {key} references
+                for ref_key, ref_value in paths.items():
+                    if '{' + ref_key + '}' in value and '{' not in ref_value:
+                        paths[key] = value.replace('{' + ref_key + '}', ref_value)
+                        changed = True
+        if not changed:
+            break
+
+    config['paths'] = paths
+    return config
+
+
 # --- Mojibake helpers ---
 ENCODING_REPLACEMENTS = {
     "â€“": "–",
@@ -136,6 +168,81 @@ def normalize_incident_key(value: object) -> str:
     return _norm_txt(value)
 
 
+# --- Zone backfill helpers ---
+def merge_zone_data(df: pd.DataFrame, zone_master_path: str) -> pd.DataFrame:
+    """Merge zone/grid data from master lookup into CAD DataFrame.
+
+    Args:
+        df: CAD DataFrame with FullAddress2 column.
+        zone_master_path: Path to zone master Excel file.
+
+    Returns:
+        DataFrame with PDZone and Grid columns backfilled where possible.
+    """
+    try:
+        # Load zone lookup
+        zone_df = pd.read_excel(zone_master_path)
+        zone_df = (
+            zone_df[["CrossStreetName", "Grid", "PDZone"]]
+            .drop_duplicates()
+            .rename(columns={"CrossStreetName": "LookupAddress"})
+        )
+
+        # Address normalization for matching
+        SUFFIX_MAP = {
+            "Street": "St", "Avenue": "Ave", "Road": "Rd", "Place": "Pl",
+            "Drive": "Dr", "Court": "Ct", "Boulevard": "Blvd"
+        }
+
+        def normalize_address_for_zone(addr):
+            """Normalize address for zone lookup matching."""
+            if pd.isna(addr):
+                return addr
+            s = str(addr).replace(" & ", " / ")
+            for full, abbr in SUFFIX_MAP.items():
+                s = re.sub(rf"\b{full}\b", abbr, s, flags=re.IGNORECASE)
+            return s.title().strip()
+
+        # Create normalized lookup column
+        df["_CleanAddress"] = df["FullAddress2"].apply(normalize_address_for_zone)
+        zone_df["LookupAddress"] = zone_df["LookupAddress"].apply(normalize_address_for_zone)
+
+        # Merge in zone/grid data (only backfill where null)
+        merged = df.merge(
+            zone_df,
+            left_on="_CleanAddress",
+            right_on="LookupAddress",
+            how="left",
+            suffixes=('', '_zone')
+        )
+
+        # Backfill PDZone and Grid where null
+        if 'PDZone' not in df.columns:
+            merged['PDZone'] = merged['PDZone_zone']
+        else:
+            merged['PDZone'] = merged['PDZone'].fillna(merged['PDZone_zone'])
+
+        if 'Grid' not in df.columns:
+            merged['Grid'] = merged['Grid_zone']
+        else:
+            merged['Grid'] = merged['Grid'].fillna(merged['Grid_zone'])
+
+        # Drop temporary columns
+        merged = merged.drop(columns=['_CleanAddress', 'LookupAddress', 'PDZone_zone', 'Grid_zone'], errors='ignore')
+
+        backfilled = (df['PDZone'].isna() if 'PDZone' in df.columns else pd.Series([True]*len(df))) & merged['PDZone'].notna()
+        logger.info(f"Zone backfill: {backfilled.sum():,} records updated")
+
+        return merged
+
+    except FileNotFoundError:
+        logger.warning(f"Zone master file not found: {zone_master_path}")
+        return df
+    except Exception as e:
+        logger.warning(f"Zone backfill failed: {e}")
+        return df
+
+
 def _clean_partition(part, config, incident_mapping):
     """Clean a single partition of the DataFrame.
 
@@ -214,6 +321,7 @@ class CADDataValidator:
         self.original_columns: list[str] = []
         self.unmapped_incidents: set[str] = set()
         self.address_issue_summary: Counter = Counter()
+        self.fulladdress2_corrections: pd.DataFrame = self._load_fulladdress2_corrections()
 
     def _load_config(self, config_path: str) -> Dict[str, Any]:
         """Load configuration JSON. Merge with defaults. Fail safe on errors."""
@@ -268,6 +376,9 @@ class CADDataValidator:
         else:
             cfg["validation_lists"] = default_config["validation_lists"]
 
+        # Expand path templates
+        cfg = expand_config_paths(cfg)
+
         return cfg
 
     def reload_config(self, config_path: str | None = None) -> Dict[str, Any]:
@@ -277,7 +388,74 @@ class CADDataValidator:
         self.config = self._load_config(path)
         self.config_path = path
         self.validation_rules = self._initialize_validation_rules()
+        # Reload any config-dependent lookups
+        self.fulladdress2_corrections = self._load_fulladdress2_corrections()
         return self.config
+
+    def _load_fulladdress2_corrections(self) -> pd.DataFrame:
+        """Load manual FullAddress2 correction rules from CSV, if available.
+
+        The CSV is expected to have columns:
+        - 'If Incident is'
+        - 'And/Or If FullAddress2 is'
+        - 'Then Change FullAddress2 to'
+
+        An optional config path can be provided via:
+        config['paths']['fulladdress2_corrections']
+        """
+        possible_paths: list[str] = []
+
+        # Configurable path (preferred)
+        if 'paths' in self.config and isinstance(self.config['paths'], dict):
+            cfg_paths = self.config['paths']
+            if 'fulladdress2_corrections' in cfg_paths:
+                possible_paths.append(cfg_paths['fulladdress2_corrections'])
+
+        # Fallback to repo doc folder
+        repo_root = os.path.dirname(os.path.dirname(__file__))
+        possible_paths.append(os.path.join(repo_root, 'doc', 'updates_corrections_FullAddress2.csv'))
+
+        for csv_path in possible_paths:
+            try:
+                if not os.path.exists(csv_path):
+                    continue
+                df = pd.read_csv(csv_path, dtype=str).fillna('')
+                expected_cols = {
+                    'If Incident is',
+                    'And/Or If FullAddress2 is',
+                    'Then Change FullAddress2 to'
+                }
+                missing = expected_cols.difference(df.columns)
+                if missing:
+                    logger.warning(
+                        "FullAddress2 corrections file %s is missing expected columns: %s",
+                        csv_path, ", ".join(sorted(missing))
+                    )
+                    continue
+
+                df = df.rename(
+                    columns={
+                        'If Incident is': 'Incident_filter',
+                        'And/Or If FullAddress2 is': 'FullAddress2_old',
+                        'Then Change FullAddress2 to': 'FullAddress2_new',
+                    }
+                )
+
+                # Normalize text for consistent matching
+                df['Incident_filter'] = df['Incident_filter'].astype(str).str.strip()
+                df['FullAddress2_old'] = df['FullAddress2_old'].astype(str).str.strip()
+                df['FullAddress2_new'] = df['FullAddress2_new'].astype(str).str.strip()
+
+                logger.info(
+                    "Loaded %d FullAddress2 correction rules from %s",
+                    len(df), csv_path
+                )
+                return df
+            except Exception as exc:
+                logger.warning("Failed to load FullAddress2 corrections from %s: %s", csv_path, exc)
+
+        logger.info("No FullAddress2 correction rules loaded (file not found or invalid).")
+        return pd.DataFrame(columns=['Incident_filter', 'FullAddress2_old', 'FullAddress2_new'])
 
     def _load_incident_mapping(self) -> pd.DataFrame:
         """Load incident mapping from CSV file.
@@ -288,13 +466,19 @@ class CADDataValidator:
         Raises:
             FileNotFoundError: If the mapping file is not found.
         """
-        # Try multiple possible locations for the mapping file
-        possible_paths = [
-            r"C:\Users\carucci_r\OneDrive - City of Hackensack\09_Reference\Classifications\CallTypes\CallType_Categories.csv",
+        # Try config path first, then fallback locations
+        possible_paths = []
+
+        # Add config path if available
+        if 'paths' in self.config and 'calltype_categories' in self.config['paths']:
+            possible_paths.append(self.config['paths']['calltype_categories'])
+
+        # Add fallback locations
+        possible_paths.extend([
             os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'CallType_Categories.csv'),
             os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config', 'CallType_Categories.csv')
-        ]
-        
+        ])
+
         for mapping_path in possible_paths:
             try:
                 df = pd.read_csv(mapping_path)
@@ -307,7 +491,7 @@ class CADDataValidator:
                 return df
             except FileNotFoundError:
                 continue
-        
+
         logger.warning("Incident mapping file not found in any expected location. Using empty mapping.")
         return pd.DataFrame(columns=['Incident', 'Incident_Norm', 'Response_Type', 'Incident_key'])
 
@@ -324,9 +508,14 @@ class CADDataValidator:
             logger.warning("Empty DataFrame provided. Returning empty DataFrame.")
             return df
         logger.info("Starting data cleaning process...")
-        
+
         cleaned_df = df.copy()
         total_modified = 0
+
+        # Apply manual FullAddress2 corrections before generic normalization
+        if 'FullAddress2' in cleaned_df.columns and not self.fulladdress2_corrections.empty:
+            updated_count = self._apply_fulladdress2_corrections(cleaned_df)
+            total_modified += updated_count
 
         def _normalize_text(value, uppercase: bool = True):
             if pd.isna(value):
@@ -356,7 +545,16 @@ class CADDataValidator:
                 cleaned_df['FullAddress2'] = cleaned_df['FullAddress2'].astype(str).str.replace(abbr, full, case=False, regex=True)
             cleaned_df['FullAddress2'] = cleaned_df['FullAddress2'].apply(_normalize_text)
             total_modified += (cleaned_df['FullAddress2'] != original).sum()
-        
+
+        # Backfill zone data from master lookup
+        if 'FullAddress2' in cleaned_df.columns and 'paths' in self.config and 'zone_master' in self.config['paths']:
+            zone_master_path = self.config['paths']['zone_master']
+            if os.path.exists(zone_master_path):
+                logger.info("Backfilling zone/grid data from master lookup...")
+                cleaned_df = merge_zone_data(cleaned_df, zone_master_path)
+            else:
+                logger.warning(f"Zone master file not found: {zone_master_path}")
+
         # Apply incident mapping
         if 'Incident' in cleaned_df.columns and not self.incident_mapping.empty:
             cleaned_df['Incident_key'] = cleaned_df['Incident'].apply(normalize_incident_key)
@@ -382,6 +580,43 @@ class CADDataValidator:
         
         logger.info(f"Cleaned {total_modified:,} rows in total.")
         return self._apply_incident_mapping(cleaned_df)
+
+    def _apply_fulladdress2_corrections(self, df: pd.DataFrame) -> int:
+        """Apply manual FullAddress2 corrections from the loaded rules.
+
+        Rules can optionally filter on Incident; when Incident_filter is blank,
+        the rule applies to any Incident with the specified FullAddress2.
+        """
+        if df.empty or 'FullAddress2' not in df.columns or self.fulladdress2_corrections.empty:
+            return 0
+
+        updated_total = 0
+        # Work on a consistent string view for matching
+        df_fulladdr = df['FullAddress2'].astype(str)
+        df_incident = df['Incident'].astype(str) if 'Incident' in df.columns else None
+
+        for _, rule in self.fulladdress2_corrections.iterrows():
+            incident_filter = rule['Incident_filter']
+            old_addr = rule['FullAddress2_old']
+            new_addr = rule['FullAddress2_new']
+
+            if not old_addr:
+                continue  # cannot match without an address
+
+            mask = df_fulladdr == old_addr
+            if incident_filter and df_incident is not None:
+                mask = mask & (df_incident == incident_filter)
+
+            if not mask.any():
+                continue
+
+            affected = int(mask.sum())
+            df.loc[mask, 'FullAddress2'] = new_addr
+            updated_total += affected
+
+        if updated_total:
+            logger.info("Applied FullAddress2 corrections to %d records", updated_total)
+        return updated_total
 
     def _apply_incident_mapping(self, df: pd.DataFrame) -> pd.DataFrame:
         """Apply incident normalization and response-type backfill."""
@@ -1530,8 +1765,8 @@ def main():
     )
     parser.add_argument(
         "--raw-dir",
-        default=r"C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Pipeline\data\01_raw",
-        help="Directory containing CAD source files."
+        default=None,
+        help="Directory containing CAD source files (overrides config path)."
     )
     parser.add_argument(
         "--sampling-method",
@@ -1550,7 +1785,15 @@ def main():
     if args.reload_config:
         validator.reload_config(args.config)
 
-    all_cad_files = sorted(glob.glob(os.path.join(args.raw_dir, "*.xlsx")))
+    # Use --raw-dir argument if provided, otherwise use config path
+    raw_dir = args.raw_dir
+    if raw_dir is None and 'paths' in validator.config and 'raw_data_dir' in validator.config['paths']:
+        raw_dir = validator.config['paths']['raw_data_dir']
+
+    if raw_dir is None:
+        raise ValueError("No raw data directory specified. Use --raw-dir or set paths.raw_data_dir in config.")
+
+    all_cad_files = sorted(glob.glob(os.path.join(raw_dir, "*.xlsx")))
     print(f"Found {len(all_cad_files)} files to process.")
 
     for cad_file_path in all_cad_files:

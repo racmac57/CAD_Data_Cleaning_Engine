@@ -2,7 +2,8 @@
 
 Here’s the comprehensive code for CAD data processing that you can provide to an AI assistant.
 
-## Recent Updates (2025-11-13)
+## Recent Updates (2025-11-21)
+- Added support for rule-based `FullAddress2` corrections using `doc/updates_corrections_FullAddress2.csv` (or `paths.fulladdress2_corrections` in `config_enhanced.json`). These rules are applied at the start of the cleaning pipeline so downstream zone/grid backfill sees corrected park/home/intersection addresses.
 - Trimmed the repository history and working tree by removing legacy `NJ_Geocode` assets that exceeded GitHub’s 100 MB cap.
 - Added `doc/reminder_tomorrow.md` to track upcoming delivery tasks and QA follow-ups.
 - ESRI sample exports now pull `Incident` text and `Response Type` directly from `CallType_Categories.csv`, title-case key human-readable fields, wrap `9-1-1` with an Excel guard, and write with a UTF-8 BOM so en dashes render correctly. A helper script (`ref/clean_calltypes.py`) keeps the mapping workbook’s casing and punctuation consistent.

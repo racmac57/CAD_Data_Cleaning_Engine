@@ -1,4 +1,17 @@
 {
+  "paths": {
+    "onedrive_root": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack",
+    "calltype_categories": "{onedrive_root}\\09_Reference\\Classifications\\CallTypes\\CallType_Categories.csv",
+    "raw_data_dir": "{onedrive_root}\\02_ETL_Scripts\\CAD_Data_Pipeline\\data\\01_raw",
+    "zone_master": "zone_grid_master.xlsx",
+    "rms_dir": "data/rms",
+    "output_dir": "data/02_reports"
+  },
+  "rms": {
+    "join_key_cad": "ReportNumberNew",
+    "join_key_rms": "Case Number",
+    "incident_field": "Incident Type_1"
+  },
   "address_abbreviations": {
     " ST ": " STREET ",
     " AVE ": " AVENUE ",
