@@ -36,8 +36,11 @@ Here’s the comprehensive code for CAD data processing that you can provide to 
 - **Production File**: Final ESRI export: `CAD_ESRI_Final_20251124_COMPLETE.xlsx`
   - 702,352 records (all legitimate records preserved)
   - 542,565 unique cases
-  - 97.3% valid addresses
-  - Ready for ESRI submission
+  - 97.5% valid addresses (684,935 valid)
+  - File size: 58.1 MB
+  - **Status: ✅ READY FOR ESRI SUBMISSION**
+  - Location: `data/ESRI_CADExport/CAD_ESRI_Final_20251124_COMPLETE.xlsx`
+  - Email template: `data/02_reports/EMAIL_TO_ESRI_FINAL.md`
 
 ## Recent Updates (2025-11-24)
 
