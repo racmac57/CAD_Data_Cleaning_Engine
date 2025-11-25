@@ -2,8 +2,43 @@
 
 Here’s the comprehensive code for CAD data processing that you can provide to an AI assistant.
 
+## Recent Updates (2025-11-24)
+
+- **Address Corrections System**: Comprehensive address correction pipeline implemented:
+  - RMS backfill: Automatically backfills incomplete addresses (missing street numbers, incomplete intersections) from RMS export using Case Number matching (433 addresses corrected)
+  - Rule-based corrections: Applied 1,139 corrections from `test/updates_corrections_FullAddress2.csv` for parks, generic locations, and specific address patterns
+  - Street name standardization: Integrated official Hackensack street names file (`ref/hackensack_municipal_streets_from_lawsoft_25_11_24.xlsx`) to verify complete street names (Parkway, Colonial Terrace, Broadway, East Broadway, The Esplanade, Cambridge Terrace) and expand abbreviations (St→Street, Terr→Terrace, Ave→Avenue)
+  - Manual review workflow: Created `scripts/identify_manual_corrections_needed.py` and `scripts/merge_manual_review_updates.py` for efficient manual correction process
+  - Total address corrections applied: 9,607 records in ESRI production file
+  - Completion rate: 99.5% (1,688 of 1,696 records corrected)
+
+- **Hour Field Correction**: Fixed Hour field extraction to preserve exact time (HH:mm) from TimeOfCall without rounding:
+  - Changed from rounding to HH:00 to extracting exact HH:mm format
+  - Automatically populates missing Hour values from TimeOfCall
+  - Applied to 728,593 records in ESRI production file
+
+- **New Scripts**:
+  - `scripts/backfill_incomplete_addresses_from_rms.py`: Identifies incomplete addresses and backfills from RMS
+  - `scripts/apply_address_rule_corrections.py`: Applies rule-based corrections from CSV
+  - `scripts/apply_street_names_corrections.py`: Uses official street names to correct addresses
+  - `scripts/apply_address_standardization.py`: Expands abbreviations and standardizes formatting
+  - `scripts/verify_addresses_against_street_names.py`: Verifies addresses against official street names
+  - `scripts/identify_manual_corrections_needed.py`: Identifies records needing manual correction
+  - `scripts/merge_manual_review_updates.py`: Merges manual review updates back into main file
+  - `scripts/verify_hour_field.py`: Verifies Hour field extraction
+
+- **Production File**: Final ESRI export updated: `CAD_ESRI_Final_20251124_corrected.xlsx` with all corrections applied (1,270,339 total corrections)
+
+## Recent Updates (2025-11-22)
+
+- Added `scripts/merge_cad_rms_incidents.py` to join cleaned CAD exports to the consolidated RMS export on `ReportNumberNew`/`Case Number` for targeted incident types, writing `Merged_Output_optimized.xlsx` with both CAD and RMS context (including CAD/RMS case numbers and narratives).
+- Added `scripts/validate_cad_notes_alignment.py` to compare `CADNotes` across the merged export, the updated CAD master workbook, and the original 2019 CAD export, producing CSV reports that highlight any note-level misalignment by `ReportNumberNew`.
+- Added `scripts/compare_merged_to_manual_csv.py` to verify that key CAD fields (especially `CADNotes`) in `Merged_Output_optimized.xlsx` stay in sync with the manually edited `2019_2025_11_17_Updated_CAD_Export_manual_fix_v1.csv`, with mismatch-only output for fast QA.
+
 ## Recent Updates (2025-11-21)
 - Added support for rule-based `FullAddress2` corrections using `doc/updates_corrections_FullAddress2.csv` (or `paths.fulladdress2_corrections` in `config_enhanced.json`). These rules are applied at the start of the cleaning pipeline so downstream zone/grid backfill sees corrected park/home/intersection addresses.
+- Added an optimized ESRI production deployment path (`scripts/esri_production_deploy.py`) plus a final Response_Type cleanup pipeline (`scripts/final_cleanup_tro_fuzzy_rms.py`) and address backfill pass (`scripts/backfill_address_from_rms.py`), achieving ~99.96% Response_Type coverage and improving valid address rate via RMS backfill.
+- New review artifacts are written to `data/02_reports/`, including `tro_fro_manual_review.csv` (TRO/FRO narrative corrections), `unmapped_final_report.md`, `unmapped_breakdown_summary.csv`, `unmapped_cases_for_manual_backfill.csv`, `fuzzy_review.csv`, and `address_backfill_from_rms_report.md`/`address_backfill_from_rms_log.csv` for audit and manual follow-up.
 - Trimmed the repository history and working tree by removing legacy `NJ_Geocode` assets that exceeded GitHub’s 100 MB cap.
 - Added `doc/reminder_tomorrow.md` to track upcoming delivery tasks and QA follow-ups.
 - ESRI sample exports now pull `Incident` text and `Response Type` directly from `CallType_Categories.csv`, title-case key human-readable fields, wrap `9-1-1` with an Excel guard, and write with a UTF-8 BOM so en dashes render correctly. A helper script (`ref/clean_calltypes.py`) keeps the mapping workbook’s casing and punctuation consistent.

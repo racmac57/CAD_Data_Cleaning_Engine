@@ -26,14 +26,14 @@ REF_DIR = BASE_DIR / "ref"
 REPORTS_DIR = DATA_DIR / "02_reports"
 
 # Input files
-CAD_FILE = DATA_DIR / "ESRI_CADExport" / "CAD_ESRI_Final_20251117.xlsx"
+CAD_FILE = DATA_DIR / "ESRI_CADExport" / "CAD_ESRI_Final_20251117_v2.xlsx"
 TRO_FRO_FILE = REPORTS_DIR / "tro_fro_manual_review.csv"
 RAW_CALLTYPE_FILE = REF_DIR / "RAW_CAD_CALL_TYPE_EXPORT.xlsx"
 MASTER_MAPPING_FILE = REF_DIR / "call_types" / "CallType_Master_Mapping.csv"
 RMS_FILE = DATA_DIR / "rms" / "2019_2025_11_16_16_57_00_ALL_RMS_Export.xlsx"
 
 # Output files
-OUTPUT_CAD_FILE = DATA_DIR / "ESRI_CADExport" / "CAD_ESRI_Final_20251117_v2.xlsx"
+OUTPUT_CAD_FILE = DATA_DIR / "ESRI_CADExport" / "CAD_ESRI_Final_20251117_v2.xlsx"  # Production file
 FUZZY_REVIEW_FILE = REPORTS_DIR / "fuzzy_review.csv"
 FINAL_REPORT_FILE = REPORTS_DIR / "unmapped_final_report.md"
 
@@ -163,6 +163,21 @@ def step2_tro_fro_corrections(cad_df, tro_fro_df, stats):
     print("\n" + "="*60)
     print("STEP 2: TRO/FRO CORRECTIONS")
     print("="*60)
+
+    # Guard: if the manual review file has not been populated with a
+    # 'Corrected Incident' column yet, skip this step gracefully.
+    expected_cols = {'ReportNumberNew', 'Corrected Incident'}
+    missing = expected_cols.difference(tro_fro_df.columns)
+    if missing:
+        print(
+            "TRO/FRO manual review file is missing expected columns "
+            f"({', '.join(sorted(missing))}); skipping TRO/FRO corrections."
+        )
+        stats.add_step('TRO/FRO Corrections', count_unmapped(cad_df), count_unmapped(cad_df), {
+            'corrections_applied': 0,
+            'total_corrections': len(tro_fro_df)
+        })
+        return cad_df, []
 
     before_unmapped = count_unmapped(cad_df)
 
@@ -426,8 +441,30 @@ def generate_final_report(cad_df, stats, review_needed, no_match):
     ].shape[0]
 
     low_confidence_count = len(review_needed)
-    no_match_count = len([x for x in no_match if 'Score' not in str(x.get('Reason', '')) or 'below' in str(x.get('Reason', ''))])
+    no_match_count = len([
+        x for x in no_match
+        if 'Score' not in str(x.get('Reason', '')) or 'below' in str(x.get('Reason', ''))
+    ])
     other_count = final_unmapped - null_incident_count - low_confidence_count
+
+    # Build per-record category labels for unmapped rows
+    # Categories: Null/Blank Incident, Low Confidence (70-75%), No Fuzzy Match (<70%), Other
+    review_ids = {str(x.get('ReportNumberNew')) for x in review_needed}
+    no_match_ids = {str(x.get('ReportNumberNew')) for x in no_match}
+
+    def categorize_unmapped_row(row):
+        report_num = str(row.get('ReportNumberNew'))
+        incident_val = row.get('Incident')
+        if pd.isna(incident_val) or str(incident_val).strip() == '':
+            return "Null/Blank Incident"
+        if report_num in review_ids:
+            return "Low Confidence (70-75%)"
+        if report_num in no_match_ids:
+            return "No Fuzzy Match (<70%)"
+        return "Other"
+
+    unmapped_df = unmapped_df.copy()
+    unmapped_df['Unmapped_Category'] = unmapped_df.apply(categorize_unmapped_row, axis=1)
 
     # Top 20 unmapped by frequency
     incident_freq = unmapped_df.groupby('Incident').agg({
@@ -547,7 +584,46 @@ These records have fuzzy matches between 70-75% confidence and should be manuall
     with open(FINAL_REPORT_FILE, 'w', encoding='utf-8') as f:
         f.write(report)
 
+    # Export supplemental CSVs for manual review/backfill
+    # 1) Summary by category (similar to Unmapped Breakdown table)
+    summary_rows = [
+        {
+            'Category': 'Null/Blank Incident',
+            'Count': null_incident_count,
+            'Description': 'Records with no Incident value'
+        },
+        {
+            'Category': 'Low Confidence (70-75%)',
+            'Count': low_confidence_count,
+            'Description': 'Fuzzy matches needing review'
+        },
+        {
+            'Category': 'No Fuzzy Match (<70%)',
+            'Count': no_match_count,
+            'Description': 'No suitable match found'
+        },
+        {
+            'Category': 'Other',
+            'Count': other_count,
+            'Description': 'Other unmapped reasons'
+        },
+    ]
+    summary_df = pd.DataFrame(summary_rows)
+    summary_path = FINAL_REPORT_FILE.with_name('unmapped_breakdown_summary.csv')
+    summary_df.to_csv(summary_path, index=False)
+
+    # 2) Detailed per-record CSV for manual backfill
+    #    Includes all CAD fields for unmapped rows plus helper columns.
+    detailed_df = unmapped_df.copy()
+    detailed_df['Manual_Backfill_Incident'] = ''
+    detailed_df['Manual_Backfill_Response_Type'] = ''
+    detailed_df['Manual_Notes'] = ''
+    detailed_path = FINAL_REPORT_FILE.with_name('unmapped_cases_for_manual_backfill.csv')
+    detailed_df.to_csv(detailed_path, index=False)
+
     print(f"Report saved to: {FINAL_REPORT_FILE}")
+    print(f"Unmapped breakdown summary CSV: {summary_path}")
+    print(f"Unmapped cases for manual backfill CSV: {detailed_path}")
 
     return report
 

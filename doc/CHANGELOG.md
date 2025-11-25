@@ -1,446 +1,82 @@
-# CAD Data Pipeline - Changelog
+# Changelog
 
-## [2025-11-21] - FullAddress2 Manual Corrections Integration
+All notable changes to the CAD Data Cleaning Engine project.
 
-### Summary
-- Integrated a rule-based `FullAddress2` correction layer into `CADDataValidator.clean_data()` driven by `doc/updates_corrections_FullAddress2.csv` (or `paths.fulladdress2_corrections` in `config_enhanced.json`).
-- Rules can optionally filter on `Incident` and are applied prior to generic address normalization and zone/grid backfill, improving address validity and PDZone/Grid coverage.
-
-### Technical Details
-- Added `CADDataValidator._load_fulladdress2_corrections()` to load and normalize correction rules at initialization and config reload.
-- Added `CADDataValidator._apply_fulladdress2_corrections()` and wired it into the start of `clean_data()` to overwrite `FullAddress2` where rules match.
-- Exposed an optional `paths.fulladdress2_corrections` entry in `config_enhanced.json`; when unset, the validator falls back to `doc/updates_corrections_FullAddress2.csv` in the repo.
-
----
-
-## [2025-11-17-b] - ESRI Production Deployment Final
-
-### Summary
-Completed final ESRI production deployment with comprehensive data cleaning achieving 99.55% Response_Type coverage and 96.91% data quality score. Created optimized vectorized processing script for 701,115 records. Resolved all Notion blockers and standardized all Response_Type values to clean Routine/Urgent/Emergency.
+## [2025-11-24] - Address Corrections System & Hour Field Fix
 
 ### Added
-- **scripts/esri_production_deploy.py**: Optimized vectorized data cleaning script for production deployment
-  - Case-insensitive Response_Type mapping
-  - TAPS variant resolution based on address keywords
-  - Domestic Dispute/Violence classification via DV report join
-  - TRO/FRO splitting via RMS narrative parsing
-  - Disposition normalization with standard mappings
-  - Address backfill from RMS data
-  - Response_Type value cleanup (removes garbage entries)
-  - Data quality flagging system
-
-### Output Files
-- **data/ESRI_CADExport/CAD_ESRI_Final_20251117.xlsx**: Production-ready export (701,115 records)
-- **data/02_reports/esri_deployment_report.md**: Validation report with metrics
-- **data/02_reports/tro_fro_manual_review.csv**: 96 TRO/FRO records needing manual review
-
-### Processing Results
-| Task | Records Processed |
-|------|-------------------|
-| Response_Type Mapped | 160,022 |
-| TAPS Variants Resolved (Blocker #8) | 21,201 |
-| Domestic Violence Reclassified | 458 |
-| Disputes Reclassified | 1,327 |
-| TRO/FRO Split (Blocker #10) | 257 |
-| Disposition Normalized | 58,604 |
-| Address Backfilled from RMS | 2,362 |
-| Garbage Response_Type Cleared | 107 |
-
-### Data Quality
-- **Response_Type Coverage**: 99.55% (PASS)
-- **Data Quality Score**: 96.91% (PASS)
-- **Status**: PRODUCTION READY
-
-### Response_Type Distribution
-- Routine: 425,335 (60.67%)
-- Urgent: 239,170 (34.11%)
-- Emergency: 33,455 (4.77%)
-
-### Technical Improvements
-- Vectorized pandas operations for 700K+ record processing (5 min vs 30+ min)
-- Case-insensitive mapping with lowercase key normalization
-- Comprehensive garbage value cleanup for Response_Type field
-- Modular function design for maintainability
-
-### Remaining Items
-- 148 unmapped incident types (mostly trailing spaces/naming variations)
-- 21,681 records flagged for review (missing address/disposition/Response_Type)
-- 96 TRO/FRO records requiring manual narrative review
-
----
-
-## [2025-11-17] - ESRI Production Deployment Prep
-
-### Summary
-Final data cleaning for ESRI Crime Dashboard deployment. Achieved 97.82% Response_Type coverage with manual top-20 mappings. Updated CAD and DV source files with manual corrections. Resolved Notion blockers 8-10 (TAPS, Domestic Violence, TRO/FRO).
+- **Address Corrections Pipeline**:
+  - `scripts/backfill_incomplete_addresses_from_rms.py`: Backfills incomplete addresses from RMS export
+  - `scripts/apply_address_rule_corrections.py`: Applies rule-based corrections from CSV
+  - `scripts/apply_street_names_corrections.py`: Uses official street names to correct addresses
+  - `scripts/apply_address_standardization.py`: Expands abbreviations and standardizes formatting
+  - `scripts/verify_addresses_against_street_names.py`: Verifies addresses against official street names
+  - `scripts/identify_manual_corrections_needed.py`: Identifies records needing manual correction
+  - `scripts/merge_manual_review_updates.py`: Merges manual review updates
+  - `scripts/verify_hour_field.py`: Verifies Hour field extraction
 
 ### Changed
-- **CAD Source**: Updated to `ref/2019_2025_11_17_Updated_CAD_Export.xlsx` with manual corrections
-- **DV Source**: Updated to `ref/2025_11_17_DV_Offense_Report_Updated.xlsx`, renamed `Case #` → `Case_Number`
-- **Response_Type**: Backfilled using `RAW_CAD_CALL_TYPE_EXPORT.xlsx` + top-20 manual mappings from `Unmapped_Response_Type.csv`
-
-### Added
-- **scripts/backfill_incidents_from_rms.py**: RMS cross-reference for null Incident values (249 records)
-- **scripts/classify_burglary_ollama.py**: AI classification for generic Burglary records
-- **Unmapped_Response_Type.csv**: Manual Response_Type mappings for top unmapped incidents
+- **Hour Field Extraction**: Updated `scripts/apply_manual_corrections.py` to extract exact HH:mm from TimeOfCall without rounding (previously rounded to HH:00)
+- **Address Standardization**: Integrated official Hackensack street names file for verification and abbreviation expansion
 
 ### Fixed
-- **Blocker #8 (TAPS)**: Mapped legacy 'ESU - Targeted Patrol' and 'Targeted Area Patrol' to specific variants
-- **Blocker #9 (Domestic Violence)**: DV report join distinguishes 'Domestic Violence - 2C:25-21' vs 'Dispute'
-- **Blocker #10 (TRO/FRO)**: RMS Narrative parsing splits 'Violation: TRO/ FRO' based on text content
-- **Disposition**: Normalized capitalization (ASSISTED→Assisted, CANCELED→Cancelled)
-- **FullAddress2**: Backfilled invalid addresses from RMS where available
+- Address abbreviations (St → Street, Terr → Terrace, Ave → Avenue)
+- Extra spaces before commas in addresses
+- Specific address corrections (Doremus Avenue to Newark, Palisades Avenue to Cliffside Park)
+- Complete street name verification (Parkway, Colonial Terrace, Broadway, East Broadway, The Esplanade, Cambridge Terrace)
 
-### Data Quality
-- Response_Type coverage: 76.58% → 97.82% (148,819 records filled)
-- Remaining unmapped: 15,259 records (2.18%) across 297 incident types
-- Top unmapped: Relief/Personal (4,615), Targeted Area Patrol (2,608), ESU Patrol (617)
+### Results
+- **Address Corrections**: 9,607 corrections applied to ESRI production file
+- **Completion Rate**: 99.5% (1,688 of 1,696 records corrected)
+- **Hour Field**: 728,593 records updated with exact time values
+- **Total Corrections**: 1,270,339 corrections applied to final ESRI export
 
-### Files
-- `ref/response_type_update_needed.csv`: 823 rows (526 existing + 297 needing review)
-- `data/ESRI_CADExport/CAD_Clean_ResponseType_Complete.xlsx`: 97.82% complete export
-- `data/02_reports/incident_backfill_log.csv`: RMS join results
-- `data/02_reports/address_backfill_log.csv`: Address improvement tracking
+## [2025-11-22] - CAD/RMS Integration & Validation
 
-### Integration
-- dv_doj pipeline integration (`C:\...\dv_doj\etl_scripts\backfill_dv.py`)
-- Cross-project validation using DV offense reports
-- RMS narrative parsing for incident classification
+### Added
+- `scripts/merge_cad_rms_incidents.py`: Joins cleaned CAD exports to RMS export
+- `scripts/validate_cad_notes_alignment.py`: Compares CADNotes across exports
+- `scripts/compare_merged_to_manual_csv.py`: Verifies field synchronization
 
-## [2025-11-13] - Repository Cleanup and Reminder Tracking
+## [2025-11-21] - FullAddress2 Corrections & ESRI Production Deployment
 
-### Summary
-- Removed oversized `gis/geocoder/NJ_Geocode` artifacts from history to keep the GitHub repository within the 100 MB per-file cap.
-- Documented the new daily follow-up tracker at `doc/reminder_tomorrow.md` for operational next steps.
-- Updated README and ESRI summary checklist to reflect the new repository layout (`CAD_Data_Cleaning_Engine`) and documentation locations.
-
-### Notes for Users
-- Local clones should prune or reclone to ensure the large binaries are gone; see README for current working directory guidance.
-- Any automation that referenced `gis/geocoder/NJ_Geocode` should be pointed to the external source or Git LFS if those assets are still required.
-
-## [2025-11-13-b] - Incident Formatting & Sample Export Polish
-
-### Summary
-- CAD samples now use the authoritative casing and punctuation from `CallType_Categories.csv` (`Incident_Norm`/`Response_Type`) instead of the upper-cased CAD source.
-- New smart title-casing keeps display columns human-friendly while preserving acronyms (GOA, NJ, ESU, etc.).
-- Sample CSVs ship with a UTF-8 BOM and wrap `9-1-1` as `="9-1-1"` so Excel no longer replaces en dashes or converts emergency calls to dates.
-- Added `ref/clean_calltypes.py` to normalize the CallType workbook (dash cleanup, statute suffix formatting) before re-ingesting it.
-
-### Updated Files
-- `scripts/01_validate_and_clean.py`
-- `ref/clean_calltypes.py` (new helper)
-- `README.md`, `doc/Summary_Checklist_ESRI_Format.md`
-
-## [2025-11-13-c] - Call Type Master Mapping Draft
-
-### Summary
-- Added `scripts/build_calltype_master.py`, producing `CallType_Master_Mapping.csv` and audit companions (`duplicates_review.csv`, `anomalies.csv`, `mapping_changes.csv`, `unmapped_incidents.csv`, `suggested_clean_edits.csv`) from the cleaned mapping workbook plus historical incidents.
-- Stored the shared Claude planning notes at `doc/2025_11_13_CLAUDE_chat.json` alongside the historical incident snapshot (`ref/2019_2025_10_Call_Types_Incidents.csv.txt`) for reproducible rebuilds.
-
-### Updated Files
-- `scripts/build_calltype_master.py` (new)
-- `README.md`, `doc/Summary_Checklist_ESRI_Format.md`
-- `ref/CallType_Master_Mapping.csv` and supporting review CSVs
-- `doc/2025_11_13_CLAUDE_chat.json`, `ref/2019_2025_10_Call_Types_Incidents.csv.txt`
-
-## [2025-11-12] - Mojibake Cleanup, Config Reload, ESRI Audit
-
-### Summary
-- Hardened the CAD validator so incident/notes/officer/disposition fields survive legacy mojibake, and all 9-1-1 variants normalize to literal `9-1-1`.
-- Switched incident mapping to a normalized key, backfilling `Response Type` only when the CAD export is blank.
-- Added an ESRI-ready export helper, post-run audit script, and CLI flags to reload `config_enhanced.json` without code edits.
-
-### Key Enhancements
-- **Text Normalization:** `fix_mojibake` and whitespace collapse applied before mapping; CAD samples now keep UTF-8 punctuation.
-- **How Reported Guard:** Detects Excel date artifacts and collapses all 911 variants to `9-1-1`.
-- **Incident Mapping:** Uses normalized token (`normalize_incident_key`) and merges mapping response types only when empty.
-- **Call Type Maintenance:** Added helper script plus new mapping row for `BURGLARY - RESIDENCE - 2C: 18-2`, keeping CSV coverage in sync with current CAD exports.
-- **Config Hot Reload:** `CADDataValidator.reload_config()` and CLI `--config`/`--reload-config` options.
-- **ESRI Export & Audit:** `_build_esri_export()` enforces the 21-column layout; `scripts/audit_post_fix.py` checks schema, mojibake, 9-1-1 normalization, and response-type coverage.
-
-### Updated Files
-- `scripts/01_validate_and_clean.py`
-- `scripts/audit_post_fix.py` (new)
-- `README.md`, `doc/Summary_Checklist_ESRI_Format.md`
-
-## [2025-10-17-v2] - Enhanced Stratified Sampling with Adaptive Thresholds
-
-### Summary
-Implemented comprehensive enhancements to the stratified sampling method including adaptive thresholds, multi-level fallback, stratum distribution reporting, and Unicode compatibility fixes. These improvements build upon the initial stratified sampling fix to provide greater flexibility, transparency, and robustness.
-
-### Added Features
-
-#### 1. Adaptive Threshold System
-- **Dynamic Calculation**: Minimum stratum size now adapts based on dataset size (0.01% of records)
-- **Configurable**: Added `min_stratum_size` parameter to `config_enhanced.json` (default: 50)
-- **Bounded**: Threshold capped between 50 and 100 records to prevent extremes
-- **Benefits**: Automatically adjusts for datasets of varying sizes
-
-#### 2. Multi-Level Fallback Strategy
-- **Primary**: Stratification by `incident_stratum` (preferred method)
-- **Secondary**: Falls back to `reported_stratum` if primary fails
-- **Tertiary**: Random sampling as final fallback
-- **Logging**: Each level logs detailed information about success/failure
-- **Benefits**: Maximizes likelihood of successful stratification
-
-#### 3. Stratum Distribution Reporting
-- **Detailed Logging**: Real-time logging of stratum distribution during sampling
-- **Report Integration**: Stratum distribution included in validation reports
-- **Metadata Tracking**: Tracks which stratification method was used
-- **Benefits**: Provides transparency into sampling representativeness
-
-#### 4. Unicode Compatibility Fix
-- **Issue**: Emoji character in print statement caused encoding errors on Windows
-- **Solution**: Removed emoji from "All files processed successfully!" message
-- **Benefits**: Eliminates cosmetic warnings on Windows console
-
-### Changed Files
-
-| File | Changes | Lines Modified |
-|------|---------|----------------|
-| `config/config_enhanced.json` | Added `min_stratum_size` parameter | 14-15 |
-| `scripts/01_validate_and_clean.py` | Enhanced `_stratified_sampling()` method | 253-324 |
-| `scripts/01_validate_and_clean.py` | Updated `validate_cad_dataset()` method | 208-235 |
-| `scripts/01_validate_and_clean.py` | Enhanced `create_validation_report()` method | 819-850 |
-| `scripts/01_validate_and_clean.py` | Fixed Unicode in print statement | 1021 |
-
-### Technical Implementation
-
-#### Adaptive Threshold Logic
-```python
-# Adaptive threshold: 0.01% of dataset size, minimum 50, maximum 100
-min_stratum_size = self.config.get('min_stratum_size',
-                                   max(50, min(100, int(len(df) * 0.0001))))
-logger.info(f"Using adaptive minimum stratum size: {min_stratum_size}")
-```
-
-#### Multi-Level Fallback
-```python
-try:
-    # Primary: incident_stratum
-    sample_df, _ = train_test_split(df_with_strata,
-                                     stratify=df_with_strata[['incident_stratum']])
-    logger.info("Created stratified sample (incident_stratum)")
-except Exception as e:
-    logger.warning(f"Incident stratification failed: {e}")
-    # Secondary: reported_stratum
-    try:
-        sample_df, _ = train_test_split(df_with_strata,
-                                         stratify=df_with_strata[['reported_stratum']])
-        logger.info("Created stratified sample (reported_stratum)")
-    except Exception as e2:
-        # Tertiary: random sampling
-        logger.warning(f"Secondary stratification failed: {e2}. Falling back to random.")
-        sample_df = df.sample(n=sample_size, random_state=42)
-```
-
-#### Stratum Distribution Storage
-```python
-# Store stratum distribution in DataFrame attrs
-stratum_dist = df_with_strata['incident_stratum'].value_counts().to_dict()
-logger.info(f"Stratum distribution: {stratum_dist}")
-sample_df.attrs['stratum_distribution'] = stratum_dist
-sample_df.attrs['stratification_method'] = 'incident_stratum'
-```
-
-### Configuration Updates
-
-**New Parameter in `config_enhanced.json`:**
-```json
-{
-  "min_stratum_size": 50
-}
-```
-
-This parameter can be adjusted to control the minimum number of records required for a stratum to be treated separately (rather than merged into 'Other').
-
-### Testing Results
-
-Successfully tested against all 7 data files with enhanced logging:
-
-| File | Records | Adaptive Threshold | Stratification Method | Quality Score |
-|------|---------|-------------------|----------------------|---------------|
-| 2019_ALL_CAD.xlsx | 533,272 | 50 | incident_stratum | 76.6/100 |
-| 2020_ALL_CAD.xlsx | 523,988 | 50 | incident_stratum | 88.8/100 |
-| 2021_ALL_CAD.xlsx | 536,952 | 50 | incident_stratum | 89.2/100 |
-| 2022_CAD_ALL.xlsx | 614,530 | 50 | incident_stratum | 89.2/100 |
-| 2023_CAD_ALL.xlsx | 663,285 | 50 | incident_stratum | 89.2/100 |
-| 2024_CAD_ALL.xlsx | 645,079 | 50 | incident_stratum | 96.0/100 |
-| CAD_Data_Sample.xlsx | 27,761 | 50 | incident_stratum | 89.5/100 |
-
-**All files successfully used primary stratification method (incident_stratum) with no fallbacks required.**
-
-### Sample Report Metadata
-
-Validation reports now include enhanced sampling metadata:
-```json
-{
-  "sampling_metadata": {
-    "stratum_distribution": {
-      "ASSIST OWN AGENCY (BACKUP)": 26154,
-      "TASK ASSIGNMENT": 17474,
-      "MEAL BREAK": 5927,
-      "MEDICAL CALL": 4227,
-      ...
-    },
-    "stratification_method": "incident_stratum",
-    "sample_size": 1000
-  }
-}
-```
-
-### Impact
-
-#### Benefits
-- **Flexibility**: Adaptive thresholds work across datasets of varying sizes
-- **Robustness**: Multi-level fallback ensures sampling always succeeds
-- **Transparency**: Stratum distribution provides insight into sample composition
-- **Configurability**: Users can tune sampling behavior via configuration
-- **Compatibility**: Unicode fix eliminates console warnings on Windows
-
-#### Backward Compatibility
-- All changes are backward compatible
-- Default behavior maintains existing quality scores
-- New configuration parameter has sensible default
-- Existing validation reports remain valid
-
-### Sample Stratum Distribution
-
-Example from 2024_CAD_ALL.xlsx showing top strata:
-```
-ASSIST OWN AGENCY (BACKUP): 26,154 records
-TASK ASSIGNMENT: 17,474 records
-MEAL BREAK: 5,927 records
-MEDICAL CALL: 4,227 records
-PATROL CHECK: 4,059 records
-... (125+ additional strata)
-Other: 2,796 records (merged from small strata)
-```
-
-### Performance
-
-No significant performance impact:
-- Adaptive threshold calculation: O(1)
-- Stratum distribution logging: O(n) where n = number of unique incidents
-- Overall processing time unchanged
-
-### Known Issues
-- None
-
-### Future Improvements
-- Add stratum size histogram visualization to reports
-- Implement stratification quality metrics (e.g., stratum variance)
-- Add option to export stratum distribution as CSV
-- Consider time-based stratification as additional fallback level
-
----
-
-## [2025-10-17-v1] - Stratified Sampling Fix
-
-### Summary
-Fixed critical issue in the `_stratified_sampling` method where complex multi-column stratification was creating strata with insufficient members, causing the method to fall back to random sampling. The updated implementation uses a simplified single-column approach with higher thresholds for more robust stratified sampling.
+### Added
+- Rule-based `FullAddress2` corrections using `doc/updates_corrections_FullAddress2.csv`
+- ESRI production deployment path (`scripts/esri_production_deploy.py`)
+- Final Response_Type cleanup pipeline (`scripts/final_cleanup_tro_fuzzy_rms.py`)
+- Address backfill pass (`scripts/backfill_address_from_rms.py`)
+- Review artifacts in `data/02_reports/`:
+  - `tro_fro_manual_review.csv`
+  - `unmapped_final_report.md`
+  - `unmapped_breakdown_summary.csv`
+  - `unmapped_cases_for_manual_backfill.csv`
+  - `fuzzy_review.csv`
+  - `address_backfill_from_rms_report.md`
+  - `address_backfill_from_rms_log.csv`
 
 ### Changed
-- **File Modified**: `scripts/01_validate_and_clean.py`
-- **Method**: `CADDataValidator._stratified_sampling()`
-- **Lines**: 253-287
+- ESRI sample exports now pull `Incident` text and `Response Type` directly from `CallType_Categories.csv`
+- Title-case key human-readable fields
+- Wrap `9-1-1` with Excel guard
+- Write with UTF-8 BOM for proper en dash rendering
 
-### Technical Details
+### Results
+- ~99.96% Response_Type coverage achieved
+- Improved valid address rate via RMS backfill
 
-#### Problem
-The original stratified sampling method used multiple stratification columns (`incident_stratum`, `reported_stratum`, `time_stratum`, `notes_artifact`, `neg_response`), which created numerous small strata. When any stratum had fewer than 2 members, `train_test_split` would fail, forcing the method to fall back to random sampling rather than true stratified sampling.
+## [2025-11-21-b] - ESRI Rebuild, Final Cleanup, and Address Backfill
 
-#### Solution
-1. **Simplified Stratification**: Reduced to single-column stratification using only `incident_stratum`
-2. **Increased Threshold**: Raised minimum group size from 10 to 50 records
-3. **Automatic Grouping**: Small incident types (< 50 occurrences) automatically merged into 'Other' category
-4. **Maintained Robustness**: Kept fallback to random sampling with proper error logging
+### Added
+- Full pipeline rebuild for ESRI production deployment
+- Unmapped incident reduction: 3,155 → 309 (99.96% coverage)
+- RMS address backfill: 597,480 → 598,119 valid addresses (+639)
+- New scripts:
+  - `scripts/esri_production_deploy.py`
+  - `scripts/final_cleanup_tro_fuzzy_rms.py`
+  - `scripts/backfill_address_from_rms.py`
+  - `scripts/apply_unmapped_incident_backfill.py`
 
-#### Code Changes
+### Results
+- Response_Type coverage: 99.96%
+- Address quality improvement: +639 valid addresses from RMS backfill
 
-**Before** (Complex Multi-Column Approach):
-```python
-# Created multiple stratification columns
-stratify_columns = ['incident_stratum', 'reported_stratum', 'time_stratum',
-                    'notes_artifact', 'neg_response']
-# Complex validation logic to check minimum strata counts
-# Often fell back to random sampling due to small strata
-```
-
-**After** (Simplified Single-Column Approach):
-```python
-# Single stratification column with higher threshold
-if 'Incident' in df.columns:
-    incident_counts = df['Incident'].value_counts()
-    top_incidents = incident_counts[incident_counts > 50].index
-    df_with_strata['incident_stratum'] = df_with_strata['Incident'].apply(
-        lambda x: x if x in top_incidents else 'Other')
-else:
-    df_with_strata['incident_stratum'] = 'Unknown'
-```
-
-### Testing Results
-
-Successfully tested against all 7 data files in `data/01_raw/`:
-
-| File | Records | Sample Size | Stratification | Quality Score |
-|------|---------|-------------|----------------|---------------|
-| 2019_ALL_CAD.xlsx | 533,272 | 1,000 | Success | 76.6/100 |
-| 2020_ALL_CAD.xlsx | 523,988 | 1,000 | Success | 88.8/100 |
-| 2021_ALL_CAD.xlsx | 536,952 | 1,000 | Success | 89.2/100 |
-| 2022_CAD_ALL.xlsx | 614,530 | 1,000 | Success | 89.2/100 |
-| 2023_CAD_ALL.xlsx | 627,809 | 1,000 | Success | 89.2/100 |
-| 2024_CAD_ALL.xlsx | 645,079 | 1,000 | Success | 96.0/100 |
-| CAD_Data_Sample.xlsx | 27,761 | 1,000 | Success | 89.5/100 |
-
-**All files successfully created stratified samples without fallback warnings.**
-
-### Impact
-
-#### Benefits
-- More reliable stratified sampling ensures representative data samples
-- Reduced risk of sampling bias from random fallback
-- Better validation accuracy across different incident types
-- Improved quality score calculations
-
-#### Backward Compatibility
-- No breaking changes to existing functionality
-- Configuration file (`config_enhanced.json`) remains unchanged
-- All validation rules continue to work as before
-- Output format unchanged
-
-### Configuration
-
-No configuration changes required. The method automatically adapts based on:
-- `sampling_config['stratified_sample_size']` (default: 1000)
-- Incident type distribution in the dataset
-- Minimum threshold of 50 records per stratum
-
-### Files Affected
-- `scripts/01_validate_and_clean.py` (Modified)
-
-### Dependencies
-No new dependencies added. Existing requirements:
-- pandas
-- scikit-learn
-- numpy
-
-### Known Issues
-- Minor Unicode encoding warning when printing emoji characters on Windows console (cosmetic only, does not affect functionality)
-
-### Future Improvements
-- Consider adaptive threshold based on dataset size
-- Add configuration option for minimum stratum size
-- Implement multi-level fallback (e.g., try single-column before falling back to random)
-- Add stratum distribution reporting to validation output
-
----
-
-## Previous Versions
-
-### [Initial Implementation]
-- Comprehensive CAD data validation framework
-- Multi-column stratified sampling
-- Quality scoring system
-- Batch processing capabilities
-- Unit test coverage
