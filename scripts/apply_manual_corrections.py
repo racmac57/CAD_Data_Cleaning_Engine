@@ -109,26 +109,32 @@ def apply_address_corrections(df, corrections_file):
         print(f"  Skipping: {corrections_file.name} (file not found)")
         return df, 0
     
-    corrections = pd.read_csv(corrections_file)
-    corrections = corrections[corrections['Corrected_Value'].notna() & (corrections['Corrected_Value'] != '')]
+    corrections = pd.read_csv(corrections_file, dtype=str).fillna('')
+    corrections = corrections[corrections['Corrected_Value'].astype(str).str.strip() != '']
     
     if len(corrections) == 0:
         print(f"  No corrections to apply in {corrections_file.name}")
         return df, 0
     
-    # Merge corrections
-    df = df.merge(
-        corrections[['ReportNumberNew', 'Corrected_Value']].rename(columns={'Corrected_Value': 'FullAddress2'}),
-        on='ReportNumberNew',
-        how='left',
-        suffixes=('', '_new')
-    )
+    # Remove duplicates from corrections - keep first occurrence per ReportNumberNew
+    corrections = corrections.drop_duplicates(subset=['ReportNumberNew'], keep='first')
+    print(f"  Unique corrections to apply: {len(corrections):,}")
+    
+    # Create a mapping dictionary for faster lookup
+    correction_map = dict(zip(
+        corrections['ReportNumberNew'].astype(str).str.strip(),
+        corrections['Corrected_Value'].astype(str).str.strip()
+    ))
+    
+    # Apply corrections using map (faster and avoids merge duplicates)
+    df['ReportNumberNew_stripped'] = df['ReportNumberNew'].astype(str).str.strip()
+    df['FullAddress2_new'] = df['ReportNumberNew_stripped'].map(correction_map)
     
     # Apply corrections where new value exists
-    mask = df['FullAddress2_new'].notna()
+    mask = df['FullAddress2_new'].notna() & (df['FullAddress2_new'] != '')
     count = mask.sum()
     df.loc[mask, 'FullAddress2'] = df.loc[mask, 'FullAddress2_new']
-    df = df.drop(columns=['FullAddress2_new'])
+    df = df.drop(columns=['FullAddress2_new', 'ReportNumberNew_stripped'])
     
     return df, count
 
@@ -230,19 +236,24 @@ def main():
     print(f"  Fixed {count:,} records")
     total_corrections += count
     
-    # Save corrected file
-    timestamp = datetime.now().strftime('%Y%m%d')
-    output_file = OUTPUT_DIR / f"CAD_ESRI_Final_{timestamp}_corrected.xlsx"
-    
+    # Save corrected file - update the production file directly
     print(f"\nSaving corrected file...")
-    df.to_excel(output_file, index=False)
-    print(f"  Saved to: {output_file}")
+    print(f"  Updating production file: {ESRI_FILE.name}")
+    df.to_excel(ESRI_FILE, index=False)
+    print(f"  Saved to: {ESRI_FILE}")
+    
+    # Also save a timestamped backup
+    timestamp = datetime.now().strftime('%Y%m%d')
+    backup_file = OUTPUT_DIR / f"CAD_ESRI_Final_{timestamp}_corrected.xlsx"
+    df.to_excel(backup_file, index=False)
+    print(f"  Backup saved to: {backup_file}")
     
     print("\n" + "="*60)
     print("CORRECTIONS COMPLETE")
     print("="*60)
     print(f"Total corrections applied: {total_corrections:,}")
-    print(f"Output file: {output_file}")
+    print(f"Production file updated: {ESRI_FILE.name}")
+    print(f"Backup file: {backup_file.name}")
     print("\nNext step: Re-run validation to verify corrections")
 
 if __name__ == "__main__":

@@ -2,32 +2,52 @@
 
 Here’s the comprehensive code for CAD data processing that you can provide to an AI assistant.
 
+## Recent Updates (2025-11-25)
+
+- **ESRI File Rebuild & Duplicate Fix**: 
+  - Identified and fixed severe duplicate corruption in ESRI export (955,759 records with 81,920 duplicates for single case)
+  - Rebuilt complete ESRI file preserving ALL legitimate records: `CAD_ESRI_Final_20251124_COMPLETE.xlsx`
+  - Final file: 702,352 records (only 84 completely identical duplicates removed)
+  - All 542,565 unique cases preserved
+  - Address corrections applied: 86,932 records corrected from cleaned version
+
+- **Address Quality Improvements**:
+  - **85.3% reduction in invalid addresses** (from 18.4% to 2.7% invalid)
+  - Raw data: 18.4% invalid addresses
+  - Cleaned data: 97.3% valid addresses (929,703 records)
+  - RMS backfill: 1,447 addresses corrected from RMS data
+  - Rule-based corrections: 119 conditional rules applied
+  - Manual corrections: 408 manual corrections applied
+
+- **Data Quality Validation**:
+  - Comprehensive quality check script: `scripts/comprehensive_quality_check.py`
+  - Corrected previous quality report (was showing incorrect 0.9% improvement)
+  - Actual improvement: 15.7 percentage points (85.3% reduction)
+  - Field coverage: 99.98% Incident, 99.96% Response_Type, 100% Disposition
+
+- **New Scripts**:
+  - `scripts/rebuild_esri_with_all_records.py`: Rebuilds ESRI file preserving all legitimate records
+  - `scripts/fix_esri_duplicates.py`: Fixes duplicate corruption (deduplicates properly)
+  - `scripts/apply_all_address_corrections.py`: Applies both conditional rules and manual corrections
+  - `scripts/generate_final_manual_address_corrections.py`: Generates CSV for manual address corrections with RMS backfill
+  - `scripts/comprehensive_quality_check.py`: Comprehensive quality validation
+  - `scripts/verify_complete_esri_file.py`: Verifies final ESRI file completeness
+
+- **Production File**: Final ESRI export: `CAD_ESRI_Final_20251124_COMPLETE.xlsx`
+  - 702,352 records (all legitimate records preserved)
+  - 542,565 unique cases
+  - 97.3% valid addresses
+  - Ready for ESRI submission
+
 ## Recent Updates (2025-11-24)
 
 - **Address Corrections System**: Comprehensive address correction pipeline implemented:
-  - RMS backfill: Automatically backfills incomplete addresses (missing street numbers, incomplete intersections) from RMS export using Case Number matching (433 addresses corrected)
-  - Rule-based corrections: Applied 1,139 corrections from `test/updates_corrections_FullAddress2.csv` for parks, generic locations, and specific address patterns
-  - Street name standardization: Integrated official Hackensack street names file (`ref/hackensack_municipal_streets_from_lawsoft_25_11_24.xlsx`) to verify complete street names (Parkway, Colonial Terrace, Broadway, East Broadway, The Esplanade, Cambridge Terrace) and expand abbreviations (St→Street, Terr→Terrace, Ave→Avenue)
-  - Manual review workflow: Created `scripts/identify_manual_corrections_needed.py` and `scripts/merge_manual_review_updates.py` for efficient manual correction process
-  - Total address corrections applied: 9,607 records in ESRI production file
-  - Completion rate: 99.5% (1,688 of 1,696 records corrected)
+  - RMS backfill: Automatically backfills incomplete addresses (missing street numbers, incomplete intersections) from RMS export using Case Number matching
+  - Rule-based corrections: Applied corrections from `test/updates_corrections_FullAddress2.csv` for parks, generic locations, and specific address patterns
+  - Street name standardization: Integrated official Hackensack street names file for verification and abbreviation expansion
+  - Manual review workflow: Created scripts for efficient manual correction process
 
-- **Hour Field Correction**: Fixed Hour field extraction to preserve exact time (HH:mm) from TimeOfCall without rounding:
-  - Changed from rounding to HH:00 to extracting exact HH:mm format
-  - Automatically populates missing Hour values from TimeOfCall
-  - Applied to 728,593 records in ESRI production file
-
-- **New Scripts**:
-  - `scripts/backfill_incomplete_addresses_from_rms.py`: Identifies incomplete addresses and backfills from RMS
-  - `scripts/apply_address_rule_corrections.py`: Applies rule-based corrections from CSV
-  - `scripts/apply_street_names_corrections.py`: Uses official street names to correct addresses
-  - `scripts/apply_address_standardization.py`: Expands abbreviations and standardizes formatting
-  - `scripts/verify_addresses_against_street_names.py`: Verifies addresses against official street names
-  - `scripts/identify_manual_corrections_needed.py`: Identifies records needing manual correction
-  - `scripts/merge_manual_review_updates.py`: Merges manual review updates back into main file
-  - `scripts/verify_hour_field.py`: Verifies Hour field extraction
-
-- **Production File**: Final ESRI export updated: `CAD_ESRI_Final_20251124_corrected.xlsx` with all corrections applied (1,270,339 total corrections)
+- **Hour Field Correction**: Fixed Hour field extraction to preserve exact time (HH:mm) from TimeOfCall without rounding
 
 ## Recent Updates (2025-11-22)
 
