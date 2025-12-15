@@ -1,0 +1,144 @@
+{
+  "generated_from_repo": true,
+  "notes": [
+    "source_field_name is the raw CAD export header (exact spelling, including spaces/punctuation).",
+    "field_name is the canonical/internal name used by the ESRI deploy flow in this repo (notably TimeOfCall / Response_Type / Hour).",
+    "esri_field_name is the ESRI deploy export name (same as field_name for deploy-schema fields).",
+    "If a field is not present in the ESRI deploy required schema, esri_field_name is null."
+  ],
+  "sources": {
+    "raw_to_esri_deploy_rename_maps": [
+      "scripts/esri_production_deploy.py::column_renames",
+      "scripts/rebuild_esri_with_all_records.py::column_map"
+    ],
+    "esri_deploy_required_columns": [
+      "scripts/esri_final_validation.py::ESRIFinalValidator.required_columns",
+      "scripts/verify_final_esri_file.py::REQUIRED_COLUMNS",
+      "scripts/rebuild_esri_with_all_records.py::esri_columns"
+    ]
+  },
+  "fields": [
+    {
+      "source_field_name": "ReportNumberNew",
+      "field_name": "ReportNumberNew",
+      "esri_field_name": "ReportNumberNew",
+      "internal_field_name": "ReportNumberNew"
+    },
+    {
+      "source_field_name": "Incident",
+      "field_name": "Incident",
+      "esri_field_name": "Incident",
+      "internal_field_name": "Incident"
+    },
+    {
+      "source_field_name": "How Reported",
+      "field_name": "How Reported",
+      "esri_field_name": "How Reported",
+      "internal_field_name": "HowReported"
+    },
+    {
+      "source_field_name": "FullAddress2",
+      "field_name": "FullAddress2",
+      "esri_field_name": "FullAddress2",
+      "internal_field_name": "FullAddress2"
+    },
+    {
+      "source_field_name": "PDZone",
+      "field_name": "PDZone",
+      "esri_field_name": "PDZone",
+      "internal_field_name": "PDZone"
+    },
+    {
+      "source_field_name": "Grid",
+      "field_name": "Grid",
+      "esri_field_name": "Grid",
+      "internal_field_name": "Grid"
+    },
+    {
+      "source_field_name": "Time of Call",
+      "field_name": "TimeOfCall",
+      "esri_field_name": "TimeOfCall",
+      "internal_field_name": "TimeOfCall"
+    },
+    {
+      "source_field_name": "cYear",
+      "field_name": "cYear",
+      "esri_field_name": "cYear",
+      "internal_field_name": "cYear"
+    },
+    {
+      "source_field_name": "cMonth",
+      "field_name": "cMonth",
+      "esri_field_name": "cMonth",
+      "internal_field_name": "cMonth"
+    },
+    {
+      "source_field_name": "HourMinuetsCalc",
+      "field_name": "Hour",
+      "esri_field_name": "Hour",
+      "internal_field_name": "Hour"
+    },
+    {
+      "source_field_name": "DayofWeek",
+      "field_name": "DayofWeek",
+      "esri_field_name": "DayofWeek",
+      "internal_field_name": "DayofWeek"
+    },
+    {
+      "source_field_name": "Time Dispatched",
+      "field_name": "Time Dispatched",
+      "esri_field_name": null,
+      "internal_field_name": "TimeDispatched"
+    },
+    {
+      "source_field_name": "Time Out",
+      "field_name": "Time Out",
+      "esri_field_name": null,
+      "internal_field_name": "TimeOut"
+    },
+    {
+      "source_field_name": "Time In",
+      "field_name": "Time In",
+      "esri_field_name": null,
+      "internal_field_name": "TimeIn"
+    },
+    {
+      "source_field_name": "Time Spent",
+      "field_name": "Time Spent",
+      "esri_field_name": null,
+      "internal_field_name": "TimeSpent"
+    },
+    {
+      "source_field_name": "Time Response",
+      "field_name": "Time Response",
+      "esri_field_name": null,
+      "internal_field_name": "TimeResponse"
+    },
+    {
+      "source_field_name": "Officer",
+      "field_name": "Officer",
+      "esri_field_name": "Officer",
+      "internal_field_name": "Officer"
+    },
+    {
+      "source_field_name": "Disposition",
+      "field_name": "Disposition",
+      "esri_field_name": "Disposition",
+      "internal_field_name": "Disposition"
+    },
+    {
+      "source_field_name": "Response Type",
+      "field_name": "Response_Type",
+      "esri_field_name": "Response_Type",
+      "internal_field_name": "ResponseType"
+    },
+    {
+      "source_field_name": "CADNotes",
+      "field_name": "CADNotes",
+      "esri_field_name": null,
+      "internal_field_name": "CADNotes"
+    }
+  ]
+}
+
+

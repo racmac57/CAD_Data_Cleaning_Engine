@@ -4,6 +4,33 @@
 
 This document summarizes the implementation of the CAD Data Cleaning Engine, including recent enhancements for address corrections, street name standardization, and Hour field extraction.
 
+## Recent Implementation (2025-12-15)
+
+### CAD + RMS Data Dictionary (Schema + Mapping JSONs)
+
+To reduce friction between raw exports, internal processing, and downstream analytics, the repo now includes explicit JSON artifacts for **field naming**, **type expectations**, **coercions/defaults**, and **cross-system joins**:
+
+- **CAD artifacts (v2)**:
+  - `cad_field_map.json`: `source_field_name` (raw header) ↔ `field_name`/`esri_field_name` plus `internal_field_name` (safe Python key)
+  - `cad_fields_schema.json`: per-field `output_type`, `output_format`, `accepted_formats`, `coercions`, and structured default rules
+- **RMS artifacts (v2)**:
+  - `rms_field_map.json`: RMS headers + `internal_field_name`, with CAD alignment notes where applicable
+  - `rms_fields_schema.json`: RMS ingest expectations (types/coercions) as used by repo scripts
+
+### Cross-System Reverse Maps (CAD ↔ RMS)
+
+Two small, explicit maps were added to drive ETL join/backfill behavior:
+
+- `cad_to_rms_field_map.json`: when **CAD drives the merge** and pulls RMS fields for enrichment
+- `rms_to_cad_field_map.json`: when **RMS patches CAD** (backfill) using a defined priority order
+
+#### Standardization rule (ETL)
+
+1. Standardize both datasets to `internal_field_name` first (no spaces; stable Python keys).
+2. Merge on `cad.ReportNumberNew = rms.CaseNumber`.
+3. Backfill order for Incident: if CAD Incident blank → RMS IncidentType1 → IncidentType2 → IncidentType3.
+4. Backfill FullAddress2 only when CAD FullAddress2 is blank or invalid.
+
 ## Recent Implementation (2025-11-24)
 
 ### Address Corrections System

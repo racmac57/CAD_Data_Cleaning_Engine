@@ -1,0 +1,552 @@
+{
+  "generated_from_repo": true,
+  "notes": [
+    "This schema is repo-derived and intentionally pragmatic: it reflects how fields are coerced/validated in scripts and configs in this repo.",
+    "output_type/output_format reflect the intended ESRI dashboard model where available (Notion_Outline_Export), otherwise the coercion behavior in code.",
+    "default_rule describes what happens when a column is missing or a value is invalid/blank in the relevant scripts.",
+    "v2 adds internal_field_name, source_field_name, accepted_formats, coercions, and structured default_rule fields.",
+    "repo_behavior_notes preserves the original free-text repo notes for auditing.",
+    "default_rule_structured is intended for ETL automation.",
+    "For 'How Reported', enforce force_text so '9-1-1' never parses as a date."
+  ],
+  "sources": {
+    "cad_input_schema": "utils/validate_schema.py::SchemaValidator.CAD_SCHEMA",
+    "esri_deploy_schema": [
+      "scripts/esri_final_validation.py::ESRIFinalValidator.required_columns",
+      "scripts/verify_final_esri_file.py::REQUIRED_COLUMNS",
+      "scripts/rebuild_esri_with_all_records.py::esri_columns"
+    ],
+    "raw_to_esri_deploy_rename_maps": [
+      "scripts/esri_production_deploy.py::column_renames",
+      "scripts/rebuild_esri_with_all_records.py::column_map"
+    ],
+    "sample_esri_schema_builder": "scripts/01_validate_and_clean.py::_build_esri_export",
+    "domain_lists": [
+      "config/config.yml",
+      "config/config_enhanced.json",
+      "scripts/esri_final_validation.py"
+    ],
+    "model_doc": "Notion_Outline_Export/CAD_Data_Cleaning_Engine.md (CAD Field Definitions)"
+  },
+  "fields": [
+    {
+      "field_name": "ReportNumberNew",
+      "output_type": "string",
+      "output_format": "text",
+      "default_rule": "Required key. Missing column in sample builder -> pd.NA; in rebuild script -> None; in deploy ensure-columns -> np.nan.",
+      "domain_file": null,
+      "source_field_name": "ReportNumberNew",
+      "esri_field_name": "ReportNumberNew",
+      "internal_field_name": "ReportNumberNew",
+      "accepted_formats": [
+        "text"
+      ],
+      "coercions": [
+        "to_string_strip"
+      ],
+      "default_rule_structured": {
+        "apply_when": "missing",
+        "default_value": null,
+        "behavior": "error"
+      },
+      "repo_behavior_notes": "Required key. Missing column in sample builder -> pd.NA; in rebuild script -> None; in deploy ensure-columns -> np.nan."
+    },
+    {
+      "field_name": "Incident",
+      "output_type": "string",
+      "output_format": "text",
+      "default_rule": "Optional. Blank stays blank; can be backfilled by joining RMS on ReportNumberNew (RMS column 'Incident Type_1').",
+      "domain_file": [
+        "scripts/backfill_incidents_from_rms.py (RMS incident backfill)",
+        "config/config_enhanced.json (rms.incident_field)",
+        "doc/2025_11_21_unmapped_incident.csv (optional incident normalization rules)"
+      ],
+      "source_field_name": "Incident",
+      "esri_field_name": "Incident",
+      "internal_field_name": "Incident",
+      "accepted_formats": [
+        "text"
+      ],
+      "coercions": [
+        "to_string_strip"
+      ],
+      "default_rule_structured": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "repo_behavior_notes": "Optional. Blank stays blank; can be backfilled by joining RMS on ReportNumberNew (RMS column 'Incident Type_1')."
+    },
+    {
+      "field_name": "How Reported",
+      "output_type": "string",
+      "output_format": "text",
+      "default_rule": "Optional. Normalized via pattern rules; guard against Excel artifacts in sample export flow. Blank stays blank if source is blank/missing.",
+      "domain_file": [
+        "config/config.yml (field_mappings.how_reported.patterns)",
+        "config/config_enhanced.json (validation_lists.how_reported)",
+        "scripts/esri_final_validation.py (ESRIFinalValidator.valid_how_reported)"
+      ],
+      "source_field_name": "How Reported",
+      "esri_field_name": "How Reported",
+      "internal_field_name": "HowReported",
+      "accepted_formats": [
+        "text"
+      ],
+      "coercions": [
+        "to_string_strip",
+        "force_text"
+      ],
+      "default_rule_structured": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "repo_behavior_notes": "Optional. Normalized via pattern rules; guard against Excel artifacts in sample export flow. Blank stays blank if source is blank/missing."
+    },
+    {
+      "field_name": "FullAddress2",
+      "output_type": "string",
+      "output_format": "text",
+      "default_rule": "Optional. Manual corrections may overwrite per ReportNumberNew; may be backfilled/validated by address scripts. Blank stays blank.",
+      "domain_file": [
+        "config/config.yml (paths.corrections.address)",
+        "scripts/apply_manual_corrections.py (FullAddress2 corrections by ReportNumberNew)",
+        "scripts/cad_zone_merger.py (zone/grid merge uses FullAddress2 normalization)"
+      ],
+      "source_field_name": "FullAddress2",
+      "esri_field_name": "FullAddress2",
+      "internal_field_name": "FullAddress2",
+      "accepted_formats": [
+        "text"
+      ],
+      "coercions": [
+        "to_string_strip"
+      ],
+      "default_rule_structured": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "repo_behavior_notes": "Optional. Manual corrections may overwrite per ReportNumberNew; may be backfilled/validated by address scripts. Blank stays blank."
+    },
+    {
+      "field_name": "PDZone",
+      "output_type": "string",
+      "output_format": "text (zone id)",
+      "default_rule": "In sample export builder: coerced numeric via pd.to_numeric(errors='coerce') -> NaN if invalid. In deploy schema: treated as text.",
+      "domain_file": [
+        "config/config_enhanced.json (validation_lists.valid_zones)",
+        "scripts/cad_zone_merger.py (zone master merge provides PDZone)"
+      ],
+      "source_field_name": "PDZone",
+      "esri_field_name": "PDZone",
+      "internal_field_name": "PDZone",
+      "accepted_formats": [
+        "text"
+      ],
+      "coercions": [
+        "to_string_strip"
+      ],
+      "default_rule_structured": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "repo_behavior_notes": "In sample export builder: coerced numeric via pd.to_numeric(errors='coerce') -> NaN if invalid. In deploy schema: treated as text."
+    },
+    {
+      "field_name": "Grid",
+      "output_type": "string",
+      "output_format": "text",
+      "default_rule": "Optional. Blank stays blank; may be filled via zone master merge keyed off FullAddress2 normalization.",
+      "domain_file": [
+        "scripts/cad_zone_merger.py (zone master merge provides Grid)",
+        "config/config_enhanced.json (paths.zone_master)"
+      ],
+      "source_field_name": "Grid",
+      "esri_field_name": "Grid",
+      "internal_field_name": "Grid",
+      "accepted_formats": [
+        "text"
+      ],
+      "coercions": [
+        "to_string_strip"
+      ],
+      "default_rule_structured": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "repo_behavior_notes": "Optional. Blank stays blank; may be filled via zone master merge keyed off FullAddress2 normalization."
+    },
+    {
+      "field_name": "TimeOfCall",
+      "output_type": "datetime",
+      "output_format": "MM/dd/yyyy HH:mm:ss",
+      "default_rule": "If raw 'Time of Call' exists, deploy rename maps it to TimeOfCall. Invalid dates become NaT when parsed in validator flows; missing remains blank.",
+      "domain_file": [
+        "scripts/esri_final_validation.py (TimeOfCall validation + derived fields rules)",
+        "Notion_Outline_Export/CAD_Data_Cleaning_Engine.md (TimeOfCall definition)"
+      ],
+      "source_field_name": "Time of Call",
+      "esri_field_name": "TimeOfCall",
+      "internal_field_name": "TimeOfCall",
+      "accepted_formats": [
+        "excel_datetime",
+        "MM/dd/yyyy HH:mm:ss",
+        "M/d/yyyy H:mm",
+        "ISO8601"
+      ],
+      "coercions": [
+        "to_datetime_coerce"
+      ],
+      "default_rule_structured": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "repo_behavior_notes": "If raw 'Time of Call' exists, deploy rename maps it to TimeOfCall. Invalid dates become NaT when parsed in validator flows; missing remains blank."
+    },
+    {
+      "field_name": "cYear",
+      "output_type": "string",
+      "output_format": "yyyy",
+      "default_rule": "Derived from TimeOfCall in ESRI model; may exist as provided column. In sample builder, coerced numeric -> NaN if invalid.",
+      "domain_file": [
+        "scripts/esri_final_validation.py (expected_year = TimeOfCall.dt.year)",
+        "Notion_Outline_Export/CAD_Data_Cleaning_Engine.md (cYear definition)"
+      ],
+      "source_field_name": "cYear",
+      "esri_field_name": "cYear",
+      "internal_field_name": "cYear",
+      "accepted_formats": [
+        "yyyy",
+        "int"
+      ],
+      "coercions": [
+        "to_string_strip"
+      ],
+      "default_rule_structured": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "repo_behavior_notes": "Derived from TimeOfCall in ESRI model; may exist as provided column. In sample builder, coerced numeric -> NaN if invalid."
+    },
+    {
+      "field_name": "cMonth",
+      "output_type": "string",
+      "output_format": "Full month name (e.g., January)",
+      "default_rule": "Derived from TimeOfCall in ESRI model; if missing remains blank.",
+      "domain_file": [
+        "scripts/esri_final_validation.py (expected_month = TimeOfCall.dt.strftime('%B'))",
+        "Notion_Outline_Export/CAD_Data_Cleaning_Engine.md (cMonth definition)"
+      ],
+      "source_field_name": "cMonth",
+      "esri_field_name": "cMonth",
+      "internal_field_name": "cMonth",
+      "accepted_formats": [
+        "FullMonthName",
+        "MM",
+        "M"
+      ],
+      "coercions": [
+        "to_string_strip"
+      ],
+      "default_rule_structured": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "repo_behavior_notes": "Derived from TimeOfCall in ESRI model; if missing remains blank."
+    },
+    {
+      "field_name": "Hour",
+      "output_type": "string",
+      "output_format": "HH:mm",
+      "default_rule": "Deploy rename maps raw 'HourMinuetsCalc' to Hour. Some correction scripts repopulate Hour from TimeOfCall by extracting HH:mm; missing stays blank.",
+      "domain_file": [
+        "scripts/esri_production_deploy.py (raw->Hour rename)",
+        "scripts/apply_manual_corrections.py::fix_hour_field (extract HH:mm from TimeOfCall)",
+        "scripts/esri_final_validation.py (checks Hour vs TimeOfCall)"
+      ],
+      "source_field_name": "HourMinuetsCalc",
+      "esri_field_name": "Hour",
+      "internal_field_name": "Hour",
+      "accepted_formats": [
+        "HH:mm",
+        "H:mm",
+        "excel_time"
+      ],
+      "coercions": [
+        "to_string_strip"
+      ],
+      "default_rule_structured": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "repo_behavior_notes": "Deploy rename maps raw 'HourMinuetsCalc' to Hour. Some correction scripts repopulate Hour from TimeOfCall by extracting HH:mm; missing stays blank."
+    },
+    {
+      "field_name": "DayofWeek",
+      "output_type": "string",
+      "output_format": "Full weekday name (Monday..Sunday)",
+      "default_rule": "Derived from TimeOfCall in ESRI model; if missing remains blank.",
+      "domain_file": [
+        "scripts/esri_final_validation.py (expected_dayofweek = TimeOfCall.dt.strftime('%A'))",
+        "Notion_Outline_Export/CAD_Data_Cleaning_Engine.md (DayofWeek definition)"
+      ],
+      "source_field_name": "DayofWeek",
+      "esri_field_name": "DayofWeek",
+      "internal_field_name": "DayofWeek",
+      "accepted_formats": [
+        "text"
+      ],
+      "coercions": [
+        "to_string_strip"
+      ],
+      "default_rule_structured": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "repo_behavior_notes": "Derived from TimeOfCall in ESRI model; if missing remains blank."
+    },
+    {
+      "field_name": "Time Dispatched",
+      "output_type": "datetime",
+      "output_format": "MM/dd/yyyy HH:mm:ss",
+      "default_rule": "In sample export builder, parsed via pd.to_datetime(errors='coerce') -> NaT if invalid; not present in ESRI deploy required schema.",
+      "domain_file": null,
+      "source_field_name": "Time Dispatched",
+      "esri_field_name": null,
+      "internal_field_name": "TimeDispatched",
+      "accepted_formats": [
+        "excel_datetime",
+        "MM/dd/yyyy HH:mm:ss",
+        "M/d/yyyy H:mm",
+        "ISO8601"
+      ],
+      "coercions": [
+        "to_datetime_coerce"
+      ],
+      "default_rule_structured": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "repo_behavior_notes": "In sample export builder, parsed via pd.to_datetime(errors='coerce') -> NaT if invalid; not present in ESRI deploy required schema."
+    },
+    {
+      "field_name": "Time Out",
+      "output_type": "datetime",
+      "output_format": "MM/dd/yyyy HH:mm:ss",
+      "default_rule": "In sample export builder, parsed via pd.to_datetime(errors='coerce') -> NaT if invalid; not present in ESRI deploy required schema.",
+      "domain_file": null,
+      "source_field_name": "Time Out",
+      "esri_field_name": null,
+      "internal_field_name": "TimeOut",
+      "accepted_formats": [
+        "excel_datetime",
+        "MM/dd/yyyy HH:mm:ss",
+        "M/d/yyyy H:mm",
+        "ISO8601"
+      ],
+      "coercions": [
+        "to_datetime_coerce"
+      ],
+      "default_rule_structured": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "repo_behavior_notes": "In sample export builder, parsed via pd.to_datetime(errors='coerce') -> NaT if invalid; not present in ESRI deploy required schema."
+    },
+    {
+      "field_name": "Time In",
+      "output_type": "datetime",
+      "output_format": "MM/dd/yyyy HH:mm:ss",
+      "default_rule": "In sample export builder, parsed via pd.to_datetime(errors='coerce') -> NaT if invalid; not present in ESRI deploy required schema.",
+      "domain_file": null,
+      "source_field_name": "Time In",
+      "esri_field_name": null,
+      "internal_field_name": "TimeIn",
+      "accepted_formats": [
+        "excel_datetime",
+        "MM/dd/yyyy HH:mm:ss",
+        "M/d/yyyy H:mm",
+        "ISO8601"
+      ],
+      "coercions": [
+        "to_datetime_coerce"
+      ],
+      "default_rule_structured": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "repo_behavior_notes": "In sample export builder, parsed via pd.to_datetime(errors='coerce') -> NaT if invalid; not present in ESRI deploy required schema."
+    },
+    {
+      "field_name": "Time Spent",
+      "output_type": "string",
+      "output_format": "HH:mm (duration string)",
+      "default_rule": "In sample export builder, forced to str(x) when present else None; validator allows object. Not present in ESRI deploy required schema.",
+      "domain_file": [
+        "Notion_Outline_Export/CAD_Data_Cleaning_Engine.md (TimeSpent definition)"
+      ],
+      "source_field_name": "Time Spent",
+      "esri_field_name": null,
+      "internal_field_name": "TimeSpent",
+      "accepted_formats": [
+        "HH:mm",
+        "H:mm",
+        "HH:mm:ss",
+        "pandas_timedelta"
+      ],
+      "coercions": [
+        "to_duration_string"
+      ],
+      "default_rule_structured": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "repo_behavior_notes": "In sample export builder, forced to str(x) when present else None; validator allows object. Not present in ESRI deploy required schema."
+    },
+    {
+      "field_name": "Time Response",
+      "output_type": "string",
+      "output_format": "HH:mm (duration string)",
+      "default_rule": "In sample export builder, forced to str(x) when present else None; validator allows object. Not present in ESRI deploy required schema.",
+      "domain_file": [
+        "Notion_Outline_Export/CAD_Data_Cleaning_Engine.md (TimeResponse definition)"
+      ],
+      "source_field_name": "Time Response",
+      "esri_field_name": null,
+      "internal_field_name": "TimeResponse",
+      "accepted_formats": [
+        "HH:mm",
+        "H:mm",
+        "HH:mm:ss",
+        "pandas_timedelta"
+      ],
+      "coercions": [
+        "to_duration_string"
+      ],
+      "default_rule_structured": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "repo_behavior_notes": "In sample export builder, forced to str(x) when present else None; validator allows object. Not present in ESRI deploy required schema."
+    },
+    {
+      "field_name": "Officer",
+      "output_type": "string",
+      "output_format": "text",
+      "default_rule": "Optional. Blank stays blank; may be normalized in cleaning steps depending on pipeline run.",
+      "domain_file": [
+        "Notion_Outline_Export/CAD_Data_Cleaning_Engine.md (Officer definition)"
+      ],
+      "source_field_name": "Officer",
+      "esri_field_name": "Officer",
+      "internal_field_name": "Officer",
+      "accepted_formats": [
+        "text"
+      ],
+      "coercions": [
+        "to_string_strip"
+      ],
+      "default_rule_structured": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "repo_behavior_notes": "Optional. Blank stays blank; may be normalized in cleaning steps depending on pipeline run."
+    },
+    {
+      "field_name": "Disposition",
+      "output_type": "string",
+      "output_format": "text",
+      "default_rule": "Optional. Can be normalized via pattern rules and manual corrections; blank stays blank.",
+      "domain_file": [
+        "config/config.yml (field_mappings.disposition.patterns)",
+        "config/config_enhanced.json (validation_lists.valid_dispositions)",
+        "scripts/apply_manual_corrections.py (Disposition corrections by ReportNumberNew)"
+      ],
+      "source_field_name": "Disposition",
+      "esri_field_name": "Disposition",
+      "internal_field_name": "Disposition",
+      "accepted_formats": [
+        "text"
+      ],
+      "coercions": [
+        "to_string_strip"
+      ],
+      "default_rule_structured": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "repo_behavior_notes": "Optional. Can be normalized via pattern rules and manual corrections; blank stays blank."
+    },
+    {
+      "field_name": "Response_Type",
+      "output_type": "string",
+      "output_format": "categorical text",
+      "default_rule": "Deploy rename maps raw 'Response Type' to Response_Type. Mapping sources are loaded from RAW call types + manual mapping CSV; invalid/blank remains blank unless mapped.",
+      "domain_file": [
+        "scripts/esri_final_validation.py (ESRIFinalValidator.valid_response_types)",
+        "ref/RAW_CAD_CALL_TYPE_EXPORT.xlsx (called by scripts/esri_production_deploy.py)",
+        "ref/Unmapped_Response_Type.csv (called by scripts/esri_production_deploy.py)"
+      ],
+      "source_field_name": "Response Type",
+      "esri_field_name": "Response_Type",
+      "internal_field_name": "ResponseType",
+      "accepted_formats": [
+        "text"
+      ],
+      "coercions": [
+        "to_string_strip"
+      ],
+      "default_rule_structured": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "repo_behavior_notes": "Deploy rename maps raw 'Response Type' to Response_Type. Mapping sources are loaded from RAW call types + manual mapping CSV; invalid/blank remains blank unless mapped."
+    },
+    {
+      "field_name": "CADNotes",
+      "output_type": "string",
+      "output_format": "text",
+      "default_rule": "Optional. Many scripts normalize notes and treat missing as empty string ''. Not present in ESRI deploy required schema.",
+      "domain_file": [
+        "scripts/validate_cad_notes_alignment.py",
+        "scripts/compare_merged_to_manual_csv.py",
+        "scripts/generate_final_manual_address_corrections.py"
+      ],
+      "source_field_name": "CADNotes",
+      "esri_field_name": null,
+      "internal_field_name": "CADNotes",
+      "accepted_formats": [
+        "text"
+      ],
+      "coercions": [
+        "to_string_strip"
+      ],
+      "default_rule_structured": {
+        "apply_when": "null",
+        "default_value": "",
+        "behavior": "fill_default"
+      },
+      "repo_behavior_notes": "Optional. Many scripts normalize notes and treat missing as empty string ''. Not present in ESRI deploy required schema."
+    }
+  ],
+  "schema_version": "2.0"
+}
+
+

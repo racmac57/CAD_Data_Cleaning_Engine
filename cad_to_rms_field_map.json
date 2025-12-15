@@ -1,0 +1,109 @@
+{
+  "schema_version": "1.0",
+  "generated_on": "2025-12-15",
+  "direction": "cad_to_rms",
+  "join_keys": {
+    "cad_internal_field_name": "ReportNumberNew",
+    "cad_source_field_name": "ReportNumberNew",
+    "rms_internal_field_name": "CaseNumber",
+    "rms_source_field_name": "Case Number"
+  },
+  "mappings": [
+    {
+      "cad": {
+        "internal_field_name": "ReportNumberNew",
+        "source_field_name": "ReportNumberNew"
+      },
+      "rms": [
+        {
+          "internal_field_name": "CaseNumber",
+          "source_field_name": "Case Number",
+          "priority": 1
+        }
+      ],
+      "notes": "Join key"
+    },
+    {
+      "cad": {
+        "internal_field_name": "Incident",
+        "source_field_name": "Incident"
+      },
+      "rms": [
+        {
+          "internal_field_name": "IncidentType1",
+          "source_field_name": "Incident Type_1",
+          "priority": 1
+        },
+        {
+          "internal_field_name": "IncidentType2",
+          "source_field_name": "Incident Type_2",
+          "priority": 2
+        },
+        {
+          "internal_field_name": "IncidentType3",
+          "source_field_name": "Incident Type_3",
+          "priority": 3
+        }
+      ],
+      "notes": "Backfill order: Type_1 then Type_2 then Type_3"
+    },
+    {
+      "cad": {
+        "internal_field_name": "FullAddress2",
+        "source_field_name": "FullAddress2"
+      },
+      "rms": [
+        {
+          "internal_field_name": "FullAddress",
+          "source_field_name": "FullAddress",
+          "priority": 1
+        }
+      ],
+      "notes": "Address backfill"
+    },
+    {
+      "cad": {
+        "internal_field_name": "Grid",
+        "source_field_name": "Grid"
+      },
+      "rms": [
+        {
+          "internal_field_name": "Grid",
+          "source_field_name": "Grid",
+          "priority": 1
+        }
+      ],
+      "notes": "Direct"
+    },
+    {
+      "cad": {
+        "internal_field_name": "PDZone",
+        "source_field_name": "PDZone"
+      },
+      "rms": [
+        {
+          "internal_field_name": "Zone",
+          "source_field_name": "Zone",
+          "priority": 1
+        }
+      ],
+      "notes": "Zone backfill"
+    },
+    {
+      "cad": {
+        "internal_field_name": "Officer",
+        "source_field_name": "Officer"
+      },
+      "rms": [
+        {
+          "internal_field_name": "OfficerOfRecord",
+          "source_field_name": "Officer of Record",
+          "priority": 1
+        }
+      ],
+      "notes": "Officer mapping"
+    }
+  ]
+}
+
+

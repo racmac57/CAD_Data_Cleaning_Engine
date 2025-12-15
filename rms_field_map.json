@@ -1,0 +1,271 @@
+{
+  "generated_from_repo": true,
+  "notes": [
+    "source_field_name is the raw RMS export header (exact spelling, including spaces/punctuation).",
+    "field_name is the canonical/display name for the RMS field in this repo (defaults to source_field_name unless a specific canonical is established).",
+    "internal_field_name is a safe Python key (no spaces).",
+    "esri_field_name is not applicable for RMS exports in this repo, so it is null for all fields.",
+    "cad_mapping is included for RMS↔CAD alignment based on repo merges and the user-provided mapping notes."
+  ],
+  "sources": {
+    "default_rms_filename_note": "HPD_RMS_Export.xlsx (user-provided default export name; repo scripts typically read data/rms/*.xlsx or a dated ALL_RMS export)",
+    "join_keys": [
+      "config/config_enhanced.json (rms.join_key_rms = 'Case Number', rms.join_key_cad = 'ReportNumberNew')",
+      "scripts/backfill_incidents_from_rms.py (defaults: cad_case_col='ReportNumberNew', rms_case_col='Case Number')",
+      "scripts/merge_cad_rms_incidents.py (left_on='ReportNumberNew', right_on='Case Number')"
+    ],
+    "rms_fields_used_in_repo": [
+      "scripts/backfill_incidents_from_rms.py (Case Number, Incident Type_1)",
+      "scripts/backfill_address_from_rms.py / scripts/esri_production_deploy.py (FullAddress)",
+      "scripts/merge_cad_rms_incidents.py (Case Number, Incident Type_1, FullAddress, Narrative)"
+    ]
+  },
+  "fields": [
+    {
+      "source_field_name": "Case Number",
+      "field_name": "Case Number",
+      "esri_field_name": null,
+      "internal_field_name": "CaseNumber",
+      "cad_mapping": {
+        "cad_source_field_name": "ReportNumberNew",
+        "cad_field_name": "ReportNumberNew"
+      }
+    },
+    {
+      "source_field_name": "Incident Date",
+      "field_name": "Incident Date",
+      "esri_field_name": null,
+      "internal_field_name": "IncidentDate",
+      "cad_mapping": null
+    },
+    {
+      "source_field_name": "Incident Time",
+      "field_name": "Incident Time",
+      "esri_field_name": null,
+      "internal_field_name": "IncidentTime",
+      "cad_mapping": null
+    },
+    {
+      "source_field_name": "Incident Date_Between",
+      "field_name": "Incident Date_Between",
+      "esri_field_name": null,
+      "internal_field_name": "IncidentDateBetween",
+      "cad_mapping": null
+    },
+    {
+      "source_field_name": "Incident Time_Between",
+      "field_name": "Incident Time_Between",
+      "esri_field_name": null,
+      "internal_field_name": "IncidentTimeBetween",
+      "cad_mapping": null
+    },
+    {
+      "source_field_name": "Report Date",
+      "field_name": "Report Date",
+      "esri_field_name": null,
+      "internal_field_name": "ReportDate",
+      "cad_mapping": null
+    },
+    {
+      "source_field_name": "Report Time",
+      "field_name": "Report Time",
+      "esri_field_name": null,
+      "internal_field_name": "ReportTime",
+      "cad_mapping": null
+    },
+    {
+      "source_field_name": "Incident Type_1",
+      "field_name": "Incident Type_1",
+      "esri_field_name": null,
+      "internal_field_name": "IncidentType1",
+      "cad_mapping": {
+        "cad_source_field_name": "Incident",
+        "cad_field_name": "Incident",
+        "notes": "Repo backfill uses Incident Type_1 to fill CAD Incident."
+      }
+    },
+    {
+      "source_field_name": "Incident Type_2",
+      "field_name": "Incident Type_2",
+      "esri_field_name": null,
+      "internal_field_name": "IncidentType2",
+      "cad_mapping": {
+        "cad_source_field_name": "Incident",
+        "cad_field_name": "Incident",
+        "notes": "User mapping note: Incident Type_2 also maps to CAD Incident (repo primarily uses Type_1)."
+      }
+    },
+    {
+      "source_field_name": "Incident Type_3",
+      "field_name": "Incident Type_3",
+      "esri_field_name": null,
+      "internal_field_name": "IncidentType3",
+      "cad_mapping": {
+        "cad_source_field_name": "Incident",
+        "cad_field_name": "Incident",
+        "notes": "User mapping note: Incident Type_3 also maps to CAD Incident (repo primarily uses Type_1)."
+      }
+    },
+    {
+      "source_field_name": "FullAddress",
+      "field_name": "FullAddress",
+      "esri_field_name": null,
+      "internal_field_name": "FullAddress",
+      "cad_mapping": {
+        "cad_source_field_name": "FullAddress2",
+        "cad_field_name": "FullAddress2"
+      }
+    },
+    {
+      "source_field_name": "Grid",
+      "field_name": "Grid",
+      "esri_field_name": null,
+      "internal_field_name": "Grid",
+      "cad_mapping": {
+        "cad_source_field_name": "Grid",
+        "cad_field_name": "Grid"
+      }
+    },
+    {
+      "source_field_name": "Zone",
+      "field_name": "Zone",
+      "esri_field_name": null,
+      "internal_field_name": "Zone",
+      "cad_mapping": {
+        "cad_source_field_name": "PDZone",
+        "cad_field_name": "PDZone"
+      }
+    },
+    {
+      "source_field_name": "Narrative",
+      "field_name": "Narrative",
+      "esri_field_name": null,
+      "internal_field_name": "Narrative",
+      "cad_mapping": null
+    },
+    {
+      "source_field_name": "Total Value Stolen",
+      "field_name": "Total Value Stolen",
+      "esri_field_name": null,
+      "internal_field_name": "TotalValueStolen",
+      "cad_mapping": null
+    },
+    {
+      "source_field_name": "Total Value Recover",
+      "field_name": "Total Value Recover",
+      "esri_field_name": null,
+      "internal_field_name": "TotalValueRecover",
+      "cad_mapping": null
+    },
+    {
+      "source_field_name": "Registration 1",
+      "field_name": "Registration 1",
+      "esri_field_name": null,
+      "internal_field_name": "Registration1",
+      "cad_mapping": null
+    },
+    {
+      "source_field_name": "Make1",
+      "field_name": "Make1",
+      "esri_field_name": null,
+      "internal_field_name": "Make1",
+      "cad_mapping": null
+    },
+    {
+      "source_field_name": "Model1",
+      "field_name": "Model1",
+      "esri_field_name": null,
+      "internal_field_name": "Model1",
+      "cad_mapping": null
+    },
+    {
+      "source_field_name": "Reg State 1",
+      "field_name": "Reg State 1",
+      "esri_field_name": null,
+      "internal_field_name": "RegState1",
+      "cad_mapping": null
+    },
+    {
+      "source_field_name": "Registration 2",
+      "field_name": "Registration 2",
+      "esri_field_name": null,
+      "internal_field_name": "Registration2",
+      "cad_mapping": null
+    },
+    {
+      "source_field_name": "Reg State 2",
+      "field_name": "Reg State 2",
+      "esri_field_name": null,
+      "internal_field_name": "RegState2",
+      "cad_mapping": null
+    },
+    {
+      "source_field_name": "Make2",
+      "field_name": "Make2",
+      "esri_field_name": null,
+      "internal_field_name": "Make2",
+      "cad_mapping": null
+    },
+    {
+      "source_field_name": "Model2",
+      "field_name": "Model2",
+      "esri_field_name": null,
+      "internal_field_name": "Model2",
+      "cad_mapping": null
+    },
+    {
+      "source_field_name": "Reviewed By",
+      "field_name": "Reviewed By",
+      "esri_field_name": null,
+      "internal_field_name": "ReviewedBy",
+      "cad_mapping": null
+    },
+    {
+      "source_field_name": "CompleteCalc",
+      "field_name": "CompleteCalc",
+      "esri_field_name": null,
+      "internal_field_name": "CompleteCalc",
+      "cad_mapping": null
+    },
+    {
+      "source_field_name": "Officer of Record",
+      "field_name": "Officer of Record",
+      "esri_field_name": null,
+      "internal_field_name": "OfficerOfRecord",
+      "cad_mapping": {
+        "cad_source_field_name": "Officer",
+        "cad_field_name": "Officer"
+      }
+    },
+    {
+      "source_field_name": "Squad",
+      "field_name": "Squad",
+      "esri_field_name": null,
+      "internal_field_name": "Squad",
+      "cad_mapping": null
+    },
+    {
+      "source_field_name": "Det_Assigned",
+      "field_name": "Det_Assigned",
+      "esri_field_name": null,
+      "internal_field_name": "DetAssigned",
+      "cad_mapping": null
+    },
+    {
+      "source_field_name": "Case_Status",
+      "field_name": "Case_Status",
+      "esri_field_name": null,
+      "internal_field_name": "CaseStatus",
+      "cad_mapping": null
+    },
+    {
+      "source_field_name": "NIBRS Classification",
+      "field_name": "NIBRS Classification",
+      "esri_field_name": null,
+      "internal_field_name": "NIBRSClassification",
+      "cad_mapping": null
+    }
+  ]
+}
+
+

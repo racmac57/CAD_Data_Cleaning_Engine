@@ -2,6 +2,22 @@
 
 All notable changes to the CAD Data Cleaning Engine project.
 
+## [2025-12-15] - CAD/RMS Data Dictionary & Cross-System Mapping
+
+### Added
+- **CAD schema + mapping JSONs (v2)**:
+  - `cad_field_map.json`: raw CAD headers → canonical names, plus `internal_field_name` (safe Python key)
+  - `cad_fields_schema.json`: types, accepted formats, coercions, and structured default rules
+- **RMS schema + mapping JSONs (v2)**:
+  - `rms_field_map.json`: RMS headers plus CAD alignment notes and safe `internal_field_name`
+  - `rms_fields_schema.json`: RMS ingest expectations (types/formats/coercions) as used by repo scripts
+- **Reverse maps for ETL merge/backfill rules**:
+  - `cad_to_rms_field_map.json`: CAD drives merge; enrich with RMS values
+  - `rms_to_cad_field_map.json`: RMS patches CAD fields, including Incident backfill priority order
+
+### Changed
+- **Documentation**: Updated `README.md` and `IMPLEMENTATION_SUMMARY.md` to reflect the new schema/mapping artifacts and standardized naming conventions.
+
 ## [2025-11-25] - ESRI File Rebuild, Duplicate Fix & Quality Validation
 
 ### Fixed

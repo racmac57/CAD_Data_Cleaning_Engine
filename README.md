@@ -2,6 +2,25 @@
 
 Here’s the comprehensive code for CAD data processing that you can provide to an AI assistant.
 
+## Recent Updates (2025-12-15)
+
+- **CAD + RMS Data Dictionary (JSON, v2)**:
+  - Added repo-backed schema and mapping artifacts to standardize names, coercions, defaults, and cross-system joins:
+    - CAD: `cad_field_map.json`, `cad_fields_schema.json`
+    - RMS: `rms_field_map.json`, `rms_fields_schema.json`
+  - Added explicit **reverse maps** for ETL merge/backfill rules:
+    - `cad_to_rms_field_map.json` (CAD drives merge; enrich with RMS)
+    - `rms_to_cad_field_map.json` (RMS patches CAD)
+  - **Naming conventions**:
+    - `source_field_name`: raw export header (exact spelling/spaces)
+    - `internal_field_name`: safe Python key (no spaces)
+  - **ETL standards location (OneDrive)**:
+    - `C:\Users\carucci_r\OneDrive - City of Hackensack\09_Reference\Standards\CAD\DataDictionary\current\schema\`
+  - **Key join + backfill rules** (codified in JSON maps):
+    - Join: `cad.ReportNumberNew` ↔ `rms.CaseNumber` (RMS “Case Number”)
+    - Incident backfill order: `IncidentType1` → `IncidentType2` → `IncidentType3`
+    - Address backfill only when CAD address is blank/invalid
+
 ## Recent Updates (2025-11-25)
 
 - **ESRI File Rebuild & Duplicate Fix**: 
