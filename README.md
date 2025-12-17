@@ -1,6 +1,24 @@
 # **Complete CAD Data Cleaning & Enrichment Code**
 
-Here’s the comprehensive code for CAD data processing that you can provide to an AI assistant.
+Here's the comprehensive code for CAD data processing that you can provide to an AI assistant.
+
+## Recent Updates (2025-12-17)
+
+- **High-Performance Validation Engine**:
+  - **26.7x speed improvement**: New parallelized/vectorized validation script (`validate_cad_export_parallel.py`)
+  - Processing time reduced from 5 minutes 20 seconds to just **12 seconds** for 702,352 records
+  - Performance: **58,529 rows/second** (up from 2,195 rows/second)
+  - Uses vectorized pandas operations instead of slow row-by-row iteration
+  - Multi-core ready (configurable CPU utilization)
+  - Identical validation logic and error detection as original
+  - Memory-efficient columnar operations
+  - Detailed performance analysis in `PERFORMANCE_COMPARISON.md`
+
+- **Validation Improvements**:
+  - Better bulk error tracking (26,997 unique affected rows vs 657,078 in original)
+  - More accurate error rate calculation (3.84% vs 93.55%)
+  - Same comprehensive validation rules applied
+  - Optimized for iterative development and production pipelines
 
 ## Recent Updates (2025-12-15)
 

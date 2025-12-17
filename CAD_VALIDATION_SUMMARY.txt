@@ -1,0 +1,139 @@
+================================================================================
+CAD EXPORT VALIDATION SUMMARY REPORT (PARALLEL/VECTORIZED)
+================================================================================
+Generated: 2025-12-17 00:08:52
+
+OVERALL STATISTICS
+--------------------------------------------------------------------------------
+Total rows processed:     702,352
+Rows with errors:         26,997
+Total errors found:       681,002
+Total warnings:           0
+Total fixes applied:      956
+Error rate:               3.84%
+
+ERRORS BY FIELD
+--------------------------------------------------------------------------------
+  Incident                          653,988 errors
+  Disposition                        26,592 errors
+  How Reported                          387 errors
+  ReportNumberNew                        32 errors
+  PDZone                                  3 errors
+
+FIXES APPLIED BY FIELD
+--------------------------------------------------------------------------------
+  How Reported                          413 fixes
+  Disposition                           383 fixes
+  DayofWeek                             139 fixes
+  cMonth                                 17 fixes
+  cYear                                   4 fixes
+
+SAMPLE ERRORS (First 50)
+--------------------------------------------------------------------------------
+Row     534300 | ReportNumberNew      | Required field is null or blank
+              Value: nan
+Row     544214 | ReportNumberNew      | Required field is null or blank
+              Value: nan
+Row     607172 | ReportNumberNew      | Required field is null or blank
+              Value: nan
+Row     608149 | ReportNumberNew      | Required field is null or blank
+              Value: nan
+Row     610511 | ReportNumberNew      | Required field is null or blank
+              Value: nan
+Row     613781 | ReportNumberNew      | Required field is null or blank
+              Value: nan
+Row     619177 | ReportNumberNew      | Required field is null or blank
+              Value: 
+Row     620902 | ReportNumberNew      | Required field is null or blank
+              Value: nan
+Row     620926 | ReportNumberNew      | Required field is null or blank
+              Value: nan
+Row     621207 | ReportNumberNew      | Required field is null or blank
+              Value: nan
+Row     625385 | ReportNumberNew      | Required field is null or blank
+              Value: nan
+Row     631492 | ReportNumberNew      | Required field is null or blank
+              Value: nan
+Row     632289 | ReportNumberNew      | Required field is null or blank
+              Value: nan
+Row     635687 | ReportNumberNew      | Required field is null or blank
+              Value: nan
+Row     646221 | ReportNumberNew      | Required field is null or blank
+              Value: nan
+Row     662281 | ReportNumberNew      | Required field is null or blank
+              Value: nan
+Row     672148 | ReportNumberNew      | Required field is null or blank
+              Value: nan
+Row     679965 | ReportNumberNew      | Required field is null or blank
+              Value: nan
+Row     695426 | ReportNumberNew      | Required field is null or blank
+              Value: nan
+Row     702014 | ReportNumberNew      | Required field is null or blank
+              Value: nan
+Row     260722 | ReportNumberNew      | Does not match required pattern (##-######[A-Z]?)
+              Value: 10-16275
+Row     447014 | ReportNumberNew      | Does not match required pattern (##-######[A-Z]?)
+              Value: 23-0698
+Row     490293 | ReportNumberNew      | Does not match required pattern (##-######[A-Z]?)
+              Value: 24-00053
+Row     490294 | ReportNumberNew      | Does not match required pattern (##-######[A-Z]?)
+              Value: 24-00059
+Row     490462 | ReportNumberNew      | Does not match required pattern (##-######[A-Z]?)
+              Value: 24-00226
+Row     520314 | ReportNumberNew      | Does not match required pattern (##-######[A-Z]?)
+              Value: 5
+Row     547576 | ReportNumberNew      | Does not match required pattern (##-######[A-Z]?)
+              Value: c
+Row     548548 | ReportNumberNew      | Does not match required pattern (##-######[A-Z]?)
+              Value: 24-058314q
+Row     555472 | ReportNumberNew      | Does not match required pattern (##-######[A-Z]?)
+              Value: 24ol.-065242
+Row     564849 | ReportNumberNew      | Does not match required pattern (##-######[A-Z]?)
+              Value: 24-
+Row     596962 | ReportNumberNew      | Does not match required pattern (##-######[A-Z]?)
+              Value: 24-10672
+Row     621082 | ReportNumberNew      | Does not match required pattern (##-######[A-Z]?)
+              Value: 25-
+020525
+Row       BULK | Incident             | Incident values missing " - " separator (likely business rule vs data format)
+              Value: 653,988 records affected
+Row      62278 | How Reported         | Invalid value (not in allowed list)
+              Value: 911
+Row      66517 | How Reported         | Invalid value (not in allowed list)
+              Value: rs
+Row      67132 | How Reported         | Invalid value (not in allowed list)
+              Value: RQ
+Row      67215 | How Reported         | Invalid value (not in allowed list)
+              Value: rs
+Row      67563 | How Reported         | Invalid value (not in allowed list)
+              Value: 911
+Row      70479 | How Reported         | Invalid value (not in allowed list)
+              Value: Walk-Ir
+Row      70662 | How Reported         | Invalid value (not in allowed list)
+              Value: sr
+Row      70865 | How Reported         | Invalid value (not in allowed list)
+              Value: re
+Row      70883 | How Reported         | Invalid value (not in allowed list)
+              Value: E
+Row      71176 | How Reported         | Invalid value (not in allowed list)
+              Value: e
+Row      71177 | How Reported         | Invalid value (not in allowed list)
+              Value: e
+Row      74236 | How Reported         | Invalid value (not in allowed list)
+              Value: s
+Row      74665 | How Reported         | Invalid value (not in allowed list)
+              Value: tr
+Row      77016 | How Reported         | Invalid value (not in allowed list)
+              Value: rs
+Row      77865 | How Reported         | Invalid value (not in allowed list)
+              Value: sr
+Row      79433 | How Reported         | Invalid value (not in allowed list)
+              Value: RE
+Row      80048 | How Reported         | Invalid value (not in allowed list)
+              Value: rs
+
+... and 186 more errors
+
+================================================================================
+END OF REPORT
+================================================================================
