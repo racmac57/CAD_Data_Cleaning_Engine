@@ -329,52 +329,52 @@ class CADValidatorParallel:
         if 'cYear' in df.columns:
             expected = df.loc[valid_times, 'TimeOfCall'].dt.year.astype(str)
             actual = df.loc[valid_times, 'cYear'].astype(str)
-            mismatch_subset = expected != actual
+            mismatch = expected != actual
             
-            if mismatch_subset.any():
-                count = mismatch_subset.sum()
-                # Reindex mismatch to full dataframe to avoid alignment issues
-                mismatch_full = mismatch_subset.reindex(df.index, fill_value=False)
-                df.loc[mismatch_full, 'cYear'] = expected[mismatch_subset]
+            if mismatch.any():
+                count = mismatch.sum()
+                # Use direct indices to avoid any alignment issues
+                update_indices = mismatch[mismatch].index
+                df.loc[update_indices, 'cYear'] = expected[mismatch]
                 self.log_fixes_bulk('cYear', None, 'Derived from TimeOfCall', count)
         
         # Validate/fix cMonth
         if 'cMonth' in df.columns:
             expected = df.loc[valid_times, 'TimeOfCall'].dt.strftime('%B')
             actual = df.loc[valid_times, 'cMonth'].astype(str)
-            mismatch_subset = expected != actual
+            mismatch = expected != actual
             
-            if mismatch_subset.any():
-                count = mismatch_subset.sum()
-                # Reindex mismatch to full dataframe to avoid alignment issues
-                mismatch_full = mismatch_subset.reindex(df.index, fill_value=False)
-                df.loc[mismatch_full, 'cMonth'] = expected[mismatch_subset]
+            if mismatch.any():
+                count = mismatch.sum()
+                # Use direct indices to avoid any alignment issues
+                update_indices = mismatch[mismatch].index
+                df.loc[update_indices, 'cMonth'] = expected[mismatch]
                 self.log_fixes_bulk('cMonth', None, 'Derived from TimeOfCall', count)
         
         # Validate/fix Hour
         if 'Hour' in df.columns:
             expected = df.loc[valid_times, 'TimeOfCall'].dt.strftime('%H:%M')
             actual = df.loc[valid_times, 'Hour'].astype(str).str.strip()
-            mismatch_subset = expected != actual
+            mismatch = expected != actual
             
-            if mismatch_subset.any():
-                count = mismatch_subset.sum()
-                # Reindex mismatch to full dataframe to avoid alignment issues
-                mismatch_full = mismatch_subset.reindex(df.index, fill_value=False)
-                df.loc[mismatch_full, 'Hour'] = expected[mismatch_subset]
+            if mismatch.any():
+                count = mismatch.sum()
+                # Use direct indices to avoid any alignment issues
+                update_indices = mismatch[mismatch].index
+                df.loc[update_indices, 'Hour'] = expected[mismatch]
                 self.log_fixes_bulk('Hour', None, 'Derived from TimeOfCall', count)
         
         # Validate/fix DayofWeek
         if 'DayofWeek' in df.columns:
             expected = df.loc[valid_times, 'TimeOfCall'].dt.strftime('%A')
             actual = df.loc[valid_times, 'DayofWeek'].astype(str)
-            mismatch_subset = expected != actual
+            mismatch = expected != actual
             
-            if mismatch_subset.any():
-                count = mismatch_subset.sum()
-                # Reindex mismatch to full dataframe to avoid alignment issues
-                mismatch_full = mismatch_subset.reindex(df.index, fill_value=False)
-                df.loc[mismatch_full, 'DayofWeek'] = expected[mismatch_subset]
+            if mismatch.any():
+                count = mismatch.sum()
+                # Use direct indices to avoid any alignment issues
+                update_indices = mismatch[mismatch].index
+                df.loc[update_indices, 'DayofWeek'] = expected[mismatch]
                 self.log_fixes_bulk('DayofWeek', None, 'Derived from TimeOfCall', count)
         
         elapsed = time.time() - start
