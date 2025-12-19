@@ -1,0 +1,55 @@
+{
+  "original_full_path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\02_ETL_Scripts\\CAD_Data_Cleaning_Engine\\doc\\2025_11_17_CLAUDE_CODE_CAD_CLEANING - Copy.MD",
+  "original_directory": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\02_ETL_Scripts\\CAD_Data_Cleaning_Engine\\doc",
+  "original_filename": "2025_11_17_CLAUDE_CODE_CAD_CLEANING - Copy.MD",
+  "operation": "MOVE",
+  "sent_at": "2025-11-23T05:09:54.1805100Z",
+  "size_bytes": 219575,
+  "modified_time": "2025-11-18T21:06:48.5939320Z",
+  "integrity_sha256": "02e0cfc29b14c4171c3ae3e8e1da79678e70fd534f2f3a5fcb6548d42c9bbfac",
+  "created_time": "2025-11-23T05:09:37.9766751Z",
+  "tags": [
+    "API",
+    "ai",
+    "code",
+    "config",
+    "data",
+    "docs",
+    "excel",
+    "function",
+    "input/output",
+    "it-ops",
+    "json",
+    "loop",
+    "markdown",
+    "police",
+    "python",
+    "regex",
+    "sql",
+    "training"
+  ],
+  "metadata_enrichment": {
+    "metadata": {
+      "project_name": "02_data",
+      "source_type": "documentation",
+      "language": "en",
+      "department": "admin",
+      "key_terms": [
+        "cad_df",
+        "data",
+        "print",
+        "scripts",
+        "python",
+        "default"
+      ],
+      "enrichment_version": "1.0.0"
+    },
+    "summaries": {
+      "file_summary": "▐▛███▜▌   Claude Code v2.0.42\n▝▜█████▛▘  Sonnet 4.5 · Claude Pro\n  ▘▘ ▝▝    C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\02_ETL_Scripts\\CAD_Data_Cleaning_Engine\n\n> cd \"C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\02_ETL_Scripts\\C...",
+      "first_line": "▐▛███▜▌   Claude Code v2.0.42"
+    },
+    "enrichment_version": "1.0.0"
+  },
+  "last_processed_at": "2025-11-23T00:10:02.752898",
+  "department": "admin"
+}

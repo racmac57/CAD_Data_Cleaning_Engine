@@ -1,0 +1,709 @@
+)\s+(STREET|ST|AVENUE|AVE|ROAD|RD|DRIVE|DR|LANE|LN|BOULEVARD|BLVD|COURT|CT|PLACE|PL|TERRACE|TERR|WAY|PARKWAY|BROADWAY|ESPLANADE)$', official_street, re.IGNORECASE)
+        if base_match:
+            base_name = base_match.group(1).strip()
+            if base_name in addr_upper and official_street in addr_upper:
+                return True
+    
+    return False
+
+# Step 5: Apply standardizations
+print("\nStep 3: Applying address standardizations...")
+corrections_applied = 0
+verifications_applied = 0
+
+for idx, row in addr_corrections.iterrows():
+    addr = str(row['FullAddress2']).strip()
+    corrected = str(row.get('Corrected_Value', '')).strip()
+    
+    # Standardize the original address
+    standardized_addr = standardize_address(addr)
+    if standardized_addr != addr:
+        # Update the original address
+        addr_corrections.loc[idx, 'FullAddress2'] = standardized_addr
+        addr = standardized_addr
+    
+    # If no correction exists, check if address is already correct
+    if not corrected or corrected == '':
+        # Check if it's a complete street name
+        if is_complete_street_name(addr):
+            addr_corrections.loc[idx, 'Corrected_Value'] = addr
+            addr_corrections.loc[idx, 'Issue_Type'] = 'Verified Correct'
+            addr_corrections.loc[idx, 'Notes'] = 'Verified as complete street name'
+            verifications_applied += 1
+        else:
+            # Standardize and use as correction if it changed
+            standardized_corrected = standardize_address(addr)
+            if standardized_corrected != addr:
+                addr_corrections.loc[idx, 'Corrected_Value'] = standardized_corrected
+                addr_corrections.loc[idx, 'Issue_Type'] = 'Standardization'
+                addr_corrections.loc[idx, 'Notes'] = 'Applied abbreviation expansion and formatting fixes'
+                corrections_applied += 1
+    else:
+        # Standardize the corrected value
+        standardized_corrected = standardize_address(corrected)
+        if standardized_corrected != corrected:
+            addr_corrections.loc[idx, 'Corrected_Value'] = standardized_corrected
+            if addr_corrections.loc[idx, 'Issue_Type'] == '':
+                addr_corrections.loc[idx, 'Issue_Type'] = 'Standardization'
+            if 'Standardization' not in str(addr_corrections.loc[idx, 'Notes']):
+                notes = str(addr_corrections.loc[idx, 'Notes'])
+                if notes and notes != '':
+                    notes += '; Applied standardization'
+                else:
+                    notes = 'Applied abbreviation expansion and formatting fixes'
+                addr_corrections.loc[idx, 'Notes'] = notes
+            corrections_applied += 1
+
+print(f"  Applied {corrections_applied:,} standardizations")
+print(f"  Verified {verifications_applied:,} addresses as correct")
+
+# Step 6: Check for specific addresses mentioned
+print("\nStep 4: Checking for specific addresses mentioned...")
+specific_fixes = 0
+
+# Check for Doremus Ave
+doremus_mask = addr_corrections['FullAddress2'].str.contains('Doremus', case=False, na=False)
+if doremus_mask.any():
+    for idx in addr_corrections[doremus_mask].index:
+        addr = str(addr_corrections.loc[idx, 'FullAddress2']).strip()
+        if 'Doremus' in addr:
+            # Extract house number if present
+            match = re.match(r'^(\d+)\s+Doremus', addr, re.IGNORECASE)
+            house_num = match.group(1) if match else "354"
+            addr_corrections.loc[idx, 'Corrected_Value'] = f"{house_num} Doremus Avenue, Newark, NJ, 07105"
+            addr_corrections.loc[idx, 'Issue_Type'] = 'Specific Correction'
+            addr_corrections.loc[idx, 'Notes'] = 'Corrected to Newark, NJ, 07105'
+            specific_fixes += 1
+
+# Check for Palisades Ave
+palisades_mask = addr_corrections['FullAddress2'].str.contains('Palisades', case=False, na=False)
+if palisades_mask.any():
+    for idx in addr_corrections[palisades_mask].index:
+        addr = str(addr_corrections.loc[idx, 'FullAddress2']).strip()
+        if 'Palisades' in addr:
+            addr_corrections.loc[idx, 'Corrected_Value'] = "525 Palisades Avenue, Cliffside Park, NJ, 07010"
+            addr_corrections.loc[idx, 'Issue_Type'] = 'Specific Correction'
+            addr_corrections.loc[idx, 'Notes'] = 'Corrected to Cliffside Park, NJ, 07010'
+            specific_fixes += 1
+
+# Check for Davis Ave
+davis_mask = addr_corrections['FullAddress2'].str.contains('Davis', case=False, na=False)
+if davis_mask.any():
+    for idx in addr_corrections[davis_mask].index:
+        addr = str(addr_corrections.loc[idx, 'FullAddress2']).strip()
+        corrected = str(addr_corrections.loc[idx, 'Corrected_Value']).strip()
+        # Replace "Davis Ave" with "Davis Avenue"
+        if 'Davis Ave' in addr or 'Davis Ave' in corrected:
+            new_addr = re.sub(r'Davis Ave\.? ', 'Davis Avenue', addr, flags=re.IGNORECASE)
+            new_corrected = re.sub(r'Davis Ave\.? ', 'Davis Avenue', corrected if corrected else addr, flags=re.IGNORECASE)
+            if new_addr != addr:
+                addr_corrections.loc[idx, 'FullAddress2'] = new_addr
+            if new_corrected != corrected:
+                addr_corrections.loc[idx, 'Corrected_Value'] = new_corrected
+                if addr_corrections.loc[idx, 'Issue_Type'] == '':
+                    addr_corrections.loc[idx, 'Issue_Type'] = 'Standardization'
+                specific_fixes += 1
+
+print(f"  Applied {specific_fixes:,} specific address fixes")
+
+# Step 7: Save updated file
+print("\nStep 5: Saving updated address corrections...")
+try:
+    addr_corrections.to_csv(ADDRESS_CSV, index=False)
+    print(f"  Saved: {ADDRESS_CSV}")
+except PermissionError:
+    print(f"  ERROR: Permission denied. Please close '{ADDRESS_CSV.name}' if it's open in Excel.") exit(1)
+except Exception as e:
+    print(f"  ERROR: Could not save file: {e}")
+    exit(1)
+
+# Summary
+print("\n" + "="*80)
+print("SUMMARY")
+print("="*80)
+print(f"Total records: {len(addr_corrections):,}")
+print(f"Standardizations applied: {corrections_applied:,}")
+print(f"Addresses verified as correct: {verifications_applied:,}")
+print(f"Specific address fixes: {specific_fixes:,}")
+print(f"Total corrections with values: {(addr_corrections['Corrected_Value'].astype(str).str.strip() != '').sum():,}")
+
+# Show sample of changes
+print("\nSample of standardizations:")
+sample = addr_corrections[addr_corrections['Issue_Type'] == 'Standardization'].head(10)
+if len(sample) > 0:
+    for _, row in sample.iterrows():
+        print(f"  {row['FullAddress2'][:50]:50} -> {row['Corrected_Value'][:60]}")
+
+print("\n" + "="*80)
+print("COMPLETE")
+print("="*80)
+print(f"Completed: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
+
+```
+
+
+## Summary of Applied Standardizations
+
+### 1. Complete street names verified
+- "Parkway" — verified as complete
+- "Colonial Terrace" — verified as complete
+- "Broadway" and "East Broadway" — verified as complete
+- "The Esplanade" — verified as complete
+- "Cambridge Terrace" — verified as complete
+
+### 2. Abbreviation expansions
+- "St", "St.", "ST" → "Street"
+- "Terr", "Terr. ", "TERR" → "Terrace"
+- "Ave", "Ave.", "AVE" → "Avenue"
+- "Blanchard Terr" → "Blanchard Terrace" (all instances fixed)
+
+### 3. Specific address corrections
+- "354 Doremus Ave., Newark, Hackensack, NJ, 07601" → "354 Doremus Avenue, Newark, NJ, 07105"
+- "525 Palisades Ave, Hackensack, NJ, 07601" → "525 Palisades Avenue, Cliffside Park, NJ, 07010"
+- "Davis Ave" → "Davis Avenue" (checked and fixed)
+
+### 4. Formatting fixes
+- Removed extra spaces before commas
+- Fixed typos: "Esplande" → "Esplanade", "Avenuenue" → "Avenue", "MainStreet" → "Main Street"
+- Fixed "clubway" → "Club Way"
+
+## Final Status
+
+- Total records: 1,696
+- Records with corrections: 1,679 (99.0% completion)
+- Records needing manual correction: 17 (down from 28)
+
+The remaining 17 records are mostly:
+- 5x: Blank intersections (" & , Hackensack, NJ, 07601")
+- 6x: "Canceled Call" placeholder addresses
+- A few typos and special cases
+
+All standardizations have been applied. The address corrections file is ready for final review and application to the ESRI file. ---
+
+**User**
+
+I made the updates to C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\manual_corrections\address_corrections_manual_review.csv,  the remaining recores with blank corections, I am unable to get an address for. Please update the final ESRI we have been updating. ---
+
+**Cursor**
+
+
+Merging updates from the manual review CSV into the main corrections file, then applying all corrections to the ESRI file:
+
+
+```python
+"""
+Merge updates from address_corrections_manual_review.csv back into address_corrections.csv. This script:
+1. Loads the manual review CSV with user updates
+2. Merges corrections back into the main address_corrections.csv
+3. Ensures all updates are preserved
+"""
+
+import pandas as pd
+from pathlib import Path
+from datetime import datetime
+
+BASE_DIR = Path(r"C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine")
+MANUAL_REVIEW_CSV = BASE_DIR / "manual_corrections" / "address_corrections_manual_review.csv"
+ADDRESS_CSV = BASE_DIR / "manual_corrections" / "address_corrections.csv"
+
+print("="*80)
+print("MERGING MANUAL REVIEW UPDATES")
+print("="*80)
+print(f"\nStarted: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+
+# Step 1: Load manual review CSV
+print("Step 1: Loading manual review CSV...")
+try:
+    manual_review = pd.read_csv(MANUAL_REVIEW_CSV, dtype=str).fillna('')
+    print(f"  Loaded {len(manual_review):,} records from manual review")
+except Exception as e:
+    print(f"  ERROR: Could not load manual review file: {e}")
+    exit(1)
+
+# Step 2: Load main address corrections
+print("\nStep 2: Loading main address corrections...")
+try:
+    addr_corrections = pd.read_csv(ADDRESS_CSV, dtype=str).fillna('')
+    print(f"  Loaded {len(addr_corrections):,} records from main file")
+except Exception as e:
+    print(f"  ERROR: Could not load main file: {e}")
+    exit(1)
+
+# Step 3: Get records with corrections from manual review
+print("\nStep 3: Identifying updates from manual review...")
+manual_updates = manual_review[
+    manual_review['Corrected_Value'].astype(str).str.strip() != ''
+].copy()
+
+print(f"  Found {len(manual_updates):,} records with corrections in manual review")
+
+# Step 4: Update main file with manual review corrections
+print("\nStep 4: Merging updates into main file...")
+updates_applied = 0
+
+# Create a lookup from ReportNumberNew to corrected value
+update_lookup = dict(zip(
+    manual_updates['ReportNumberNew'].astype(str).str.strip(),
+    manual_updates['Corrected_Value'].astype(str).str.strip()
+))
+
+# Update main file
+for idx, row in addr_corrections.iterrows():
+    report_num = str(row['ReportNumberNew']).strip()
+    if report_num in update_lookup:
+        new_corrected = update_lookup[report_num]
+        old_corrected = str(row.get('Corrected_Value', '')).strip()
+        
+        if new_corrected != old_corrected:
+            addr_corrections.loc[idx, 'Corrected_Value'] = new_corrected
+            # Update Issue_Type and Notes if they exist in manual review
+            if 'Issue_Type' in manual_updates.columns:
+                manual_row = manual_updates[manual_updates['ReportNumberNew'].astype(str).str.strip() == report_num]
+                if not manual_row.empty:
+                    new_issue_type = str(manual_row.iloc[0].get('Issue_Type', '')).strip()
+                    new_notes = str(manual_row.iloc[0].get('Notes', '')).strip()
+                    if new_issue_type:
+                        addr_corrections.loc[idx, 'Issue_Type'] = new_issue_type
+                    if new_notes:
+                        addr_corrections.loc[idx, 'Notes'] = new_notes
+                    else:
+                        addr_corrections.loc[idx, 'Notes'] = 'Updated from manual review'
+            else:
+                addr_corrections.loc[idx, 'Notes'] = 'Updated from manual review'
+            updates_applied += 1
+
+print(f"  Applied {updates_applied:,} updates from manual review")
+
+# Step 5: Save updated file
+print("\nStep 5: Saving updated address corrections...")
+try:
+    addr_corrections.to_csv(ADDRESS_CSV, index=False)
+    print(f"  Saved: {ADDRESS_CSV}")
+except PermissionError:
+    print(f"  ERROR: Permission denied. Please close '{ADDRESS_CSV.name}' if it's open in Excel.") exit(1)
+except Exception as e:
+    print(f"  ERROR: Could not save file: {e}")
+    exit(1)
+
+# Summary
+print("\n" + "="*80)
+print("SUMMARY")
+print("="*80)
+print(f"Total records in main file: {len(addr_corrections):,}")
+print(f"Updates applied from manual review: {updates_applied:,}")
+print(f"Total corrections with values: {(addr_corrections['Corrected_Value'].astype(str).str.strip() != '').sum():,}")
+
+# Count remaining blank corrections
+remaining_blank = (addr_corrections['Corrected_Value'].astype(str).str.strip() == '').sum()
+print(f"Records still without corrections: {remaining_blank:,}")
+
+if remaining_blank > 0:
+    print("\nRecords still needing correction:")
+    blank_records = addr_corrections[addr_corrections['Corrected_Value'].astype(str).str.strip() == '']
+    print(blank_records[['ReportNumberNew', 'FullAddress2', 'Incident']].head(10).to_string(index=False))
+
+print("\n" + "="*80)
+print("COMPLETE")
+print("="*80)
+print(f"Completed: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
+```
+
+
+Merged your manual updates and applied all corrections to the ESRI file. Summary:
+
+## Summary
+
+### 1. Manual review updates merged
+- 9 corrections merged from `address_corrections_manual_review.csv` into the main file
+- Total corrections in main file: 1,688 out of 1,696 (99.5% completion)
+
+### 2. Corrections applied to ESRI file
+- Address corrections: 9,607 applied
+- How Reported corrections: 33,849 applied
+- Disposition corrections: 265,183 applied
+- Case Number corrections: 1 applied
+- Hour field format: 961,699 fixed
+- Total corrections: 1,270,339
+
+### 3. Output file
+- Updated ESRI file: `CAD_ESRI_Final_20251124_corrected.xlsx`
+- Location: `data/ESRI_CADExport/CAD_ESRI_Final_20251124_corrected.xlsx`
+
+### 4. Remaining records (8)
+These couldn't be corrected:
+- 1x: "414 Hackensack Medical Center" (Medical Call)
+- 7x: "Canceled Call" placeholders and blank intersections (" & ,")
+
+These are likely data quality issues (canceled calls, incomplete data) and may not need addresses. The ESRI file has been updated with all available address corrections. The file is ready for use. Should I run validation to verify the corrections, or make any other changes? ---
+
+**User**
+
+The last item I want to go over is Hour_field: the TimeOfCall is MM/dd/YYY HH:mm, the Hour column states "Hour" hoever it is actually returning the time portion of the TimeOfCall Column. do not round the values in this column, if a value is missing please take the time portion of the TimeOfCall (ie HH:mm)
+
+---
+
+**Cursor**
+
+
+Checking how the Hour field is handled, then updating it to extract HH:mm from TimeOfCall without rounding:
+
+
+
+Updating the Hour field logic to extract HH:mm from TimeOfCall without rounding:
+
+
+```python
+#!/usr/bin/env python3
+"""
+Apply manual corrections from CSV files to the ESRI final export.
+""" import pandas as pd
+from pathlib import Path
+from datetime import datetime
+
+BASE_DIR = Path(r"C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine")
+ESRI_FILE = BASE_DIR / "data" / "ESRI_CADExport" / "CAD_ESRI_Final_20251117_v2.xlsx"
+CORRECTIONS_DIR = BASE_DIR / "manual_corrections"
+OUTPUT_DIR = BASE_DIR / "data" / "ESRI_CADExport"
+
+def apply_how_reported_corrections(df, corrections_file):
+    """Apply How Reported corrections.""" if not corrections_file.exists():
+        print(f"  Skipping: {corrections_file.name} (file not found)")
+        return df, 0
+    
+    corrections = pd.read_csv(corrections_file)
+    corrections = corrections[corrections['Corrected_Value'].notna() & (corrections['Corrected_Value'] != '')]
+    
+    if len(corrections) == 0:
+        print(f"  No corrections to apply in {corrections_file.name}")
+        return df, 0
+    
+    # Merge corrections
+    df = df.merge(
+        corrections[['ReportNumberNew', 'Corrected_Value']].rename(columns={'Corrected_Value': 'How Reported'}),
+        on='ReportNumberNew',
+        how='left',
+        suffixes=('', '_new')
+    )
+    
+    # Apply corrections where new value exists
+    mask = df['How Reported_new'].notna()
+    count = mask.sum()
+    df.loc[mask, 'How Reported'] = df.loc[mask, 'How Reported_new']
+    df = df.drop(columns=['How Reported_new'])
+    
+    return df, count
+
+def apply_disposition_corrections(df, corrections_file):
+    """Apply Disposition corrections.""" if not corrections_file.exists():
+        print(f"  Skipping: {corrections_file.name} (file not found)")
+        return df, 0
+    
+    corrections = pd.read_csv(corrections_file)
+    corrections = corrections[corrections['Corrected_Value'].notna() & (corrections['Corrected_Value'] != '')]
+    
+    if len(corrections) == 0:
+        print(f"  No corrections to apply in {corrections_file.name}")
+        return df, 0
+    
+    # Merge corrections
+    df = df.merge(
+        corrections[['ReportNumberNew', 'Corrected_Value']].rename(columns={'Corrected_Value': 'Disposition'}),
+        on='ReportNumberNew',
+        how='left',
+        suffixes=('', '_new')
+    )
+    
+    # Apply corrections where new value exists
+    mask = df['Disposition_new'].notna()
+    count = mask.sum()
+    df.loc[mask, 'Disposition'] = df.loc[mask, 'Disposition_new']
+    df = df.drop(columns=['Disposition_new'])
+    
+    return df, count
+
+def apply_case_number_corrections(df, corrections_file):
+    """Apply ReportNumberNew corrections.""" if not corrections_file.exists():
+        print(f"  Skipping: {corrections_file.name} (file not found)")
+        return df, 0
+    
+    corrections = pd.read_csv(corrections_file)
+    corrections = corrections[corrections['Corrected_Value'].notna() & (corrections['Corrected_Value'] != '')]
+    
+    if len(corrections) == 0:
+        print(f"  No corrections to apply in {corrections_file.name}")
+        return df, 0
+    
+    # Clean case numbers - remove newlines, whitespace, and normalize
+    corrections['ReportNumberNew_clean'] = corrections['ReportNumberNew'].astype(str).str.strip().str.replace('\n', '').str.replace('\r', '')
+    corrections['Corrected_Value_clean'] = corrections['Corrected_Value'].astype(str).str.strip()
+    
+    # Create mapping from old to new case numbers
+    case_map = dict(zip(corrections['ReportNumberNew_clean'], corrections['Corrected_Value_clean']))
+    
+    # Clean ReportNumberNew in the dataframe for matching
+    df['ReportNumberNew_clean'] = df['ReportNumberNew'].astype(str).str.strip().str.replace('\n', '').str.replace('\r', '')
+    
+    # Apply corrections
+    mask = df['ReportNumberNew_clean'].isin(case_map.keys())
+    count = mask.sum()
+    df.loc[mask, 'ReportNumberNew'] = df.loc[mask, 'ReportNumberNew_clean'].map(case_map)
+    
+    # Drop temporary column
+    df = df.drop(columns=['ReportNumberNew_clean'])
+    
+    return df, count
+
+def apply_address_corrections(df, corrections_file):
+    """Apply FullAddress2 corrections.""" if not corrections_file.exists():
+        print(f"  Skipping: {corrections_file.name} (file not found)")
+        return df, 0
+    
+    corrections = pd.read_csv(corrections_file)
+    corrections = corrections[corrections['Corrected_Value'].notna() & (corrections['Corrected_Value'] != '')]
+    
+    if len(corrections) == 0:
+        print(f"  No corrections to apply in {corrections_file.name}")
+        return df, 0
+    
+    # Merge corrections
+    df = df.merge(
+        corrections[['ReportNumberNew', 'Corrected_Value']].rename(columns={'Corrected_Value': 'FullAddress2'}),
+        on='ReportNumberNew',
+        how='left',
+        suffixes=('', '_new')
+    )
+    
+    # Apply corrections where new value exists
+    mask = df['FullAddress2_new'].notna()
+    count = mask.sum()
+    df.loc[mask, 'FullAddress2'] = df.loc[mask, 'FullAddress2_new']
+    df = df.drop(columns=['FullAddress2_new'])
+    
+    return df, count
+
+def fix_hour_field(df):
+    """Extract HH:mm from TimeOfCall and populate Hour field without rounding.""" print("\n  Fixing Hour field format...")
+    
+    if 'TimeOfCall' not in df.columns:
+        print("  WARNING: TimeOfCall column not found. Skipping Hour field fix.") return df, 0
+    
+    if 'Hour' not in df.columns:
+        print("  WARNING: Hour column not found. Creating Hour column.") df['Hour'] = ''
+    
+    def extract_time_from_timeofcall(timeofcall_str):
+        """Extract HH:mm from TimeOfCall (format: MM/dd/YYYY HH:mm).""" if pd.isna(timeofcall_str):
+            return ''
+        
+        timeofcall_str = str(timeofcall_str).strip()
+        
+        # Try to parse MM/dd/YYYY HH:mm format
+        import re
+        # Pattern: MM/dd/YYYY HH:mm or similar datetime formats
+        time_match = re.search(r'(\d{1,2}):(\d{2})', timeofcall_str)
+        if time_match:
+            hour = time_match.group(1).zfill(2)  # Pad to 2 digits
+            minute = time_match.group(2)
+            return f"{hour}:{minute}"
+        
+        # Try parsing as datetime if it's in a different format
+        try:
+            from datetime import datetime
+            # Try common formats
+            for fmt in ['%m/%d/%Y %H:%M', '%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M', '%m/%d/%Y %H:%M:%S']:
+                try:
+                    dt = datetime.strptime(timeofcall_str, fmt)
+                    return f"{dt.hour:02d}:{dt.minute:02d}"
+                except:
+                    continue
+        except:
+            pass
+        
+        return ''
+    
+    # Extract time from TimeOfCall for all records
+    df['Hour'] = df['TimeOfCall'].apply(extract_time_from_timeofcall)
+    
+    # Count how many were populated
+    count = (df['Hour'] != '').sum()
+    
+    return df, count
+
+def main():
+    print("="*60)
+    print("APPLYING MANUAL CORRECTIONS")
+    print("="*60)
+    print(f"\nInput file: {ESRI_FILE}")
+    print(f"Corrections directory: {CORRECTIONS_DIR}\n")
+    
+    # Load main file
+    print("Loading ESRI export file...")
+    df = pd.read_excel(ESRI_FILE)
+    print(f"  Loaded {len(df):,} records\n")
+    
+    total_corrections = 0
+    
+    # Apply corrections
+    print("Applying corrections...")
+    
+    # 1. How Reported
+    print("\n1. How Reported corrections:")
+    df, count = apply_how_reported_corrections(df, CORRECTIONS_DIR / "how_reported_corrections.csv")
+    print(f"  Applied {count:,} corrections")
+    total_corrections += count
+    
+    # 2. Disposition
+    print("\n2. Disposition corrections:")
+    df, count = apply_disposition_corrections(df, CORRECTIONS_DIR / "disposition_corrections.csv")
+    print(f"  Applied {count:,} corrections")
+    total_corrections += count
+    
+    # 3. Case Numbers
+    print("\n3. Case Number corrections:")
+    df, count = apply_case_number_corrections(df, CORRECTIONS_DIR / "case_number_corrections.csv")
+    print(f"  Applied {count:,} corrections")
+    total_corrections += count
+    
+    # 4. Addresses
+    print("\n4. Address corrections:")
+    df, count = apply_address_corrections(df, CORRECTIONS_DIR / "address_corrections.csv")
+    print(f"  Applied {count:,} corrections")
+    total_corrections += count
+    
+    # 5. Hour Field (automated fix)
+    print("\n5. Hour field format fix:")
+    df, count = fix_hour_field(df)
+    print(f"  Fixed {count:,} records")
+    total_corrections += count
+    
+    # Save corrected file
+    timestamp = datetime.now().strftime('%Y%m%d')
+    output_file = OUTPUT_DIR / f"CAD_ESRI_Final_{timestamp}_corrected.xlsx"
+    
+    print(f"\nSaving corrected file...")
+    df.to_excel(output_file, index=False)
+    print(f"  Saved to: {output_file}")
+    
+    print("\n" + "="*60)
+    print("CORRECTIONS COMPLETE")
+    print("="*60)
+    print(f"Total corrections applied: {total_corrections:,}")
+    print(f"Output file: {output_file}")
+    print("\nNext step: Re-run validation to verify corrections")
+
+if __name__ == "__main__":
+    main()
+
+
+```
+
+
+Verifying the Hour field extracts HH:mm correctly without rounding:
+
+
+```python
+"""
+Verify that Hour field correctly extracts HH:mm from TimeOfCall without rounding.
+""" import pandas as pd
+from pathlib import Path
+
+BASE_DIR = Path(r"C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine")
+ESRI_FILE = BASE_DIR / "data" / "ESRI_CADExport" / "CAD_ESRI_Final_20251124_corrected.xlsx"
+
+print("="*80)
+print("VERIFYING HOUR FIELD")
+print("="*80)
+
+# Load file
+print("\nLoading ESRI file...")
+df = pd.read_excel(ESRI_FILE, dtype=str, nrows=100)
+print(f"  Loaded {len(df):,} records (sample)")
+
+if 'TimeOfCall' not in df.columns:
+    print("  ERROR: TimeOfCall column not found")
+    exit(1)
+
+if 'Hour' not in df.columns:
+    print("  ERROR: Hour column not found")
+    exit(1)
+
+# Check samples
+print("\nSample TimeOfCall and Hour values:")
+sample = df[['TimeOfCall', 'Hour']].head(20)
+for idx, row in sample.iterrows():
+    timeofcall = str(row['TimeOfCall'])
+    hour = str(row['Hour'])
+    print(f"  TimeOfCall: {timeofcall[:30]:30} -> Hour: {hour}")
+
+# Check for rounding issues (should not see :00 for all minutes)
+print("\nChecking for rounding issues...")
+hour_values = df['Hour'].dropna().astype(str)
+rounded_count = hour_values.str.endswith(':00').sum()
+non_rounded_count = (~hour_values.str.endswith(':00')).sum()
+
+print(f"  Hour values ending in :00: {rounded_count}")
+print(f"  Hour values with minutes: {non_rounded_count}")
+
+if rounded_count == len(hour_values) and len(hour_values) > 0:
+    print("  [WARNING] All Hour values are rounded to :00 - this may indicate rounding is still happening")
+else:
+    print("  [OK] Hour values include minutes (not all rounded)")
+
+# Check for missing values
+missing_hour = df['Hour'].isna().sum() + (df['Hour'].astype(str).str.strip() == '').sum()
+print(f"\nMissing Hour values: {missing_hour}")
+
+if missing_hour > 0:
+    print("\nSample records with missing Hour:")
+    missing = df[df['Hour'].isna() | (df['Hour'].astype(str).str.strip() == '')]
+    print(missing[['TimeOfCall', 'Hour']].head(10).to_string(index=False))
+
+print("\n" + "="*80)
+print("VERIFICATION COMPLETE")
+print("="*80)
+
+```
+
+
+Hour field is working correctly. Verification results:
+
+## Hour field verification
+
+### Results
+- Hour values include minutes (not rounded): all 100 sample records show HH:mm format
+- No rounding: 0 values ending in :00
+- No missing values: all records have Hour populated
+- Correct format: extracting HH:mm from TimeOfCall (e.g., "00:04", "01:13", "01:30")
+
+### What changed
+1. Removed rounding: previously rounded to HH:00; now preserves exact minutes
+2. Extracts from TimeOfCall: uses the time portion (HH:mm) from TimeOfCall
+3. Handles multiple formats: supports MM/dd/YYYY HH:mm and YYYY-MM-DD HH:MM:SS
+4. Populates missing values: if Hour is missing, extracts from TimeOfCall
+
+### Sample output
+- TimeOfCall: `2019-01-01 00:04:21` → Hour: `00:04`
+- TimeOfCall: `2019-01-01 01:30:32` → Hour: `01:30`
+- TimeOfCall: `2019-01-01 01:40:48` → Hour: `01:40`
+
+The Hour field now correctly extracts and preserves the exact time (HH:mm) from TimeOfCall without rounding. The updated ESRI file is saved as `CAD_ESRI_Final_20251124_corrected.xlsx` with all corrections applied, including the corrected Hour field. ---
+
+**User**
+
+Make changes to the README, SUMMARY and changelog files to reflect recent updates. ---
+
+**Cursor**
+
+
+Updating README, IMPLEMENTATION_SUMMARY, and CHANGELOG to reflect recent updates:
+
+
+
+Updating README and creating/updating IMPLEMENTATION_SUMMARY and CHANGELOG:
+
+
+```markdown
+# **Complete CAD Data Cleaning & Enrichment Code**
+
+Here’s the comprehensive code for CAD data processing that you can provide to an AI assistant.

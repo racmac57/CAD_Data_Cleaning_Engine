@@ -1,0 +1,212 @@
+{
+  "version": "1.0",
+  "generated_on": "2025-12-16",
+  "sources": {
+    "default_rms_filename_note": "HPD_RMS_Export.xlsx (user-provided default export name; repo scripts typically read data/rms/*.xlsx or a dated ALL_RMS export)",
+    "join_keys": [
+      "config/config_enhanced.json (rms.join_key_rms = 'Case Number', rms.join_key_cad = 'ReportNumberNew')",
+      "scripts/backfill_incidents_from_rms.py (defaults: cad_case_col='ReportNumberNew', rms_case_col='Case Number')",
+      "scripts/merge_cad_rms_incidents.py (left_on='ReportNumberNew', right_on='Case Number')"
+    ],
+    "rms_fields_used_in_repo": [
+      "scripts/backfill_incidents_from_rms.py (Case Number, Incident Type_1)",
+      "scripts/backfill_address_from_rms.py / scripts/esri_production_deploy.py (FullAddress)",
+      "scripts/merge_cad_rms_incidents.py (Case Number, Incident Type_1, FullAddress, Narrative)"
+    ]
+  },
+  "notes": [
+    "source_field_name is the raw RMS export header (exact spelling, including spaces/punctuation).",
+    "field_name is the canonical/display name for the RMS field in this repo (defaults to source_field_name unless a specific canonical is established).",
+    "internal_field_name is a safe Python key (no spaces).",
+    "esri_field_name is not applicable for RMS exports in this repo, so it is null for all fields.",
+    "cad_mapping is included for RMS↔CAD alignment based on repo merges and the user-provided mapping notes."
+  ],
+  "fields": [
+    {
+      "system": "RMS",
+      "source_field_name": "Case Number",
+      "internal_field_name": "CaseNumber",
+      "esri_field_name": null
+    },
+    {
+      "system": "RMS",
+      "source_field_name": "Incident Date",
+      "internal_field_name": "IncidentDate",
+      "esri_field_name": null
+    },
+    {
+      "system": "RMS",
+      "source_field_name": "Incident Time",
+      "internal_field_name": "IncidentTime",
+      "esri_field_name": null
+    },
+    {
+      "system": "RMS",
+      "source_field_name": "Incident Date_Between",
+      "internal_field_name": "IncidentDateBetween",
+      "esri_field_name": null
+    },
+    {
+      "system": "RMS",
+      "source_field_name": "Incident Time_Between",
+      "internal_field_name": "IncidentTimeBetween",
+      "esri_field_name": null
+    },
+    {
+      "system": "RMS",
+      "source_field_name": "Report Date",
+      "internal_field_name": "ReportDate",
+      "esri_field_name": null
+    },
+    {
+      "system": "RMS",
+      "source_field_name": "Report Time",
+      "internal_field_name": "ReportTime",
+      "esri_field_name": null
+    },
+    {
+      "system": "RMS",
+      "source_field_name": "Incident Type_1",
+      "internal_field_name": "IncidentType1",
+      "esri_field_name": null
+    },
+    {
+      "system": "RMS",
+      "source_field_name": "Incident Type_2",
+      "internal_field_name": "IncidentType2",
+      "esri_field_name": null
+    },
+    {
+      "system": "RMS",
+      "source_field_name": "Incident Type_3",
+      "internal_field_name": "IncidentType3",
+      "esri_field_name": null
+    },
+    {
+      "system": "RMS",
+      "source_field_name": "FullAddress",
+      "internal_field_name": "FullAddress",
+      "esri_field_name": null
+    },
+    {
+      "system": "RMS",
+      "source_field_name": "Grid",
+      "internal_field_name": "Grid",
+      "esri_field_name": null
+    },
+    {
+      "system": "RMS",
+      "source_field_name": "Zone",
+      "internal_field_name": "Zone",
+      "esri_field_name": null
+    },
+    {
+      "system": "RMS",
+      "source_field_name": "Narrative",
+      "internal_field_name": "Narrative",
+      "esri_field_name": null
+    },
+    {
+      "system": "RMS",
+      "source_field_name": "Total Value Stolen",
+      "internal_field_name": "TotalValueStolen",
+      "esri_field_name": null
+    },
+    {
+      "system": "RMS",
+      "source_field_name": "Total Value Recover",
+      "internal_field_name": "TotalValueRecover",
+      "esri_field_name": null
+    },
+    {
+      "system": "RMS",
+      "source_field_name": "Registration 1",
+      "internal_field_name": "Registration1",
+      "esri_field_name": null
+    },
+    {
+      "system": "RMS",
+      "source_field_name": "Make1",
+      "internal_field_name": "Make1",
+      "esri_field_name": null
+    },
+    {
+      "system": "RMS",
+      "source_field_name": "Model1",
+      "internal_field_name": "Model1",
+      "esri_field_name": null
+    },
+    {
+      "system": "RMS",
+      "source_field_name": "Reg State 1",
+      "internal_field_name": "RegState1",
+      "esri_field_name": null
+    },
+    {
+      "system": "RMS",
+      "source_field_name": "Registration 2",
+      "internal_field_name": "Registration2",
+      "esri_field_name": null
+    },
+    {
+      "system": "RMS",
+      "source_field_name": "Reg State 2",
+      "internal_field_name": "RegState2",
+      "esri_field_name": null
+    },
+    {
+      "system": "RMS",
+      "source_field_name": "Make2",
+      "internal_field_name": "Make2",
+      "esri_field_name": null
+    },
+    {
+      "system": "RMS",
+      "source_field_name": "Model2",
+      "internal_field_name": "Model2",
+      "esri_field_name": null
+    },
+    {
+      "system": "RMS",
+      "source_field_name": "Reviewed By",
+      "internal_field_name": "ReviewedBy",
+      "esri_field_name": null
+    },
+    {
+      "system": "RMS",
+      "source_field_name": "CompleteCalc",
+      "internal_field_name": "CompleteCalc",
+      "esri_field_name": null
+    },
+    {
+      "system": "RMS",
+      "source_field_name": "Officer of Record",
+      "internal_field_name": "OfficerOfRecord",
+      "esri_field_name": null
+    },
+    {
+      "system": "RMS",
+      "source_field_name": "Squad",
+      "internal_field_name": "Squad",
+      "esri_field_name": null
+    },
+    {
+      "system": "RMS",
+      "source_field_name": "Det_Assigned",
+      "internal_field_name": "DetAssigned",
+      "esri_field_name": null
+    },
+    {
+      "system": "RMS",
+      "source_field_name": "Case_Status",
+      "internal_field_name": "CaseStatus",
+      "esri_field_name": null
+    },
+    {
+      "system": "RMS",
+      "source_field_name": "NIBRS Classification",
+      "internal_field_name": "NIBRSClassification",
+      "esri_field_name": null
+    }
+  ]
+}

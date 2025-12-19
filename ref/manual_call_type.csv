@@ -1,0 +1,631 @@
+﻿9-1-1 Call,,,Incident,Change to
+A.C.O.R.N. Test,,,,
+A.T.R.A.,,,1,Blocked Driveway
+Abandoned 9-1-1 Emergency,,,9-1-1 Call,
+Abandoned Auto,,,A.C.O.R.N. Test,
+ABC Advisory Check,,,A.T.R.A.,
+ABC Inspection,,,Abandoned 9-1-1,Abandoned 9-1-1 Emergency
+ABC Violation,,,Abandoned 9-1-1 Emergency,Abandoned 9-1-1 Emergency
+Academy Assignment,,,Abandoned 9-1-1Emergency,Abandoned 9-1-1 Emergency
+Active/Administratively Closed,,,Abandoned Auto,
+Administrative Assignment,,,ABC Advisory Check,
+Aggravated Assault - 2C:12-1b,,,ABC Inspection,
+Aggravated Sexual Assault - 2C:14-2a,,,ABC Liquor License Applicant,
+Aiding Suicide - 2C:11-6,,,ABC Violation,
+Alarm - Burglar,,,Academy Assignment,
+Alarm - Fire,,,Administrative Assignment,
+Alarm - Other,,,Aggravated Assault - 2C:12-1b,
+Alarm - Panic,,,Aggravated Assault 2C:12-1b,Aggravated Assault - 2C:12-1b
+Alarm Ordinance,,,Aggravated Sexual Assault 2C:14-2a,Aggravated Sexual Assault - 2C:14-2a
+Alcohol/School Property - 2C:33-16,,,Alarm - Burglar,
+Alcoholic Beverage - Hours of Sale,,,Alarm - Fire,
+Alcoholic Beverage - New Years Day Hours of Sale,,,Alarm - Other,
+Alcoholic Beverage - Serving Underage,,,Alarm - Other ,
+Alcoholic Beverage - Sunday Hours of Sale,,,Alarm - Panic,
+Alcoholic Beverage - Unlicensed Bartender,,,Alarm - Panic ,
+ALPR Analysis,,,Alarm Ordinance,
+ALPR Flag,,,Alcoholic Beverage - Serving Underage,
+Animal Bite Incident,,,Alcoholic Beverage - Unlicensed Bartender,Alcoholic Beverage - Unlicensed Bartender
+Animal Complaint,,,ALPR Analysis,
+Animal Cruelty,,,Animal Bite Incident,
+Annoying Phone Calls - 2C:33-4a,,,Animal Complaint,
+Applicant ABC License (Server),,,ANIMAL COMPLAINT ,Animal Complaint
+Applicant ABC Liquor License (Business),,,Animal Cruelty,
+Applicant AD Material License,,,Applicant ABC License,Applicant ABC Liquor License (Business)
+Applicant All Others,,,Applicant ABC License (Server),
+Applicant City Employee,,,Applicant ABC Liquor License (Business),
+Applicant Concealed Carry,,,Applicant All Others,
+Applicant Firearm(s),,,Applicant City Employee,
+Applicant Handicapped Permit,,,Applicant Concealed Carry,
+Applicant Ice Cream Vendor,,,Applicant Firearm,Applicant Firearm(s)
+Applicant Jewelry,,,Applicant Firearm(s),
+Applicant Landscaper,,,Applicant Handicapped Permit,
+Applicant Limo,,,Applicant Ice Cream Vendor,
+Applicant Peddling License,,,Applicant Jewelry,
+Applicant Pistol Permit,,,Applicant Landscaper,
+Applicant Police Auxiliary,,,Applicant Landscaper/Snow Rem,
+Applicant Police Officer,,,Applicant Limo,
+Applicant Snow Removal ,,,Applicant Peddling License,
+Applicant Solicitor,,,Applicant Peddling/Ad Material License,
+Applicant Spa Therapy,,,Applicant Pistol Permit,
+Applicant Taxi,,,Applicant Police Auxiliary,
+Applicant Towing,,,Applicant Police Officer,
+Applicant Vending License,,,Applicant Police Officer ,
+Arrest and JV Complaints,,,Applicant Snow Removal ,
+Arrest Process,,,Applicant Solicitor,
+Arson - 2C:17-1,,,Applicant Spa Therapy,
+Assist Motorist,,,Applicant Taxi,
+Assist Other Agency,,,Applicant Taxi / Limo,
+Assist Own Agency (Backup),,,Applicant Towing,
+Attempted Burglary - Auto - 2C:18-2,,,Applicant Vending License,
+Attempted Burglary - Commercial - 2C:18-2,,,Arrest Process,
+Attempted Burglary - Residence - 2C:18-2,,,Arson - 2C:17-1,
+Aviation Accident,,,Arson 2C:17-1,Arson - 2C:17-1
+Background Checks,,,Assist Motorist,
+Bad Checks - 2C:21-5,,,Assist Other Agency,Assist Other Agency
+Bias Incident,,,Assist Other Agency ,Assist Other Agency
+Blocked Driveway,,,Assist Own Agency (Backup),Assist Own Agency (Backup)
+Boating Incident,,,Assist Own Agency (Backup) ,Assist Own Agency (Backup)
+BOLO,,,Attempted Burglary - Residence - 2C:18-2,
+Bomb Scare,,,Attempted Burglary 2C:18-2,9-1-1 Call
+Breath Test - Refusal - 39:4-50.2,,,Background Checks,
+Bribery - 2C:27-2,,,Bad Checks - 2C:21-5,
+Burglar Tools - 2C:5-5,,,Bad Checks 2C:21-5,Bad Checks - 2C:21-5
+Burglary - Auto - 2C:18-2,,,Bad Checks 2C:21-5 ,Bad Checks - 2C:21-5
+Burglary - Commercial - 2C:18-2,,,Bias Incident,
+Burglary - Residence - 2C:18-2,,,Blocked Driveway,
+Canceled Call,,,Boating Incident,
+Canvassing without Permit,,,BOLO,
+Canvassing/Peddling Permit,,,Bomb Scare,
+Car Seat Installation,,,Breath Test: Refusal  39:4-50.2,Breath Test - Refusal - 39:4-50.2
+Car Wash,,,Burglar Tools 2C:5-5,Burglar Tools - 2C:5-5
+Carjacking - 2C:15-2,,,Burglary  2C:18-2,
+Catalytic Converter Theft,,,Burglary - Auto - 2C: 18-2,Burglary - Auto - 2C:18-2
+CCH/III Request,,,Burglary - Auto - 2C:18-2,
+CDS: Obtain by Fraud - 2C:35-13,,,Burglary - Commercial - 2C: 18-2,Burglary - Commercial - 2C:18-2
+CDS/Dist.; School Property - 2C:35-7,,,Burglary - Commercial - 2C:18-2,Burglary - Commercial - 2C:18-2
+CDS/Distribution - 2C:35-5,,,Burglary - Commercial 2C: 18-2,Burglary - Commercial - 2C:18-2
+CDS/Employing Juvenile - 2C:35-6,,,Burglary - Residence - 2C: 18-2,Burglary - Residence - 2C:18-2
+CDS/Possession: Influence - 2C:35-10,,,Burglary - Residence - 2C:18-2,Burglary - Residence - 2C:18-2
+Checked Road Conditions (Weather),,,Burglary - Residence 2C:18-2,Burglary - Residence - 2C:18-2
+Child Abuse - Title 9,,,Burglary-Residential,Burglary - Residence - 2C:18-2
+Child Custody Dispute,,,Canceled Call,
+Church Crossing,,,Car Seat Installation,
+City Ordinance,,,Car Wash,
+City Ordinance Warning,,,"Car wash
+",Car Wash
+Civil Defense Test,,,Carjacking  2C:15-2,Carjacking - 2C:15-2
+Cleared - Arrest,,,Carjacking - 2C:15-2,
+Code Blue,,,Carjacking 2C:15-2,Carjacking - 2C:15-2
+Coffee Break,,,Catalytic Converter Theft,
+Community Engagement - Community Policing,,,CCH / III Request,CCH/III Request
+Community Engagement - Crime Prevention,,,CDS/Dist.; School Property  2C:35-7,
+Community Engagement - Crisis Intervention ,,,CDS/Possession: Influence  2C:35-10,CDS/Possession: Influence - 2C:35-10
+Community Engagement - Emergency Response ,,,CDS/Possession: Influence - 2C:35-10,CDS/Possession: Influence - 2C:35-10
+Community Engagement - Online Engagement,,,CDS/Possession: Influence  2C:35-10 ,CDS/Possession: Influence - 2C:35-10
+Community Engagement - Public Education,,,CDS/Possession: Influence 2C:35-10,CDS/Possession: Influence - 2C:35-10
+Community Engagement - School Outreach,,,Checked Road Conditions (Weather),
+Community Engagement - Traffic Safety,,,Child Abuse - Title 9,
+Community Engagement - Victim Support,,,Child Custody Dispute,
+Compensation - 2C:27-4,,,City Ordinance,
+Compensation/Public Servant - 2C:27-7,,,City Ordinance Warning,
+Complaint Signed,,,Code Blue,
+Compounding - 2C:29-4,,,Coffee Break,
+Compulsory School Attend. - Title 18A:38-2,,,Community Engagement,Community Engagement - Community Policing
+Computer Issue - Desktop,,,Community Engagement ,Community Engagement - Community Policing
+Computer Issue - Vehicle,,,Community Engagement - Community Policing,
+Conditional Dismissal Process,,,Community Engagement - Crime Prevention,
+Conspiracy - 2C:5-2,,,Community Engagement - Crisis Intervention ,
+Constable - Secured Park Facilities,,,Community Engagement - Emergency Response ,
+Construction Hours,,,Community Engagement - Online Engagement,
+Contempt of Court - 2C:29-9,,,Community Engagement - Public Education,
+Controlled Buy,,,Community Engagement - School Outreach,
+Controlled CDS Purchase,,,Community Engagement - Traffic Safety,
+Cooperative Arrest - Little Ferry,,,Community Engagement - Victim Support,
+Cooperative Arrest - Maywood,,,Computer Issue - Vehicle,
+Cooperative Arrest - Ridgefield Park,,,Computer Issue – Vehicle,Computer Issue - Vehicle
+Cooperative Arrest - South Hackensack,,,Conditional Dismissal Process,
+Counterfeit Money,,,Constable - Secured Park Facilities,
+Court - Federal,,,Construction Hours,
+Court - Municipal,,,Contempt of Court -  2C:29-9,
+Court - Municipal Prisoner,,,Contempt of Court  2C:29-9,Contempt of Court - 2C:29-9
+Court - Other Municipality,,,Counterfeit Money,
+Court - Superior,,,Court - Municipal,
+Court Officer,,,Court - Other Municipality,
+Court Order,,,Court - Superior,
+Courtesy Transport,,,Court- Municipal Prisoner,Court - Municipal Prisoner
+Creating a Hazard - 2C:40-1,,,Court Officer,
+Credit Cards - Unlawful Use - 2C:21-6,,,Court Order,
+Credit Practices - 2C:21-19,,,Creating a Hazard  2C:40-1,Creating a Hazard - 2C:40-1
+Criminal Attempt - 2C:5-1,,,Credit Cards - Unlawful Use  2C:21-6,Credit Cards - Unlawful Use - 2C:21-6
+Criminal Coercion - 2C:13-5,,,Credit Cards - Unlawful Use - 2C:21-6,Credit Cards - Unlawful Use - 2C:21-6
+Criminal Homicide - 2C:11-2,,,Credit Cards: Unlawful Use  2C:21-6,Credit Cards - Unlawful Use - 2C:21-6
+Criminal Mischief - 2C:17-3,,,Criminal Attempt  2C:5-1,Criminal Coercion - 2C:13-5
+Criminal Mischief - Graffiti - 2C:17-3,,,Criminal Attempt - 2C:5-1,
+Criminal Mischief - Park - 2C:17-3,,,Criminal Coercion - 2C:13-5,
+Criminal Mischief - School - 2C:17-3,,,Criminal Mischief  2C:17-3,Criminal Mischief - 2C:17-3
+Criminal Mischief - Vehicle - 2C:17-3,,,Criminal Mischief - 2C:17-3,
+Criminal Restraint - 2C:13-2,,,Criminal Mischief - Graffiti - 2C:17-3,
+Criminal Sexual Contact - 2C:14-3a,,,Criminal Mischief - Park - 2C:17-3,
+Criminal Simulation - 2C:21-2,,,Criminal Mischief - Vehicle - 2C:17-3,
+Criminal Trespass - 2C:18-3,,,Criminal Mischief 2C:17-3,Criminal Mischief - 2C:17-3
+Cyber Harassment - 2C:33-4.1,,,Criminal Sexual Contact  2C:14-3a,Criminal Sexual Contact - 2C:14-3a
+D.O.A,,,Criminal Sexual Contact - 2C:14-3a,Criminal Sexual Contact - 2C:14-3a
+D.P.W. Assist,,,Criminal Sexual Contact 2C:14-3a,Criminal Sexual Contact - 2C:14-3a
+Damage to Property: Threats - 2C:33-11,,,Criminal Simulation  2C:21-2,Criminal Simulation - 2C:21-2
+DARE Assignment,,,Criminal Trespass  2C:18-3,Criminal Trespass - 2C:18-3
+DCPP (DYFS),,,Criminal Trespass - 2C:18-3,Criminal Trespass - 2C:18-3
+Dead Animal,,,Criminal Trespass 2C:18-3,Criminal Trespass - 2C:18-3
+Deceased Person/Sexual Pen. - 2C:34-5,,,Cyber Harassment - 2C:33-4.1,Cyber Harassment - 2C:33-4.1
+Desecration/Venerated Obj. - 2C:33-9,,,Cyber Harassment 2C:33-4.1,Cyber Harassment - 2C:33-4.1
+Desk Coverage,,,D.O.A,
+Detective Bureau Detail,,,D.P.W. Assist,D.P.W. Assist
+Disabled Motor Vehicle,,,DCPP (DYFS),
+Disarm a Law Enforcement Officer,,,Dead Animal,
+Disarm a Law Enforcement Officer - Attempt,,,Desecration/Venerated Obj.  2C:33-9,
+Discovery - Criminal,,,Desk Coverage,Desk Coverage
+Discovery - Motor Vehicle,,,"Desk Coverage
+",Desk Coverage
+Discovery - Non Specific,,,Detective Bureau Detail,
+Disorderly Conduct - 2C:33-2,,,Disabled Motor Vehicle,
+Dispute,,,Discovery - Criminal,
+Disrupting Meet/Procession - 2C:33-8s,,,Discovery - Motor Vehicle,Discovery - Motor Vehicle
+Disturbance,,,Discovery - Motor Vehicle ,Discovery - Motor Vehicle
+DNA Sample,,,Discovery - Non Specific,Discovery - Non Specific
+Docket - Drop Off,,,Discovery-Criminal,Discovery - Criminal
+Docket - Pick up,,,Discovery-Criminal ,Discovery - Criminal
+Dogs at Large,,,Discovery-Motor Vehicle,Discovery - Motor Vehicle
+Dogs Defecating,,,Discovery-MotorVehicle,Discovery - Motor Vehicle
+Domestic Violence - 2C:25-21,,,Discovery-Non Specific,Discovery - Non Specific
+Drinking in Public,,,Disorderly Conduct  2C:33-2,Disorderly Conduct - 2C:33-2
+Driving While Intoxicated - 39:4-50,,,Disorderly Conduct - 2C:33-2,Disorderly Conduct - 2C:33-2
+Drug Paraphernalia - 2C:36-2,,,Dispute,
+Duty to Warn - Notification,,,dispute ,Dispute
+Embezzlment,,,Disturbance,
+Emergency Access Card Use,,,disturbance ,Disturbance
+Endangering Welfare - 2C:24-4,,,DNA Sample,
+Endangering Welfare - 2C:24-7,,,Docket – Drop Off,Docket - Drop Off
+Endangering Welfare - 2C:24-8,,,Docket – Pick up,Docket - Pick up
+Enticing a Child - 2C:13-6,,,Docket – Pick up ,Docket - Pick up
+Escape - 2C:29-5,,,Dogs at Large,Dogs at Large
+Escort - Money,,,Dogs at Large ,Dogs at Large
+ESU - Response,,,Dogs Defecating,
+ESU - Training,,,Domestic Dispute,Dispute
+Evidence Delivery,,,"domestic Dispute
+",Dispute
+Evidence Retrieval,,,Domestic Violence  2C:25-21,Domestic Violence - 2C:25-21
+Evidence Tampering - 2C:28-6,,,Domestic Violence - 2C:25-21,Domestic Violence - 2C:25-21
+Exceptionally Cleared/Closed,,,Domestic Violence 2C:25-21,Domestic Violence - 2C:25-21
+Expungement,,,Drinking in Public,
+Facial Recognition Request,,,Driving While Intoxicated   39:4-50,Driving While Intoxicated - 39:4-50
+False Imprisonment - 2C:13-3,,,Driving While Intoxicated - 39:4-50,Driving While Intoxicated - 39:4-50
+False Public Alarm - 2C:33-3,,,Driving While Intoxicated 39:4-50,Driving While Intoxicated - 39:4-50
+False Reports - 2C:28-4,,,Drug Paraphernalia  2C:36-2,Drug Paraphernalia - 2C:36-2
+False Swearing - 2C:28-2,,,Duty to Warn ,Duty to Warn - Notification
+Fear of Bodily Violence - 2C:33-10,,,Duty To Warn - Notification,
+Fencing - 2C:20-7.1,,,E.D.P,
+Field Contact/ Information,,,Embezzlment,
+Fight - Armed,,,Emergency Access Card Use,
+Fight - Unarmed,,,Endangering Welfare  2C:24-4,Endangering Welfare - 2C:24-4
+Fingerprints,,,Endangering Welfare  2C:24-7,Endangering Welfare - 2C:24-7
+Fire,,,Enticing a Child  2C:13-6,Enticing a Child - 2C:13-6
+Fire Department Call,,,Escape - 2C:29-5,
+Fireworks Complaint,,,Escort - Money,Escort - Money
+Fish and Game Violation  Title 23,,,"Escort - Money
+",Escort - Money
+Food/Drug Tampering - 2C:40-17,,,Esu - Response,ESU - Response
+Forgery - 2C:21-1,,,Esu - Training,ESU - Response
+Fraud,,,Evidence Delivery,
+FTO Documentation,,,Evidence Delivery / Retrieval,
+Fugitive from Justice,,,Expungement,
+Funeral Escort,,,Facial Recognition Request,
+Gang Intelligence,,,False Imprisonment  2C:13-3,False Imprisonment - 2C:13-3
+General Information,,,False Public Alarm  2C:33-3,False Public Alarm - 2C:33-3
+General Investigation,,,False Public Alarm - 2C:33-3,False Public Alarm - 2C:33-3
+Generated in Error,,,False Reports  2C:28-4,False Reports - 2C:28-4
+Generator Test,,,False Reports - 2C:28-4,False Reports - 2C:28-4
+Gifts/Public Servant - 2C:27-6,,,FERPO/TERPO,Service - TERPO
+Good Conduct Letter Request,,,Field Contact/ Information,Field Contact/ Information
+Group,,,Fight - Armed,
+Handle With Care - Notification,,,Fight - Unarmed,
+Harassment - 2C:33-4,,,Fight -Armed,Fight - Armed
+HAZ-MAT Incident,,,Fight -Unarmed,Fight - Unarmed
+Hazard - Pothole,,,Fight -Unarmed ,Fight - Unarmed 
+Hazard All Other,,,Fingerprints,
+Hazardous Condition - Health/Welfare,,,fire,Fire
+Hazardous Condition - Sewer Call,,,Fire ,
+Hazardous Road Condition - Flooding,,,Fire Department Call,Fire Department Call
+Hazardous Road Condition - General,,,Fire Department Call ,Fire Department Call
+Hazardous Road Condition - Ice,,,Firearm Qualification,Training
+Hindering Apprehension - 2C:29-3,,,Fireworks Complaint,
+Homicide - 2C:11-2,,,Fish And Game Violation  Title 23,Fish and Game Violation  Title 23
+Hostage Situation,,,Food/Drug Tampering - 2C:40-17,
+HQ Assignment,,,Forgery  2C:21-1,Forgery - 2C:21-1
+Hypodermic/Possession - 2C:36-6,,,Forgery - 2C:21-1,
+ICE Notification,,,Fraud,Fraud
+Identity Theft,,,Fraud ,Fraud
+Illegal Dumping,,,"fraud
+",Fraud
+Imitation CDS - 2C:35-11,,,FTO Documentation,
+Impersonating Public Servant - 2C:28-9,,,Funeral Escort,
+Implements for Escape - 2C:29-6,,,General Information,
+Improper Records,,,General Investigation,
+Information,,,Generated in Error,
+Injured on Duty,,,Generator Test,
+Injury/Law Enforce. Animals - 2C:29-3.1,,,Good Conduct Letter Request,
+Insecure Building,,,Group,
+Interception/Emerg. Comm. - 2C:33-21,,,"group
+",Group
+Interference - 2C:29-1,,,Handle With Care,
+Interference w/Transport. - 2C:33-14,,,Handle With Care - Notification,
+Interference With Custody - 2C:13-4,,,Harassment  2C:33-4,Harassment - 2C:33-4
+Interference/Railway Signals - 2C:33-14.1,,,Harassment - 2C:33-4,Harassment - 2C:33-4
+Intoxicated Person,,,Harassment  2C:33-4p,Harassment - 2C:33-4
+Invasion of Privacy - Observing,,,Hazard - Pothole,
+Investigation - Follow-Up,,,Hazard All Other,
+Juvenile Complaint (Criminal),,,Hazardous Condition - Health / Welfare,
+Juvenile Complaint (Non-Criminal),,,Hazardous Condition - Health/Welfare,
+Juvenile Complaint Signed,,,Hazardous Condition - Sewer Call,
+Juvenile Investigation,,,Hazardous Condition -Health / Welfare,Hazardous Condition - Health/Welfare
+Kidnapping - 2C:13-1,,,Hazardous Condition -Sewer Call,Hazardous Condition - Sewer Call
+Landlord/Tenant Dispute,,,Hazardous Condition -Sewer Call ,Hazardous Condition - Sewer Call
+Leaving Scene of an Acc. -  39:4-129,,,Hazardous Road Condition - Flooding,
+Lewdness - 2C:14-4,,,Hazardous Road Condition - General,
+License Plate-Lost/Stolen,,,Hazardous Road Condition - Ice,
+Lo-Jack Hit - Tracking Signal,,,Hazardous Road Condition –Flooding,Hazardous Road Condition - Flooding
+Lock-Out Residence,,,Hazardous Road Condition -General,Hazardous Road Condition - General
+Loitering/CDS Offense - 2C:33-2.1,,,Hazardous Road Condition -General ,Hazardous Road Condition - General
+M.V. Master Keys - 2C:5-6,,,Hazardous Road Condition –Ice,Hazardous Road Condition - Ice
+Maintaining a Nuisance - 2C:33-12,,,Hazard-Pothole,Hazard - Pothole
+Manslaughter - 2C:11-4,,,HAZ-MAT Incident,HAZ-MAT Incident
+Meal Break,,,Hindering Apprehension  2C:29-3,Hindering Apprehension - 2C:29-3
+Medical Call,,,Hindering Apprehension - 2C:29-3,Hindering Apprehension - 2C:29-3
+Medical Call - Oxygen,,,Hostage Situation,
+Medical Call/Injury,,,HQ Assignment,
+Meeting,,,Identity Theft,Identity Theft
+Megan's Law Violation,,,Identity Theft ,Identity Theft
+Mental Health Incident,,,Illegal Dumping,Illegal Dumping
+Missing Person - Adult,,,Illegal Dumping ,Illegal Dumping
+Missing Person - Juvenile,,,Information,
+Missing Person - Return - Adult,,,Injured On Duty,
+Missing Person - Return - Juvenile,,,Insecure Building,
+Money Laundering,,,Interference With Custody  2C:13-4,Interference With Custody - 2C:13-4
+Motor Vehicle - Private Property Tow,,,Interference With Custody - 2C:13-4,Interference With Custody - 2C:13-4
+Motor Vehicle Complaint,,,Intoxicated Person,
+Motor Vehicle Crash,,,Invasion of Privacy,
+Motor Vehicle Crash - Bicyclist Struck,,,Invasion of Privacy - Observing,
+Motor Vehicle Crash - Hit and Run,,,Invasion of Privacy (Observing) ,Invasion of Privacy - Observing
+Motor Vehicle Crash - Pedestrian Struck,,,Investigation - Follow-Up,Investigation - Follow-Up
+Motor Vehicle Crash - Police Vehicle,,,"Investigation - Follow-Up
+",Investigation - Follow-Up
+Motor Vehicle Crash - w/injury,,,Investigation-Follow up,Investigation - Follow-Up
+Motor Vehicle Impound,,,Juvenile Complaint (Criminal),9-1-1 Call
+Motor Vehicle Lock-out,,,Juvenile Complaint (Non-Criminal),
+Motor Vehicle Stop,,,Juvenile Complaint Signed,
+Motor Vehicle Theft - 2C:20-3,,,Juvenile Investigation,Juvenile Investigation
+Motor Vehicle Violation,,,Juvenile Investigation ,Juvenile Investigation
+Motor Vehicle Violation - Commercial Vehicle,,,Kidnapping  2C:13-1,Kidnapping - 2C:13-1
+Motor Vehicle Violation - Private Property,,,Kidnapping - 2C:13-1,
+Municipal Property/Building Check,,,Landlord / Tenant Dispute,Landlord/Tenant Dispute
+Murder - 2C:11-3,,,Lewdness  2C:14-4,Lewdness - 2C:14-4
+Mutual Aid - E.M.S.,,,Lewdness - 2C:14-4,Lewdness - 2C:14-4
+Mutual Aid - Fire,,,Lewdness 2C:14-4,Lewdness - 2C:14-4
+Mutual Aid - Police,,,License Plate-Lost/Stolen,License Plate-Lost/Stolen
+NARCAN Deployment - Adult - Aid,,,Lock-Out Residence,Lock-Out Residence
+NARCAN Deployment - Juvenile - Aid,,,Lo-Jack Hit - Tracking Signal,
+Narcotics Investigation,,,M.V. Master Keys  2C:5-6,M.V. Master Keys - 2C:5-6
+NCIC Record,,,meal,Meal Break
+No Investigation ,,,Meal Break,
+Noise Complaint,,,Medical Call,Medical Call
+Non-Emergency Assist,,,Medical Call ,Medical Call
+Non-Support - 2C:24-5,,,Medical Call - Oxygen,
+Notification Request,,,Medical Call –Oxygen,Medical Call - Oxygen
+Obscenity - Over 18 yrs. - 2C:34-2,,,Medical Call/Injury,Medical Call/Injury
+Obscenity - Under 18 yrs. - 2C:34-3,,,Medical Call/Injury ,Medical Call/Injury
+Obscenity Public Comm. - 2C:34-4,,,Medical Emergency,
+Obscenity Retail Display - 2C:34-3.2,,,Meeting,
+Obstructing Highways/Pass. - 2C:33-7,,,Megan's Law Violation,
+Obstruction of Govermental Function,,,Mental Health Call,
+Off the Air,,,Mental Health Incident,
+Official Misconduct - 2C:30-2,,,Missing Person,
+On-Duty Fitness,,,Missing Person - Adult,
+OOPS Investigation,,,Missing Person - Juvenile,
+OPRA Request,,,Missing Person - Return - Adult,
+Overdose - Adult - Aid,,,Missing Person - Return - Juvenile,
+Overdose - Juvenile - Aid,,,Missing Person- Return,
+Overnight Parking,,,Money Laundering,
+Paging Device/Illicit Use - 2C:33-20,,,Motor Vehicle - Private Property Tow,
+Paging Device/Minors - 2C:33-18,,,Motor Vehicle Complaint,Motor Vehicle Complaint
+Paging Device/Student - 2C:33-19,,,Motor Vehicle Complaint ,Motor Vehicle Complaint
+Parking Complaint,,,Motor Vehicle Crash,Motor Vehicle Crash
+Parking Offense,,,Motor Vehicle Crash -  w/injury,Motor Vehicle Crash - w/injury
+Parks Department Needed,,,Motor Vehicle Crash - Bicyclist Struck,
+Parole/Probation Registry,,,Motor Vehicle Crash - Hit and Run,
+Patrol Check,,,Motor Vehicle Crash – Hit and Run,Motor Vehicle Crash - Hit and Run
+Patrol Check - Extra Duty Detail,,,Motor Vehicle Crash - Pedestrian Struck,
+Pawned Item(s),,,Motor Vehicle Crash – Pedestrian Struck,Motor Vehicle Crash - Pedestrian Struck
+Peace Officer,,,Motor Vehicle Crash - Police Vehicle,
+Perjury 2C:28-1,,,Motor Vehicle Crash-Bicyclist Struck,Motor Vehicle Crash - Bicyclist Struck
+Photography,,,Motor Vehicle Crash-City Police Vehicle,Motor Vehicle Crash - Police Vehicle
+Police Assist,,,Motor Vehicle Crash-Police Vehicle,Motor Vehicle Crash - Police Vehicle
+Poss. CDS in MV - 39:4-49.1,,,Motor Vehicle Impound,
+PRD Activation,,,Motor Vehicle Lock-out,
+Presentation Community Policing,,,Motor Vehicle Stop,
+Prisoner Log ,,,Motor Vehicle Theft,Motor Vehicle Theft - 2C:20-3
+Prisoner Transport,,,Motor Vehicle Theft ,Motor Vehicle Theft - 2C:20-3
+Prohibited Weapons - 2C:39-3,,,Motor Vehicle Theft  2C:20-3,Motor Vehicle Theft - 2C:20-3
+Property - Found,,,Motor Vehicle Theft - 2C:20-3,Motor Vehicle Theft - 2C:20-3
+Property - Lost,,,Motor Vehicle Theft 2C:20-3,Motor Vehicle Theft - 2C:20-3
+Property Damage - City Property,,,Motor Vehicle Violation,
+Property Damage - Non-Criminal,,,Motor Vehicle Violation - Commercial Vehicle,
+Property Damage - Police Vehicle,,,Motor Vehicle Violation – Commercial Vehicle,Motor Vehicle Violation - Commercial Vehicle
+Property Disposition,,,Motor Vehicle Violation - Private Property,Motor Vehicle Violation - Private Property
+Property Recovered - Stolen,,,Motor Vehicle Violation – Private Property,Motor Vehicle Violation - Private Property
+Property Returned - Court Ordered,,,Mutual Aid - E.M.S.,
+Property Returned - Lost and Found,,,Mutual Aid - Police,
+Prostitution - 2C:34-1,,,Mutual Aid – Police,Mutual Aid - Police
+Public Safety/Sr. Citizens - 2C:24-8,,,Narcotics Investigation,Narcotics Investigation
+Pursuit - Foot,,,Narcotics Investigation  ,Narcotics Investigation
+Pursuit - Motor Vehicle,,,NCIC Record,
+Radar Detail,,,Noise Complaint,Noise Complaint
+Radar Trailer Deployed,,,Noise Complaint ,Noise Complaint
+Radio Coverage,,,Non-Emergency Assist,
+RDF Deployment,,,Notification Request,
+RDT Deployment,,,Obstruction of Govermental Function,
+Receiving Stolen Property - 2C:20-7,,,Official Misconduct  2C:30-2,Official Misconduct - 2C:30-2
+Reckless Endangerment - 2C:12-2,,,On-Duty Fitness,
+Records Request,,,Oops Investigation,
+Records Request - DCPP (DYFS),,,OPRA Request,
+Recovered Stolen - Article,,,Overdose - Adult - Aid,
+Recovered Stolen - Firearm,,,Overnight Parking,Overnight Parking
+Recovered Stolen License Plate,,,Overnight Parking ,Overnight Parking
+Recovered Stolen Vehicle,,,Paging Device/Illicit Use - 2C:33-20,
+Refuel Vehicle,,,Parking Complaint,Parking Complaint
+Relief/Personal,,,Parking Complaint ,Parking Complaint
+Repossessed Motor Vehicle,,,Parking Offense,Parking Offense
+Resisting Arrest/Eluding - 2C:29-2,,,Parole/Probation Registry,Parole/Probation Registry
+Retaliation/Official Action - 2C:27-5,,,Parole/Probation Registry ,Parole/Probation Registry
+Riot - Failure to Disperse - 2C:33-1,,,Patrol Check,Patrol Check
+Road Job/Outside Assignment,,,Patrol Check ,Patrol Check
+Robbery - 2C:15-1,,,Patrol Check - Extra Duty Detail,
+Sale of Cigarettes to Minors - 2A:170-51,,,"Patrol Check
+",Patrol Check
+School Crossing,,,Pawned Item(s),Pawned Item(s)
+School Detail,,,Peace Officer,Peace Officer
+Search Warrant Execution - CDW,,,Peace Officer ,Peace Officer
+Search Warrant Execution - Vehicle,,,Perjury  2C:28-1,Perjury 2C:28-1
+Search Warrant Execution - Structure,,,Perjury 2C:28-1,Perjury 2C:28-1
+Service - FERPO,,,Photography,
+Service - FRO,,,Police Assist,Police Assist
+Service - Subpoena,,,Police Assist ,Police Assist
+Service - Summons,,,Poss. CDS in MV  39:4-49.1,Poss. CDS in MV - 39:4-49.1
+Service - TERPO,,,Prisoner Log ,
+Service - TRO,,,Prisoner Log -Routine Response,
+Service - Warrant,,,Prisoner Transport,Prisoner Transport
+Serving Alcohol to Minors - 2C:33-17,,,Property - Found,Property - Found
+Sex Offender - Address Verification,,,Property – Found,Property - Found
+Sex Offender - General,,,Property - Lost,Property - Lost
+Sex Offender - Intent to Move,,,Property – Lost,Property - Lost
+Sex Offender - Removal Order,,,Property Damage - City Property,
+Sex Offender - Serve Documents,,,Property Damage - Non-Criminal,
+Sex Offender - Serve Tier Papers,,,Property Damage - Police Vehicle,
+Sex Offender - Travel,,,Property Damage (City Property),Property Damage - City Property
+Sex Offender Investigation,,,Property Damage (Non-Criminal),Property Damage - Non-Criminal
+Sex Offender Registration,,,Property Damage (Non-Criminal) ,Property Damage - Non-Criminal
+Sex Offender Registration - Employment,,,Property Damage (Police Vehicle),Property Damage - Police Vehicle
+Sex Offender Registration - School Enrollment,,,Property Disposition,
+Sexual Assault - 2C:14-2b,,,Property Recovered: Stolen,Property Recovered - Stolen
+Shooting,,,Property Returned - Court Ordered,
+Shoplifting - 2C:20-11,,,Property Returned - Lost and Found,
+Shopping Cart,,,Property Returned: Lost and Found,Property Returned - Lost and Found
+Shots Fired Investigation,,,Prostitution  2C:34-1,Prostitution - 2C:34-1
+Simple Assault - 2C:12-1a,,,Prostitution - 2C:34-1,Prostitution - 2C:34-1
+Slugs - 2C:21-18,,,Pursuit – Foot,Pursuit - Foot
+Smoking Prohibited,,,Pursuit - Motor Vehicle,
+Snow Plowed onto Public Street,,,Pursuit – Motor Vehicle,Pursuit - Motor Vehicle
+Snow Removal,,,Radar Detail,
+Special Assignment,,,Radio Coverage,
+Stabbing,,,RDF Deployment,
+Stabbing,,,RDT Deployment,
+Stalking - 2C:12-10,,,Receiving Stolen Property  2C:20-7,Receiving Stolen Property - 2C:20-7
+Stationhouse Adjustment,,,Reckless Endangerment  2C:12-2,Reckless Endangerment - 2C:12-2
+Stolen Article,,,Records Request,Records Request
+Stranded Party,,,Records Request ,Records Request
+Street Light,,,Records Request - DCPP (DYFS),
+Structure Damage,,,Recovered Stolen Article,
+Sudden Death Investigation,,,Recovered Stolen License Plate,
+Suicidal Party,,,Recovered Stolen Vehicle,
+Suicide,,,Refuel Vehicle,Refuel Vehicle
+Summons,,,Refuel Vehicle ,Refuel Vehicle
+Surrender of Ammunition,,,Relief / Personal,Relief/Personal
+Surrender of Weapon,,,"Relief / Personal
+",Relief/Personal
+Surrendered Firearm ID Card,,,Relief/Personal,Relief/Personal
+Surrendered License Plates,,,Repossessed Motor Vehicle,Repossessed Motor Vehicle
+Suspended Drivers License - 39:3-40,,,Repossessed Motor Vehicle ,Repossessed Motor Vehicle
+Suspended Registration - 39:3-40,,,Robbery  2C:15-1,Robbery - 2C:15-1
+Suspicious Activity Report,,,Robbery - 2C:15-1,Robbery - 2C:15-1
+Suspicious Activity Submission,,,"robbery  2C:15-1
+",Robbery - 2C:15-1
+Suspicious Incident,,,Robbery 2C:15-1,Robbery - 2C:15-1
+Suspicious Item,,,sale of Cigarettes to Minors  2A:170-51,Sale of Cigarettes to Minors - 2A:170-51
+Suspicious Person,,,School Crossing,
+Suspicious Vehicle,,,School Detail,
+Tampering: Public Records - 2C:28-7,,,Search Warrant Execution,
+TAPS - Business,,,Search Warrant Execution - Cdw,Search Warrant Execution - CDW
+TAPS - ESU - Business,,,Search Warrant Execution- Structure,Search Warrant Execution - Structure
+TAPS - ESU - Medical Facility,,,Service - Ferpo,
+TAPS - ESU - Park,,,Service - FRO,
+TAPS - ESU - Parking Garage,,,Service - Subpoena,
+TAPS - ESU - Religious Facility,,,Service - Summons,
+TAPS - ESU - School,,,Service - TERPO,
+TAPS - Housing,,,Service - TRO,
+TAPS - Medical Facility,,,Service - Warrant,
+TAPS - Other,,,Service of Subpoena,Service - Subpoena
+TAPS - Park,,,Service of Summons,Service - Summons
+TAPS - Parking Garage,,,Service of TRO / FRO,
+TAPS - Religious Facility,,,Service of Warrant,Service - Warrant
+TAPS - School,,,Sex Offender - General,
+TAS Alert - Missing Person,,,Sex Offender - Intent to Move,
+TAS Alert - Stolen License Plate,,,Sex Offender Annual Address Verification,
+TAS Alert - Stolen Vehicle,,,Sex Offender Investigation,
+TAS Alert - Wanted Person,,,Sex Offender Registration,Sex Offender Registration
+Task Assignment,,,Sex Offender Registration ,Sex Offender Registration
+Temporary Parking,,,Sex Offender Registration - Employment,Sex Offender Registration - Employment
+Terroristic Threats - 2C:12-3,,,Sex Offender Registration-Employment,Sex Offender Registration - Employment
+Theft - 2C:20-3,,,Sex Offender Registration-School Enrollment,Sex Offender Registration - School Enrollment
+Theft by Deception - 2C:20-4,,,Sex Offender-General,Sex Offender - General
+Theft by Extortion - 2C:20-5,,,Sex Offender-Intent to Move,Sex Offender - Intent to Move
+Theft of Identity - 2C:21-17,,,Sex Offender-Removal Order,Sex Offender - Removal Order
+Theft of Lost/Mislaid Property - 2C:20-6,,,Sex Offender-Serve Documents,Sex Offender - Serve Documents
+Theft of Services - 2C:20-8,,,Sex Offender-Serve Tier Papers,Sex Offender - Serve Tier Papers
+Theft/Disposition - 2C:20-9,,,Sexual Assault  2C:14-2b,Sexual Assault - 2C:14-2b
+Time Check,,,Sexual Assault - 2C:14-2b,Sexual Assault - 2C:14-2b
+TOT DCP&P,,,Sexual Assault  2C:14-2b ,Sexual Assault - 2C:14-2b
+Traffic Bureau Report,,,Sexual Assault 2C:14-2b,Sexual Assault - 2C:14-2b
+Traffic Detail,,,Shooting,9-1-1 Call
+Traffic Detail - Road Closure,,,Shoplifting  2C:20-11,Shoplifting - 2C:20-11
+Traffic Enforcement Detail,,,Shoplifting - 2C:20-11,Shoplifting - 2C:20-11
+Traffic Hazard,,,Shoplifting  2C:20-11 ,Shoplifting - 2C:20-11
+Traffic Light Malfunction,,,Shoplifting 2C:20-11,Shoplifting - 2C:20-11
+Traffic Sign/Signal Malfunction,,,Shopping Cart,Shopping Cart
+Training,,,Shopping Cart ,Shopping Cart
+Training Record,,,Shots Fired Investigation,Shots Fired Investigation
+Transportation,,,Simple Assault  2C:12-1a,Simple Assault - 2C:12-1a
+Tree Limb Down,,,Simple Assault - 2C:12-1a,Simple Assault - 2C:12-1a
+Truancy,,,Simple Assault  2C:12-1a ,Simple Assault - 2C:12-1a
+U-Visa,,,Simple Assault 2C:12-1a,Simple Assault - 2C:12-1a
+UAS Operation,,,Smoking Prohibited,
+Unauthorized Intercept./Comm. - 2C:33-22,,,Snow Plowed onto Public Street,
+Underage Possession/Consumption - 2C:33-15,,,Snow Removal,
+Undercover Buy,,,Special Assignment,
+Unfounded Incident,,,Stabbing,
+Unfounded/Closed,,,Stalking  2C:12-10,Stalking - 2C:12-10
+Uninsured Vehicle - 39:6b-2,,,Stalking - 2C:12-10,
+Unintentional Discharge,,,Stolen Article,Stolen Article
+Unknown Investigation,,,stranded Party,
+Unlawful Possess./Weapons - 2C:39-5,,,Street Light,
+Unlawful Taking - 2C:20-10,,,Sudden Death Investigation,
+Unlawful Use Of 9-1-1 Sys. - 2C:33-3e,,,Suicidal Party,Suicidal Party
+Unregistered Vehicle - 39:3-4,,,Suicidal Party ,Suicidal Party
+Unsworn Falsification - 2C:28-3,,,Suicide,
+Unwanted Person,,,Surrender of Ammunition,Surrender of Ammunition
+Urinating in Public,,,Surrender of Weapon,Surrender of Weapon
+Utility Incident,,,Suspended Drivers License  39:3-40,Suspended Drivers License - 39:3-40
+Vacant House,,,Suspended Drivers License 39:3-40,Suspended Drivers License - 39:3-40
+Vacation,,,Suspended Registration  39:3-40,Suspended Registration - 39:3-40
+Validation,,,Suspended Registration - 39:3-40,Suspended Registration - 39:3-40
+Vehicle Maintenance,,,Suspicious Activity Report,Suspicious Activity Report
+Vehicular Homicide - 2C:11-5,,,Suspicious Incident,Suspicious Incident
+Vending Without Permit,,,Suspicious Incident ,Suspicious Incident
+Violation FRO - 2C:29-9b,,,Suspicious Item,
+Violation of Court Order,,,Suspicious Person,
+Violation TRO - 2C:29-9b,,,Suspicious Vehicle,Suspicious Vehicle
+Virtual - Patrol,,,Suspicious Vehicle ,Suspicious Vehicle
+Wagering/Official Action - 2C:30-3,,,T-05,Task Assignment
+Warning Issued,,,Tampering: Public Records  2C:28-7,Tampering: Public Records - 2C:28-7
+Warrant Arrest,,,Tampering: Public Records - 2C:28-7,Tampering: Public Records - 2C:28-7
+Warrant Recall,,,TAPS - Business,
+Weapons - Unlawful Purposes - 2C:39-4,,,TAPS - ESU - Business,
+Weapons Seizure - 2C:25-21d.,,,TAPS - ESU - Medical Facility,
+Weather Alerts,,,TAPS - ESU - Park,
+Welfare Check,,,TAPS - ESU - Parking Garage,
+Widespread Damage - 2C:17-2,,,TAPS - ESU - Religious Facility,
+Wire Down,,,TAPS - ESU - School,
+Witness Tampering - 2C:28-5,,,TAPS - Housing,
+Wrongful Impersonating - 2C:21-1,,,TAPS - Medical Facility,
+,,,TAPS - Other,
+,,,TAPS - Park,
+,,,TAPS - Parking Garage,
+,,,TAPS - Religious Facility,
+,,,TAPS - School,
+,,,Targeted Area Patrol,
+,,,Tas Alert - Missing Person,TAS Alert - Missing Person
+,,,TAS Alert - Stolen License Plate,
+,,,Tas Alert - Stolen Vehicle,TAS Alert - Stolen Vehicle
+,,,Tas Alert - Wanted Person,
+,,,Task Assignment,
+,,,Temporary Parking,
+,,,Terroristic Threats  2C:12-3,Terroristic Threats - 2C:12-3
+,,,Terroristic Threats - 2C:12-3,Terroristic Threats - 2C:12-3
+,,,Terroristic Threats  2C:12-3 ,Terroristic Threats - 2C:12-3
+,,,Terroristic Threats 2C:12-3,Terroristic Threats - 2C:12-3
+,,,Theft,Theft - 2C:20-3
+,,,Theft  2C:20-3,Theft - 2C:20-3
+,,,Theft - 2C:20-3,Theft - 2C:20-3
+,,,Theft  2C:20-3 ,Theft - 2C:20-3
+,,,Theft 2C:20-3,Theft - 2C:20-3
+,,,Theft by Deception  2C:20-4,Theft by Deception - 2C:20-4
+,,,Theft by Deception - 2C:20-4,Theft by Deception - 2C:20-4
+,,,Theft by Deception 2C:20-4,Theft by Deception - 2C:20-4
+,,,Theft by Extortion  2C:20-5,Theft by Extortion - 2C:20-5
+,,,Theft by Extortion - 2C:20-5,Theft by Extortion - 2C:20-5
+,,,Theft From Auto,Burglary - Auto - 2C:18-2
+,,,Theft of Identity  2C:21-17,Theft of Identity - 2C:21-17
+,,,Theft of Lost/Mislaid Property  2C:20-6,Theft of Lost/Mislaid Property - 2C:20-6
+,,,Theft of Lost/Mislaid Property - 2C:20-6,Theft of Lost/Mislaid Property - 2C:20-6
+,,,Theft of Lost/Mislaid Property 2C:20-6,Theft of Lost/Mislaid Property - 2C:20-6
+,,,Theft of Services  2C:20-8,Theft of Services - 2C:20-8
+,,,Theft of Services - 2C:20-8,Theft of Services - 2C:20-8
+,,,Theft of Services  2C:20-8 ,Theft of Services - 2C:20-8
+,,,Theft of Services 2C:20-8,Theft of Services - 2C:20-8
+,,,Time Check,
+,,,Traffic Bureau Report,
+,,,Traffic Detail,
+,,,Traffic Detail - Road Closure,
+,,,Traffic Enforcement Detail,Traffic Enforcement Detail
+,,,Traffic Enforcement Detail ,Traffic Enforcement Detail
+,,,Traffic Hazard,
+,,,Traffic Light Malfunction,
+,,,Traffic Sign / Signal Malfunction,Traffic Sign/Signal Malfunction
+,,,Traffic Sign/Signal Malfunction,Traffic Sign/Signal Malfunction
+,,,Training,Training
+,,,Training ,Training
+,,,Training Record,Training Record
+,,,Transportation,
+,,,Tree limb down,
+,,,Trespass-Criminal,
+,,,Truancy,
+,,,UAS Operation,UAS Operation
+,,,UAS Operations,UAS Operation
+,,,Underage Possession/Consumption - 2C:33-15,
+,,,Unknown Investigation,
+,,,Unlawful Possess./Weapons  2C:39-5,Unlawful Possess./Weapons - 2C:39-5
+,,,Unlawful Possess./Weapons - 2C:39-5,Unlawful Possess./Weapons - 2C:39-5
+,,,Unlawful Possess./Weapons 2C:39-5,Unlawful Possess./Weapons - 2C:39-5
+,,,Unlawful Taking  2C:20-10,Unlawful Taking - 2C:20-10
+,,,Unlawful Taking - 2C:20-10,Unlawful Taking - 2C:20-10
+,,,Unlawful Taking  2C:20-10 ,Unlawful Taking - 2C:20-10
+,,,Unlawful Taking 2C:20-10,Unlawful Taking - 2C:20-10
+,,,Unregistered Vehicle  39:3-4,Unregistered Vehicle - 39:3-4
+,,,Unregistered Vehicle - 39:3-4,Unregistered Vehicle - 39:3-4
+,,,Unregistered Vehicle 39:3-4,Unregistered Vehicle - 39:3-4
+,,,Unsworn Falsification  2C:28-3,Unsworn Falsification - 2C:28-3
+,,,Unwanted Person,Unwanted Person
+,,,Unwanted Person ,Unwanted Person
+,,,"Unwanted Person
+",Unwanted Person
+,,,Urinating in Public,
+,,,Utility Incident,
+,,,U-Visa,
+,,,Vacant House,
+,,,Vehicle Maintenance,
+,,,Violation of Court Order,
+,,,Violation TRO - 2C:29-9b,Violation TRO - 2C:29-9b
+,,,Violation: TRO/ FRO  2C:25-31,
+,,,Violation: TRO/ FRO  2C:25-31 ,
+,,,Violation: TRO/ FRO  2C:29-9b,
+,,,Violation: TRO/ FRO - 2C:29-9b,
+,,,Violation: TRO/ FRO 2C:29-9b,
+,,,Virtual - Patrol,
+,,,Warrant Arrest,
+,,,Weapons - Unlawful Purposes - 2C:39-4,Weapons - Unlawful Purposes - 2C:39-4
+,,,Weapons - Unlawful Purposes 2C:39-4,Weapons - Unlawful Purposes - 2C:39-4
+,,,Weapons Seizure  2C:25-21d.,Weapons Seizure - 2C:25-21d.
+,,,Weapons Seizure - 2C:25-21d.,Weapons Seizure - 2C:25-21d.
+,,,Weapons/Unlawful Purposes  2C:39-4,Weapons - Unlawful Purposes - 2C:39-4
+,,,Weather Alerts,
+,,,Welfare Check,
+,,,welfare check ,Welfare Check
+,,,Wire down,
+,,,Witness Tampering  2C:28-5,Witness Tampering - 2C:28-5

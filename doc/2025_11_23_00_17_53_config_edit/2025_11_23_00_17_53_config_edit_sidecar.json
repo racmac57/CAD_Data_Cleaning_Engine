@@ -1,0 +1,84 @@
+{
+  "source_file": "config_edit.md",
+  "source_path": "C:\\_chunker\\02_data\\config_edit.md",
+  "manifest_path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\KB_Shared\\04_output\\2025_11_23_00_17_53_config_edit\\2025_11_23_00_17_53_config_edit.origin.json",
+  "created_at": "2025_11_23_00_17_53",
+  "tags": [
+    "API",
+    "ai",
+    "code",
+    "config",
+    "data",
+    "docs",
+    "function",
+    "input/output",
+    "json",
+    "legal",
+    "markdown",
+    "police",
+    "python",
+    "sql",
+    "variable",
+    "workflow"
+  ],
+  "metadata": {
+    "project_name": "02_data",
+    "source_type": "documentation",
+    "language": "en",
+    "department": "admin",
+    "key_terms": [
+      "json",
+      "config",
+      "self",
+      "config_enhanced",
+      "reload",
+      "config_path"
+    ],
+    "enrichment_version": "1.0.0"
+  },
+  "summaries": {
+    "file_summary": "Got it. Your control lists live in `config\\config_enhanced.json`.",
+    "first_line": "Got it. Your control lists live in `config\\config_enhanced.json`. The loader reads that file, validates it, merges any missing keys from defaults, and falls back to defaults only when the JSON is missing or invalid.  "
+  },
+  "chunks": [
+    {
+      "chunk_id": "2025-11-23T00:17:53+00:00_config_edit_chunk1",
+      "chunk_index": 1,
+      "file": "chunk_00000.txt",
+      "tags": [
+        "ai",
+        "api",
+        "code",
+        "config",
+        "config_enhanced",
+        "config_path",
+        "data",
+        "docs",
+        "function",
+        "input/output",
+        "json",
+        "legal",
+        "markdown",
+        "police",
+        "python",
+        "reload",
+        "self",
+        "sql",
+        "variable",
+        "workflow"
+      ],
+      "key_terms": [
+        "json",
+        "config",
+        "self",
+        "config_enhanced",
+        "reload",
+        "config_path"
+      ],
+      "summary": "Got it.",
+      "char_length": 7074,
+      "byte_length": 7245
+    }
+  ],
+  "enrichment_version": "1.0.0"
+}

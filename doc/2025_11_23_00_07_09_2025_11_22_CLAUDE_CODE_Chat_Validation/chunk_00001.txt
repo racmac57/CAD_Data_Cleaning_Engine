@@ -1,0 +1,667 @@
+---
+
+**Constraints to follow**:
+- Files contain 700K+ rows
+- Do **not** open in Excel unless broken into small edits (per strategy doc)
+- Ensure `CADNotes` remain untouched unless explicitly edited
+- All copied files should be `.csv` format
+
+Use the validated outputs from the cleaning pipeline (e.g. `Merged_Output_optimized.xlsx`, `CAD_ESRI_Final_*.xlsx`)
+to identify source files. ● I'll help you set up the test folder with the appropriate working files. Let me start by reviewing the context and
+   then locating the correct files. ● Read(SUMMARY.md)
+  ⎿  Error reading file
+
+● Read(README.md)
+  ⎿  Read 658 lines
+
+● Search(pattern: "config/**/*.json")
+  ⎿  Found 1 file (ctrl+o to expand)
+
+● Read(config\config_enhanced.json)
+  ⎿  Read 28 lines
+
+● Search(pattern: "doc/**/*.md")
+  ⎿  Found 24 files (ctrl+o to expand)
+
+● Search(pattern: "@doc/**/*.md")
+  ⎿  Found 0 files
+
+● Read(doc\MANUAL_EDITING_STRATEGY_TEMPLATE.md)
+  ⎿  Read 263 lines
+
+● Bash(ls -la)
+  ⎿  total 12231
+     drwxr-xr-x 1 Carucci_R 1049089       0 Nov 22 01:37 . drwxr-xr-x 1 Carucci_R 1049089       0 Nov 22 01:37 ..
+     … +40 lines (ctrl+o to expand)
+
+● Bash(ls -la test/)
+  ⎿  total 20
+     drwxr-xr-x 1 Carucci_R 1049089 0 Nov 22 01:42 . drwxr-xr-x 1 Carucci_R 1049089 0 Nov 22 01:37 ..
+
+● Bash(find data -name "*.xlsx" -o -name "*.csv" | head -50)
+  ⎿  data/01_raw/2019_2025_11_14_cad.xlsx
+     data/01_raw/2019_ALL_CAD.xlsx
+     data/01_raw/2020_ALL_CAD.xlsx
+     … +43 lines (ctrl+o to expand)
+
+● Bash(find . -maxdepth 1 -name "*CAD*" -name "*.csv" -o -name "*CAD*" -name "*.xlsx" | grep -v "\.git")
+  ⎿  ./CAD_Notes_Validation_Full.csv
+     ./CAD_Notes_Validation_Full.xlsx
+     ./CAD_Notes_Validation_Mismatches.csv
+     ./CAD_Notes_Validation_Mismatches.xlsx
+
+● Bash(ls -lh "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Pipeline\data" 2>/dev/null ||
+      echo "Pipeline directory not accessible")
+  ⎿  Pipeline directory not accessible
+
+● Bash(ls -lah "C:/Users/carucci_r/OneDrive - City of Hackensack/02_ETL_Scripts/CAD_Data_Pipeline/data/01_raw/" | tail
+      -20)
+  ⎿ ls: cannot access 'C:/Users/carucci_r/OneDrive - City of Hackensack/02_ETL_Scripts/CAD_Data_Pipeline/data/01_ra
+    w/': No such file or directory
+
+
+● Bash(ls -lah "C:/Users/carucci_r/OneDrive - City of Hackensack/02_ETL_Scripts/CAD_Data_Pipeline/data/03_output/"
+      2>/dev/null | tail -20 || echo "No output directory…)
+  ⎿  (No content)
+
+● Bash(ls -lh data/01_raw/ | grep -i "2025. *11")
+  ⎿  -rw-r--r-- 1 Carucci_R 1049089 101M Nov 21 13:44 2019_2025_11_14_cad.xlsx
+     -rw-r--r-- 1 Carucci_R 1049089 108M Nov 21 17:28 2025_11_21_2019_2025_11_21_ALL_CAD_Data.xlsx
+
+● Bash(find . -name "*manual*" -name "*.csv" 2>/dev/null | head -10)
+  ⎿  ./data/02_reports/tro_fro_manual_review.csv
+     ./data/02_reports/unmapped_cases_for_manual_backfill.csv
+     ./ref/manual_call_type.csv
+     ./scripts/2025_11_21_call_type_map_manual.csv
+
+● Read(IMPLEMENTATION_SUMMARY.md)
+  ⎿  Read 100 lines
+
+● Bash(find . -name "*2025_11_17*" -name "*.csv" -o -name "*2025_11_17*" -name "*.xlsx" | grep -v ".git")
+  ⎿  ./ref/2019_2025_11_17_Updated_CAD_Export.xlsx
+     ./ref/2019_2025_11_17_Updated_CAD_Export_manual_fix_v1.xlsx
+     ./ref/2025_11_17_DV_Offense_Report_Updated.xlsx
+     ./ref/archive/2019_2025_11_17_DV_Offense_Report.xlsx
+
+● Bash(ls -lh data/ESRI_CADExport/)
+  ⎿  total 332M
+     drwxr-xr-x 1 Carucci_R 1049089    0 Nov 21 21:09 archive
+     -rw-r--r-- 1 Carucci_R 1049089  89M Nov 17 00:02 CAD_Clean_ResponseType_Complete.xlsx
+     … +5 lines (ctrl+o to expand)
+
+● Bash(ls -lh ref/ | grep -i "2019_2025_11_17")
+  ⎿  -rw-r--r-- 1 Carucci_R 1049089  94M Nov 21 15:43 2019_2025_11_17_Updated_CAD_Export.xlsx
+     -rw-r--r-- 1 Carucci_R 1049089 175M Nov 21 21:33 2019_2025_11_17_Updated_CAD_Export_manual_fix_v1.xlsx
+
+● Read(doc\CHANGELOG.md)
+  ⎿  Read 150 lines
+
+● Bash(find . -name "*.csv" -size +100M 2>/dev/null | head -10)
+  ⎿  (No content)
+
+● Bash(ls -lh ref/*.csv 2>/dev/null | head -20 || echo "No CSV files in ref")
+  ⎿  -rw-r--r-- 1 Carucci_R 1049089    2 Nov 13 23:50 ref/anomalies.csv
+     -rw-r--r-- 1 Carucci_R 1049089  590 Nov 12 12:37 ref/cad_call_source_acceptables.csv
+     -rw-r--r-- 1 Carucci_R 1049089   68 Nov 12 12:46 ref/cad_call_source_map.csv
+     … +11 lines (ctrl+o to expand)
+
+● Write(scripts\convert_test_files.py)
+  ⎿  Wrote 1 lines to scripts\convert_test_files.py
+     """
+     Convert test working files from XLSX to CSV format. This script converts the identified CAD and RMS Excel files to CSV format
+     for the /test working directory.
+     """ import pandas as pd
+     import os
+     from pathlib import Path
+
+● Now I'll run the conversion script to create the CSV files in the test directory. This will take several minutes
+  as these files contain 700K+ rows. ● Bash(cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine" &&   timeout: 10m
+      python scripts/convert_test_files.py)                                                               0s
+  ⎿  Error: Exit code 1
+     Traceback (most recent call last):
+       File "C:\Users\carucci_r\OneDrive - City of
+     Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\scripts\convert_test_files.py", line 39, in convert_to_csv
+         print(f"\u2713 SUCCESS: {description}")
+         ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+       File "C:\Python313\Lib\encodings\cp1252.py", line 19, in encode
+         return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+                ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 0: character maps to <undefined>
+
+     … +43 lines (ctrl+o to see all)
+
+● The script hit an encoding issue with special characters, but successfully created the first CSV file (201.71 MB,
+  702,436 records). Let me fix the script and continue:
+
+● Update(scripts\convert_test_files.py)
+  ⎿  Updated scripts\convert_test_files.py with 2 additions and 2 removals
+       36            # Verify output
+       37            file_size_mb = os.path.getsize(dest_path) / (1024 * 1024)
+       38            print(f"  CSV created: {file_size_mb:.2f} MB")
+       39 -          print(f"✓ SUCCESS: {description}")
+       39 +          print(f"[OK] SUCCESS: {description}")
+       40            return True
+       41
+       42        except Exception as e:
+       43 -          print(f"✗ ERROR: {e}")
+       43 +          print(f"[ERROR] {e}")
+       44            return False
+       45
+       46    def main():
+
+● Update(scripts\convert_test_files.py)
+  ⎿  Updated scripts\convert_test_files.py with 3 additions and 3 removals
+        98        print("="*60)
+        99
+       100        for i, result in enumerate(results, 1):
+       101 -          status = "✓ SUCCESS" if result["success"] else "✗ FAILED"
+       101 +          status = "[OK] SUCCESS" if result["success"] else "[ERROR] FAILED"
+       102            print(f"{i}. {status}: {result['description']}")
+       103
+       104        success_count = sum(1 for r in results if r["success"])
+       105        print(f"\n{success_count}/3 conversions completed successfully")
+       106
+       107        if success_count == 3:
+       108 -          print("\n✓ All test files are ready in /test directory")
+       108 +          print("\n[OK] All test files are ready in /test directory")
+       109        else:
+       110 -          print("\n⚠ Some conversions failed - please review errors above")
+       110 +          print("\n[WARNING] Some conversions failed - please review errors above")
+       111
+       112    if __name__ == "__main__":
+       113        main()
+
+● Bash(cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine" &&   timeout: 10m
+      python scripts/convert_test_files.py)                                                               0s
+  ⎿  ============================================================
+     CAD/RMS Test File Conversion Utility
+     ============================================================
+     … +62 lines (ctrl+o to expand)
+
+● Excellent! All three files have been successfully converted. Let me update the todo list and then add the working
+  paths section to the documentation:
+
+● Bash(ls -lh test/)
+  ⎿  total 321M
+     -rw-r--r-- 2 Carucci_R 1049089 116M Nov 22 02:18 2025_11_16_RMS_Export.csv
+     -rw-r--r-- 1 Carucci_R 1049089 202M Nov 22 02:17 2025_11_17_CAD_Cleanup_PreManual.csv
+     -rw-r--r-- 1 Carucci_R 1049089 3.0M Nov 22 02:17 2025_11_17_CAD_With_RMS.csv
+
+● Perfect! Now let me update the documentation with the working paths section:
+
+● Update(doc\MANUAL_EDITING_STRATEGY_TEMPLATE.md)
+  ⎿  Updated doc\MANUAL_EDITING_STRATEGY_TEMPLATE.md with 16 additions and 1 removal
+        1    # Manual Editing Strategy Template
+        2    **For: `2019_2025_11_17_Updated_CAD_Export_manual_fix_v1.csv` (700K+ rows)**
+        3
+        4 -  **Date:** 2025-11-22
+        4 +  **Date:** 2025-11-22
+        5    **Purpose:** Safe, systematic approach to editing thousands of records without risking CAD notes
+            misalignment
+        6
+        7    ---
+        8
+        9 +  ## 🧭 Active Working Paths
+       10 +
+       11 +  - **CAD (Final cleanup version, needs manual edits):** `/test/2025_11_17_CAD_Cleanup_PreManual.csv`
+       12 +  - **CAD (With RMS backfill applied):** `/test/2025_11_17_CAD_With_RMS.csv`
+       13 +  - **Full RMS Export:** `/test/2025_11_16_RMS_Export.csv`
+       14 +
+       15 +  These are the current working files for field-by-field corrections. Edits to `Incident`, `How
+          + Reported`, or `FullAddress2` should reference these paths. Avoid editing large master files directly. 16 +
+       17 +  **File Details:**
+       18 +  - `2025_11_17_CAD_Cleanup_PreManual.csv`: 702,436 records, 202 MB - Pre-manual cleanup with clean
+          + `CADNotes`
+       19 +  - `2025_11_17_CAD_With_RMS.csv`: 3,770 records, 3 MB - CAD joined with RMS incident backfill
+       20 +  - `2025_11_16_RMS_Export.csv`: 156,036 records, 116 MB - Full RMS export for reference
+       21 +
+       22 +  ---
+       23 +
+       24    ## 🎯 Core Principle
+       25
+       26    **Never edit the master file directly. ** Instead:
+
+● ✅ All Tasks Completed Successfully! I've successfully set up your /test working directory with the requested files and updated the documentation. Here's what was done:
+
+  📁 Test Files Created
+
+  1. /test/2025_11_17_CAD_Cleanup_PreManual.csv (202 MB)
+  - Source: ref/2019_2025_11_17_Updated_CAD_Export.xlsx
+  - Records: 702,436 rows
+  - Status: Clean CADNotes, needs manual fixes for:
+    - Incident
+    - How Reported
+    - FullAddress2
+
+  2. /test/2025_11_17_CAD_With_RMS.csv (3 MB)
+  - Source: Merged_Output_optimized.xlsx
+  - Records: 3,770 rows
+  - Status: Has RMS incident backfill applied (targeted incident types joined with RMS data)
+
+  3. /test/2025_11_16_RMS_Export.csv (116 MB)
+  - Source: data/rms/2019_2025_11_16_16_57_00_ALL_RMS_Export.xlsx
+  - Records: 156,036 rows
+  - Status: Full RMS export for cross-reference
+
+  📝 Documentation Updated
+
+  Updated doc/MANUAL_EDITING_STRATEGY_TEMPLATE.md with a new 🧭 Active Working Paths section (inserted directly
+  after the header, before the 🎯 Core Principle section) that includes:
+  - File paths for all three working files
+  - File details (record counts, sizes, purposes)
+  - Guidance to avoid editing large master files directly
+
+  🛠️ Utility Script Created
+
+  Created scripts/convert_test_files.py for future conversions if needed. This script handles:
+  - Large file conversions (700K+ rows)
+  - Progress tracking
+  - Error handling
+  - Summary reporting
+
+  All files are ready for your field-by-field corrections workflow! ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+> [Pasted text #1 +85 lines]
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ⏵⏵ accept edits on (shift+tab to cycle)
+
+╭─── Claude Code v2.0.47 ──────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                    │ Recent activity                                                 │
+│                  Welcome back RAC! │ 4d ago  cd "C:\Users\carucci_r\OneDrive - City of Hackensack\0… │
+│                                                    │ 4d ago  ESRI CAD Data Cleaning - Final Production Deployment C… │
+│                                                    │ 5d ago  # Fix #2: Locate or Create Zone Master File claude-cod… │
+│                       ▐▛███▜▌                      │ /resume for more                                                │
+│                      ▝▜█████▛▘                     │ ─────────────────────────────────────────────────────────────── │
+│                        ▘▘ ▝▝                       │ What's new                                                      │
+│                                                    │ Improved error messages and validation for `claude --teleport`  │
+│                                                    │ Improved error handling in `/usage`                             │
+│              Sonnet 4.5 · Claude Pro               │ Fixed race condition with history entry not getting logged at … │
+│ ~\OneDrive - City of Hackensack\02_ETL_Scripts\CA… │ /release-notes for more                                         │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+> please review the SUMMARY, README, CAD_Data_Cleaning_Engine, config for context. I created a folder named @test to
+ hold working cleanup files. Please do the following:
+
+---
+
+1. 🧹 From the CAD export files, identify the **best version** that:
+   - Still needs **final manual fixes** for the following fields:
+     - `Incident`
+     - `How Reported`
+     - `FullAddress2`
+   - Has **clean `CADNotes`**
+   - Copy this file to `/test/2025_11_17_CAD_Cleanup_PreManual.csv`
+
+2. ✅ Identify a CAD version that already has:
+   - **RMS incident backfill**
+   - `How Reported` cleaned
+   - `FullAddress2` corrected
+   - Copy this to `/test/2025_11_17_CAD_With_RMS.csv`
+
+3. 📁 Locate the **latest full RMS export**, ideally named:
+   - `2019_2025_11_16_16_57_00_ALL_RMS_Export.xlsx`
+   - Convert to `.csv` and save it as:
+     - `/test/2025_11_16_RMS_Export.csv`
+
+4. 📝 Update `@doc/MANUAL_EDITING_STRATEGY_TEMPLATE.md`:
+
+Insert this new section **directly after the top header**, before the 🎯 Core Principle section:
+
+---
+
+### 🧭 Active Working Paths
+
+- **CAD (Final cleanup version, needs manual edits):** `/test/2025_11_17_CAD_Cleanup_PreManual.csv`
+- **CAD (With RMS backfill applied):** `/test/2025_11_17_CAD_With_RMS.csv`
+- **Full RMS Export:** `/test/2025_11_16_RMS_Export.csv`
+
+These are the current working files for field-by-field corrections. Edits to `Incident`, `How Reported`, or
+`FullAddress2` should reference these paths. Avoid editing large master files directly. ---
+
+**Constraints to follow**:
+- Files contain 700K+ rows
+- Do **not** open in Excel unless broken into small edits (per strategy doc)
+- Ensure `CADNotes` remain untouched unless explicitly edited
+- All copied files should be `.csv` format
+
+Use the validated outputs from the cleaning pipeline (e.g. `Merged_Output_optimized.xlsx`, `CAD_ESRI_Final_*.xlsx`)
+to identify source files. ● I'll help you set up the test folder with the appropriate working files. Let me start by reviewing the context and
+   then locating the correct files. ● Read(SUMMARY.md)
+  ⎿  Error reading file
+
+● Read(README.md)
+  ⎿  Read 658 lines
+
+● Search(pattern: "config/**/*.json")
+  ⎿  Found 1 file (ctrl+o to expand)
+
+● Read(config\config_enhanced.json)
+  ⎿  Read 28 lines
+
+● Search(pattern: "doc/**/*.md")
+  ⎿  Found 24 files (ctrl+o to expand)
+
+● Search(pattern: "@doc/**/*.md")
+  ⎿  Found 0 files
+
+● Read(doc\MANUAL_EDITING_STRATEGY_TEMPLATE.md)
+  ⎿  Read 263 lines
+
+● Bash(ls -la)
+  ⎿  total 12231
+     drwxr-xr-x 1 Carucci_R 1049089       0 Nov 22 01:37 . drwxr-xr-x 1 Carucci_R 1049089       0 Nov 22 01:37 ..
+     … +40 lines (ctrl+o to expand)
+
+● Bash(ls -la test/)
+  ⎿  total 20
+     drwxr-xr-x 1 Carucci_R 1049089 0 Nov 22 01:42 . drwxr-xr-x 1 Carucci_R 1049089 0 Nov 22 01:37 ..
+
+● Bash(find data -name "*.xlsx" -o -name "*.csv" | head -50)
+  ⎿  data/01_raw/2019_2025_11_14_cad.xlsx
+     data/01_raw/2019_ALL_CAD.xlsx
+     data/01_raw/2020_ALL_CAD.xlsx
+     … +43 lines (ctrl+o to expand)
+
+● Bash(find . -maxdepth 1 -name "*CAD*" -name "*.csv" -o -name "*CAD*" -name "*.xlsx" | grep -v "\.git")
+  ⎿  ./CAD_Notes_Validation_Full.csv
+     ./CAD_Notes_Validation_Full.xlsx
+     ./CAD_Notes_Validation_Mismatches.csv
+     ./CAD_Notes_Validation_Mismatches.xlsx
+
+● Bash(ls -lh "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Pipeline\data" 2>/dev/null ||
+      echo "Pipeline directory not accessible")
+  ⎿  Pipeline directory not accessible
+
+● Bash(ls -lah "C:/Users/carucci_r/OneDrive - City of Hackensack/02_ETL_Scripts/CAD_Data_Pipeline/data/01_raw/" | tail
+      -20)
+  ⎿ ls: cannot access 'C:/Users/carucci_r/OneDrive - City of Hackensack/02_ETL_Scripts/CAD_Data_Pipeline/data/01_ra
+    w/': No such file or directory
+
+
+● Bash(ls -lah "C:/Users/carucci_r/OneDrive - City of Hackensack/02_ETL_Scripts/CAD_Data_Pipeline/data/03_output/"
+      2>/dev/null | tail -20 || echo "No output directory…)
+  ⎿  (No content)
+
+● Bash(ls -lh data/01_raw/ | grep -i "2025. *11")
+  ⎿  -rw-r--r-- 1 Carucci_R 1049089 101M Nov 21 13:44 2019_2025_11_14_cad.xlsx
+     -rw-r--r-- 1 Carucci_R 1049089 108M Nov 21 17:28 2025_11_21_2019_2025_11_21_ALL_CAD_Data.xlsx
+
+● Bash(find . -name "*manual*" -name "*.csv" 2>/dev/null | head -10)
+  ⎿  ./data/02_reports/tro_fro_manual_review.csv
+     ./data/02_reports/unmapped_cases_for_manual_backfill.csv
+     ./ref/manual_call_type.csv
+     ./scripts/2025_11_21_call_type_map_manual.csv
+
+● Read(IMPLEMENTATION_SUMMARY.md)
+  ⎿  Read 100 lines
+
+● Bash(find . -name "*2025_11_17*" -name "*.csv" -o -name "*2025_11_17*" -name "*.xlsx" | grep -v ".git")
+  ⎿  ./ref/2019_2025_11_17_Updated_CAD_Export.xlsx
+     ./ref/2019_2025_11_17_Updated_CAD_Export_manual_fix_v1.xlsx
+     ./ref/2025_11_17_DV_Offense_Report_Updated.xlsx
+     ./ref/archive/2019_2025_11_17_DV_Offense_Report.xlsx
+
+● Bash(ls -lh data/ESRI_CADExport/)
+  ⎿  total 332M
+     drwxr-xr-x 1 Carucci_R 1049089    0 Nov 21 21:09 archive
+     -rw-r--r-- 1 Carucci_R 1049089  89M Nov 17 00:02 CAD_Clean_ResponseType_Complete.xlsx
+     … +5 lines (ctrl+o to expand)
+
+● Bash(ls -lh ref/ | grep -i "2019_2025_11_17")
+  ⎿  -rw-r--r-- 1 Carucci_R 1049089  94M Nov 21 15:43 2019_2025_11_17_Updated_CAD_Export.xlsx
+     -rw-r--r-- 1 Carucci_R 1049089 175M Nov 21 21:33 2019_2025_11_17_Updated_CAD_Export_manual_fix_v1.xlsx
+
+● Read(doc\CHANGELOG.md)
+  ⎿  Read 150 lines
+
+● Bash(find . -name "*.csv" -size +100M 2>/dev/null | head -10)
+  ⎿  (No content)
+
+● Bash(ls -lh ref/*.csv 2>/dev/null | head -20 || echo "No CSV files in ref")
+  ⎿  -rw-r--r-- 1 Carucci_R 1049089    2 Nov 13 23:50 ref/anomalies.csv
+     -rw-r--r-- 1 Carucci_R 1049089  590 Nov 12 12:37 ref/cad_call_source_acceptables.csv
+     -rw-r--r-- 1 Carucci_R 1049089   68 Nov 12 12:46 ref/cad_call_source_map.csv
+     … +11 lines (ctrl+o to expand)
+
+● Write(scripts\convert_test_files.py)
+  ⎿  Wrote 1 lines to scripts\convert_test_files.py
+     """
+     Convert test working files from XLSX to CSV format. This script converts the identified CAD and RMS Excel files to CSV format
+     for the /test working directory.
+     """ import pandas as pd
+     import os
+     from pathlib import Path
+
+● Now I'll run the conversion script to create the CSV files in the test directory. This will take several minutes
+  as these files contain 700K+ rows. ● Bash(cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine" &&   timeout: 10m
+      python scripts/convert_test_files.py)                                                               0s
+  ⎿  Error: Exit code 1
+     Traceback (most recent call last):
+       File "C:\Users\carucci_r\OneDrive - City of
+     Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\scripts\convert_test_files.py", line 39, in convert_to_csv
+         print(f"\u2713 SUCCESS: {description}")
+         ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+       File "C:\Python313\Lib\encodings\cp1252.py", line 19, in encode
+         return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+                ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 0: character maps to <undefined>
+
+     … +43 lines (ctrl+o to see all)
+
+● The script hit an encoding issue with special characters, but successfully created the first CSV file (201.71 MB,
+  702,436 records). Let me fix the script and continue:
+
+● Update(scripts\convert_test_files.py)
+  ⎿  Updated scripts\convert_test_files.py with 2 additions and 2 removals
+       36            # Verify output
+       37            file_size_mb = os.path.getsize(dest_path) / (1024 * 1024)
+       38            print(f"  CSV created: {file_size_mb:.2f} MB")
+       39 -          print(f"✓ SUCCESS: {description}")
+       39 +          print(f"[OK] SUCCESS: {description}")
+       40            return True
+       41
+       42        except Exception as e:
+       43 -          print(f"✗ ERROR: {e}")
+       43 +          print(f"[ERROR] {e}")
+       44            return False
+       45
+       46    def main():
+
+● Update(scripts\convert_test_files.py)
+  ⎿  Updated scripts\convert_test_files.py with 3 additions and 3 removals
+        98        print("="*60)
+        99
+       100        for i, result in enumerate(results, 1):
+       101 -          status = "✓ SUCCESS" if result["success"] else "✗ FAILED"
+       101 +          status = "[OK] SUCCESS" if result["success"] else "[ERROR] FAILED"
+       102            print(f"{i}. {status}: {result['description']}")
+       103
+       104        success_count = sum(1 for r in results if r["success"])
+       105        print(f"\n{success_count}/3 conversions completed successfully")
+       106
+       107        if success_count == 3:
+       108 -          print("\n✓ All test files are ready in /test directory")
+       108 +          print("\n[OK] All test files are ready in /test directory")
+       109        else:
+       110 -          print("\n⚠ Some conversions failed - please review errors above")
+       110 +          print("\n[WARNING] Some conversions failed - please review errors above")
+       111
+       112    if __name__ == "__main__":
+       113        main()
+
+● Bash(cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine" &&   timeout: 10m
+      python scripts/convert_test_files.py)                                                               0s
+  ⎿  ============================================================
+     CAD/RMS Test File Conversion Utility
+     ============================================================
+     … +62 lines (ctrl+o to expand)
+
+● Excellent! All three files have been successfully converted. Let me update the todo list and then add the working
+  paths section to the documentation:
+
+● Bash(ls -lh test/)
+  ⎿  total 321M
+     -rw-r--r-- 2 Carucci_R 1049089 116M Nov 22 02:18 2025_11_16_RMS_Export.csv
+     -rw-r--r-- 1 Carucci_R 1049089 202M Nov 22 02:17 2025_11_17_CAD_Cleanup_PreManual.csv
+     -rw-r--r-- 1 Carucci_R 1049089 3.0M Nov 22 02:17 2025_11_17_CAD_With_RMS.csv
+
+● Perfect! Now let me update the documentation with the working paths section:
+
+● Update(doc\MANUAL_EDITING_STRATEGY_TEMPLATE.md)
+  ⎿  Updated doc\MANUAL_EDITING_STRATEGY_TEMPLATE.md with 16 additions and 1 removal
+        1    # Manual Editing Strategy Template
+        2    **For: `2019_2025_11_17_Updated_CAD_Export_manual_fix_v1.csv` (700K+ rows)**
+        3
+        4 -  **Date:** 2025-11-22
+        4 +  **Date:** 2025-11-22
+        5    **Purpose:** Safe, systematic approach to editing thousands of records without risking CAD notes
+            misalignment
+        6
+        7    ---
+        8
+        9 +  ## 🧭 Active Working Paths
+       10 +
+       11 +  - **CAD (Final cleanup version, needs manual edits):** `/test/2025_11_17_CAD_Cleanup_PreManual.csv`
+       12 +  - **CAD (With RMS backfill applied):** `/test/2025_11_17_CAD_With_RMS.csv`
+       13 +  - **Full RMS Export:** `/test/2025_11_16_RMS_Export.csv`
+       14 +
+       15 +  These are the current working files for field-by-field corrections. Edits to `Incident`, `How
+          + Reported`, or `FullAddress2` should reference these paths. Avoid editing large master files directly. 16 +
+       17 +  **File Details:**
+       18 +  - `2025_11_17_CAD_Cleanup_PreManual.csv`: 702,436 records, 202 MB - Pre-manual cleanup with clean
+          + `CADNotes`
+       19 +  - `2025_11_17_CAD_With_RMS.csv`: 3,770 records, 3 MB - CAD joined with RMS incident backfill
+       20 +  - `2025_11_16_RMS_Export.csv`: 156,036 records, 116 MB - Full RMS export for reference
+       21 +
+       22 +  ---
+       23 +
+       24    ## 🎯 Core Principle
+       25
+       26    **Never edit the master file directly. ** Instead:
+
+● ✅ All Tasks Completed Successfully! I've successfully set up your /test working directory with the requested files and updated the documentation. Here's what was done:
+
+  📁 Test Files Created
+
+  1. /test/2025_11_17_CAD_Cleanup_PreManual.csv (202 MB)
+  - Source: ref/2019_2025_11_17_Updated_CAD_Export.xlsx
+  - Records: 702,436 rows
+  - Status: Clean CADNotes, needs manual fixes for:
+    - Incident
+    - How Reported
+    - FullAddress2
+
+  2. /test/2025_11_17_CAD_With_RMS.csv (3 MB)
+  - Source: Merged_Output_optimized.xlsx
+  - Records: 3,770 rows
+  - Status: Has RMS incident backfill applied (targeted incident types joined with RMS data)
+
+  3. /test/2025_11_16_RMS_Export.csv (116 MB)
+  - Source: data/rms/2019_2025_11_16_16_57_00_ALL_RMS_Export.xlsx
+  - Records: 156,036 rows
+  - Status: Full RMS export for cross-reference
+
+  📝 Documentation Updated
+
+  Updated doc/MANUAL_EDITING_STRATEGY_TEMPLATE.md with a new 🧭 Active Working Paths section (inserted directly
+  after the header, before the 🎯 Core Principle section) that includes:
+  - File paths for all three working files
+  - File details (record counts, sizes, purposes)
+  - Guidance to avoid editing large master files directly
+
+  🛠️ Utility Script Created
+
+  Created scripts/convert_test_files.py for future conversions if needed. This script handles:
+  - Large file conversions (700K+ rows)
+  - Progress tracking
+  - Error handling
+  - Summary reporting
+
+  All files are ready for your field-by-field corrections workflow! > We need to validate recent updates and ensure data integrity across multiple CAD files. ---
+
+### 🔍 Step 1: Generate a Field-by-Field Diff Report
+
+Compare the following files by `ReportNumberNew`:
+
+- BEFORE: `/test/2025_11_17_CAD_Cleanup_PreManual.csv`
+- AFTER: `/test/2025_11_17_CAD_Cleaned_FullAddress2.csv`
+
+Fields to compare:
+- `Incident`
+- `Disposition`
+- `How Reported`
+- `FullAddress2`
+- `Response Type`
+- `CADNotes`
+
+Instructions:
+- Normalize whitespace and punctuation
+- For each field that changed, create a row with:
+  - `ReportNumberNew`
+  - `Field_Name`
+  - `Old_Value`
+  - `New_Value`
+  - `match = FALSE` (or TRUE)
+- One row per field change
+
+Save the diff to:
+- `/test/CAD_Field_Diff_Report.csv`
+
+Also:
+- Output a summary of:
+  - Total records compared
+  - Total mismatches
+  - Count of changes by field
+
+---
+
+### 📝 Step 2 (Optional): CADNotes-Only Mismatch Audit
+
+Also produce:
+- `/test/CADNotes_Mismatches.csv`
+
+Only include rows where `CADNotes` differs across the two input files after normalization. Fields:
+- `ReportNumberNew`
+- `CADNotes_BEFORE`
+- `CADNotes_AFTER`
+- `match = FALSE`
+
+---
+
+### 🔁 Step 3: Revert Changes Using Diff Report
+
+Using the diff file:
+- `/test/CAD_Field_Diff_Report.csv`
+
+And the *incorrect* post-fix file:
+- `/test/2025_11_17_CAD_Cleaned_FullAddress2.csv`
+
+Revert any mismatched fields back to their original values from:
+- `/test/2025_11_17_CAD_Cleanup_PreManual.csv`
+
+Rules:
+- Match on `ReportNumberNew`
+- For each diff row with `match = FALSE`, overwrite that column’s value with the original
+
+Do not touch:
+- Rows not listed in the diff
+- Columns not marked as changed
+
+Output:
+- `/test/2025_11_17_CAD_Reverted_From_Diff.csv`
+
+Log:
+- Number of fields reverted
+- Number of cases touched
+- Field-wise summary of changes
+
+---
+
+Goal: This process should catch accidental misalignments (especially CADNotes drift) and provide a recovery-safe
+version of the CAD export. ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+> 
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ⏵⏵ accept edits on (shift+tab to cycle)
+
+╭─── Claude Code v2.0.47 ──────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                    │ Recent activity                                                 │
+│                  Welcome back RAC!

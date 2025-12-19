@@ -1,0 +1,806 @@
+'Call Type'
+    - Second: if no match, fuzzy to CallType_Master_Mapping.Incident_Norm
+    - Log matches 70-75% for review, auto-apply 75+%
+    """
+    print("\n" + "="*60)
+    print("STEP 3: FUZZY MATCHING")
+    print("="*60)
+
+    before_unmapped = count_unmapped(cad_df)
+    print(f"Before: {before_unmapped:,} unmapped Response_Type")
+
+    # Build lookup dictionaries
+    # RAW call types: Call Type -> Response
+    raw_lookup = dict(zip(
+        raw_calltype_df['Call Type'].str.strip().str.upper(),
+        raw_calltype_df['Response']
+    ))
+    raw_call_types = list(raw_lookup.keys())
+
+    # Master mapping: Incident_Norm -> Response_Type
+    master_lookup = dict(zip(
+        master_mapping_df['Incident_Norm'].str.strip().str.upper(),
+        master_mapping_df['Response_Type']
+    ))
+    master_incidents = list(master_lookup.keys())
+
+    # Find unmapped records
+    unmapped_mask = cad_df['Response_Type'].isna() | (cad_df['Response_Type'] == '')
+    unmapped_indices = cad_df[unmapped_mask].index.tolist()
+
+    print(f"Processing {len(unmapped_indices):,} unmapped records...")
+
+    # Track matches
+    auto_applied = 0
+    review_needed = []
+    no_match = []
+
+    for i, idx in enumerate(unmapped_indices):
+        if (i + 1) % 500 == 0:
+            print(f"  Processed {i+1:,}/{len(unmapped_indices):,} records...")
+
+        incident = cad_df.loc[idx, 'Incident']
+        if pd.isna(incident) or str(incident).strip() == '':
+            no_match.append({
+                'ReportNumberNew': cad_df.loc[idx, 'ReportNumberNew'],
+                'Incident': incident,
+                'Reason': 'Null/blank Incident'
+            })
+            continue
+
+        incident_upper = str(incident).strip().upper()
+        report_num = cad_df.loc[idx, 'ReportNumberNew']
+
+        # First: try RAW call types
+        best_score = 0
+        best_match = None
+        best_response = None
+        match_source = None
+
+        for call_type in raw_call_types:
+            score = fuzz.token_sort_ratio(incident_upper, call_type)
+            if score > best_score:
+                best_score = score
+                best_match = call_type
+                best_response = raw_lookup[call_type]
+                match_source = 'RAW_CAD_CALL_TYPE'
+
+        # Second: if no good match, try master mapping
+        if best_score < REVIEW_THRESHOLD:
+            for incident_norm in master_incidents:
+                score = fuzz.token_sort_ratio(incident_upper, incident_norm)
+                if score > best_score:
+                    best_score = score
+                    best_match = incident_norm
+                    best_response = master_lookup[incident_norm]
+                    match_source = 'Master_Mapping'
+
+        # Apply or log match
+        if best_score >= AUTO_APPLY_THRESHOLD:
+            cad_df.loc[idx, 'Response_Type'] = best_response
+            auto_applied += 1
+        elif best_score >= REVIEW_THRESHOLD:
+            review_needed.append({
+                'ReportNumberNew': report_num,
+                'Incident': incident,
+                'Matched_To': best_match,
+                'Response_Type': best_response,
+                'Score': best_score,
+                'Source': match_source
+            })
+        else:
+            no_match.append({
+                'ReportNumberNew': report_num,
+                'Incident': incident,
+                'Best_Match': best_match,
+                'Best_Score': best_score,
+                'Reason': f'Score {best_score}% below threshold'
+            })
+
+    after_unmapped = count_unmapped(cad_df)
+
+    print(f"\nAfter: {after_unmapped:,} unmapped Response_Type")
+    print(f"Auto-applied (>=75%): {auto_applied:,}")
+    print(f"Needs review (70-75%): {len(review_needed):,}")
+    print(f"No match (<70%): {len(no_match):,}")
+
+    # Save review file
+    if review_needed:
+        review_df = pd.DataFrame(review_needed)
+        review_df.to_csv(FUZZY_REVIEW_FILE, index=False)
+        print(f"\nSaved fuzzy review file: {FUZZY_REVIEW_FILE}")
+
+    stats.add_step('Fuzzy Matching', before_unmapped, after_unmapped, {
+        'auto_applied': auto_applied,
+        'review_needed': len(review_needed),
+        'no_match': len(no_match)
+    })
+
+    return cad_df, review_needed, no_match
+
+
+def step4_apply_fuzzy_to_rms_backfilled(cad_df, raw_calltype_df, master_mapping_df, backfill_details):
+    """
+    Apply fuzzy matching specifically to RMS-backfilled records
+    """
+    print("\n" + "="*60)
+    print("STEP 4: FUZZY MATCH RMS-BACKFILLED RECORDS")
+    print("="*60)
+
+    if not backfill_details:
+        print("No RMS-backfilled records to process")
+        return cad_df
+
+    # Build lookups
+    raw_lookup = dict(zip(
+        raw_calltype_df['Call Type'].str.strip().str.upper(),
+        raw_calltype_df['Response']
+    ))
+    raw_call_types = list(raw_lookup.keys())
+
+    master_lookup = dict(zip(
+        master_mapping_df['Incident_Norm'].str.strip().str.upper(),
+        master_mapping_df['Response_Type']
+    ))
+    master_incidents = list(master_lookup.keys())
+
+    # Process backfilled records
+    backfilled_report_nums = [d['ReportNumberNew'] for d in backfill_details]
+    matched = 0
+
+    for report_num in backfilled_report_nums:
+        mask = cad_df['ReportNumberNew'].astype(str) == report_num
+        if not mask.any():
+            continue
+
+        idx = cad_df[mask].index[0]
+        incident = cad_df.loc[idx, 'Incident']
+        response_type = cad_df.loc[idx, 'Response_Type']
+
+        # Only process if Response_Type is still blank
+        if pd.notna(response_type) and str(response_type).strip():
+            continue
+
+        if pd.isna(incident) or str(incident).strip() == '':
+            continue
+
+        incident_upper = str(incident).strip().upper()
+
+        # Find best match
+        best_score = 0
+        best_response = None
+
+        for call_type in raw_call_types:
+            score = fuzz.token_sort_ratio(incident_upper, call_type)
+            if score > best_score:
+                best_score = score
+                best_response = raw_lookup[call_type]
+
+        if best_score < REVIEW_THRESHOLD:
+            for incident_norm in master_incidents:
+                score = fuzz.token_sort_ratio(incident_upper, incident_norm)
+                if score > best_score:
+                    best_score = score
+                    best_response = master_lookup[incident_norm]
+
+        if best_score >= AUTO_APPLY_THRESHOLD:
+            cad_df.loc[idx, 'Response_Type'] = best_response
+            matched += 1
+
+    print(f"Matched {matched:,} of {len(backfill_details):,} RMS-backfilled records")
+
+    return cad_df
+
+
+def generate_final_report(cad_df, stats, review_needed, no_match):
+    """
+    Generate comprehensive final report for supervisor
+    """
+    print("\n" + "="*60)
+    print("GENERATING FINAL REPORT")
+    print("="*60)
+
+    total_records = len(cad_df)
+    final_unmapped = count_unmapped(cad_df)
+    final_null_incident = count_null_incident(cad_df)
+
+    # Coverage calculation
+    mapped_count = total_records - final_unmapped
+    coverage_pct = (mapped_count / total_records) * 100
+
+    # Breakdown of unmapped
+    unmapped_mask = cad_df['Response_Type'].isna() | (cad_df['Response_Type'] == '')
+    unmapped_df = cad_df[unmapped_mask]
+
+    # Count by reason
+    null_incident_count = unmapped_df[
+        unmapped_df['Incident'].isna() | (unmapped_df['Incident'] == '')
+    ].shape[0]
+
+    low_confidence_count = len(review_needed)
+    no_match_count = len([
+        x for x in no_match
+        if 'Score' not in str(x.get('Reason', '')) or 'below' in str(x.get('Reason', ''))
+    ])
+    other_count = final_unmapped - null_incident_count - low_confidence_count
+
+    # Build per-record category labels for unmapped rows
+    # Categories: Null/Blank Incident, Low Confidence (70-75%), No Fuzzy Match (<70%), Other
+    review_ids = {str(x.get('ReportNumberNew')) for x in review_needed}
+    no_match_ids = {str(x.get('ReportNumberNew')) for x in no_match}
+
+    def categorize_unmapped_row(row):
+        report_num = str(row.get('ReportNumberNew'))
+        incident_val = row.get('Incident')
+        if pd.isna(incident_val) or str(incident_val).strip() == '':
+            return "Null/Blank Incident"
+        if report_num in review_ids:
+            return "Low Confidence (70-75%)"
+        if report_num in no_match_ids:
+            return "No Fuzzy Match (<70%)"
+        return "Other"
+
+    unmapped_df = unmapped_df.copy()
+    unmapped_df['Unmapped_Category'] = unmapped_df.apply(categorize_unmapped_row, axis=1)
+
+    # Top 20 unmapped by frequency
+    incident_freq = unmapped_df.groupby('Incident').agg({
+        'ReportNumberNew': ['count', 'first']
+    }).reset_index()
+    incident_freq.columns = ['Incident', 'Count', 'Sample_ReportNumber']
+    incident_freq = incident_freq.sort_values('Count', ascending=False).head(20)
+
+    # Generate markdown report
+    report = f"""# Final Cleanup Report - CAD Data Pipeline
+Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+## Executive Summary
+
+| Metric | Value |
+|--------|-------|
+| **Total Records** | {total_records:,} |
+| **Final Mapped** | {mapped_count:,} |
+| **Final Unmapped** | {final_unmapped:,} |
+| **Coverage Rate** | {coverage_pct:.2f}% |
+
+## Unmapped Breakdown
+
+| Category | Count | Description |
+|----------|-------|-------------|
+| Null/Blank Incident | {null_incident_count:,} | Records with no Incident value |
+| Low Confidence (70-75%) | {low_confidence_count:,} | Fuzzy matches needing review |
+| No Fuzzy Match (<70%) | {no_match_count:,} | No suitable match found |
+| Other | {other_count:,} | Other unmapped reasons |
+
+## Coverage Improvement by Step
+
+| Step | Before | After | Improvement |
+|------|--------|-------|-------------|
+"""
+
+    for step in stats.get_summary():
+        improvement_pct = (step['improvement'] / step['before'] * 100) if step['before'] > 0 else 0
+        report += f"| {step['name']} | {step['before']:,} | {step['after']:,} | -{step['improvement']:,} ({improvement_pct:.1f}%) |\n"
+
+    # Overall improvement
+    initial = stats.steps[0]['before'] if stats.steps else final_unmapped
+    total_improvement = initial - final_unmapped
+    total_pct = (total_improvement / initial * 100) if initial > 0 else 0
+    report += f"| **Total** | {initial:,} | {final_unmapped:,} | **-{total_improvement:,} ({total_pct:.1f}%)** |\n"
+
+    report += f"""
+## Step Details
+
+### Step 1: RMS Backfill
+"""
+    if stats.steps and stats.steps[0]['details']:
+        details = stats.steps[0]['details']
+        report += f"""- Null Incidents before: {details.get('null_before', 'N/A'):,}
+- Null Incidents after: {details.get('null_after', 'N/A'):,}
+- Incidents backfilled from RMS: {details.get('backfilled', 0):,}
+"""
+
+    report += f"""
+### Step 2: TRO/FRO Corrections
+"""
+    if len(stats.steps) > 1 and stats.steps[1]['details']:
+        details = stats.steps[1]['details']
+        report += f"""- Total corrections in file: {details.get('total_corrections', 'N/A'):,}
+- Corrections applied: {details.get('corrections_applied', 0):,}
+"""
+
+    report += f"""
+### Step 3: Fuzzy Matching
+"""
+    if len(stats.steps) > 2 and stats.steps[2]['details']:
+        details = stats.steps[2]['details']
+        report += f"""- Auto-applied (>=75% confidence): {details.get('auto_applied', 0):,}
+- Needs review (70-75% confidence): {details.get('review_needed', 0):,}
+- No match found (<70%): {details.get('no_match', 0):,}
+
+**Review file saved to:** `{FUZZY_REVIEW_FILE.name}`
+"""
+
+    report += f"""
+## Top 20 Unmapped Incidents (by Frequency)
+
+| Rank | Incident | Count | Sample Report# |
+|------|----------|-------|----------------|
+"""
+
+    for i, row in enumerate(incident_freq.itertuples(), 1):
+        incident_display = str(row.Incident)[:50] if row.Incident else "(blank)"
+        report += f"| {i} | {incident_display} | {row.Count:,} | {row.Sample_ReportNumber} |\n"
+
+    report += f"""
+## Records Needing Manual Review
+
+### Low Confidence Fuzzy Matches (70-75%)
+Review file: `{FUZZY_REVIEW_FILE.name}`
+- Total records: {len(review_needed):,}
+
+These records have fuzzy matches between 70-75% confidence and should be manually validated before applying. ### Remaining Unmapped Records
+- Total still unmapped: {final_unmapped:,}
+- Records with null Incident: {null_incident_count:,}
+
+## Output Files
+
+1. **Updated CAD Export:** `{OUTPUT_CAD_FILE.name}`
+   - Final Response_Type coverage: {coverage_pct:.2f}%
+
+2. **Fuzzy Review File:** `{FUZZY_REVIEW_FILE.name}`
+   - Contains {len(review_needed):,} records with 70-75% match scores
+
+---
+*Report generated by CAD Data Cleaning Engine*
+"""
+
+    # Save report
+    with open(FINAL_REPORT_FILE, 'w', encoding='utf-8') as f:
+        f.write(report)
+
+    # Export supplemental CSVs for manual review/backfill
+    # 1) Summary by category (similar to Unmapped Breakdown table)
+    summary_rows = [
+        {
+            'Category': 'Null/Blank Incident',
+            'Count': null_incident_count,
+            'Description': 'Records with no Incident value'
+        },
+        {
+            'Category': 'Low Confidence (70-75%)',
+            'Count': low_confidence_count,
+            'Description': 'Fuzzy matches needing review'
+        },
+        {
+            'Category': 'No Fuzzy Match (<70%)',
+            'Count': no_match_count,
+            'Description': 'No suitable match found'
+        },
+        {
+            'Category': 'Other',
+            'Count': other_count,
+            'Description': 'Other unmapped reasons'
+        },
+    ]
+    summary_df = pd.DataFrame(summary_rows)
+    summary_path = FINAL_REPORT_FILE.with_name('unmapped_breakdown_summary.csv')
+    summary_df.to_csv(summary_path, index=False)
+
+    # 2) Detailed per-record CSV for manual backfill
+    #    Includes all CAD fields for unmapped rows plus helper columns. detailed_df = unmapped_df.copy()
+    detailed_df['Manual_Backfill_Incident'] = ''
+    detailed_df['Manual_Backfill_Response_Type'] = ''
+    detailed_df['Manual_Notes'] = ''
+    detailed_path = FINAL_REPORT_FILE.with_name('unmapped_cases_for_manual_backfill.csv')
+    detailed_df.to_csv(detailed_path, index=False)
+
+    print(f"Report saved to: {FINAL_REPORT_FILE}")
+    print(f"Unmapped breakdown summary CSV: {summary_path}")
+    print(f"Unmapped cases for manual backfill CSV: {detailed_path}")
+
+    return report
+
+
+def main():
+    """Main execution function"""
+    print("="*60)
+    print("CAD DATA FINAL CLEANUP")
+    print("TRO/FRO + Fuzzy Match + RMS Backfill")
+    print("="*60)
+    print(f"Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
+    # Load data
+    cad_df, tro_fro_df, raw_calltype_df, master_mapping_df, rms_df = load_data()
+
+    # Initialize statistics
+    stats = CleanupStats(len(cad_df))
+    stats.initial_unmapped = count_unmapped(cad_df)
+    stats.initial_null_incident = count_null_incident(cad_df)
+
+    print(f"\nInitial state:")
+    print(f"  Total records: {len(cad_df):,}")
+    print(f"  Unmapped Response_Type: {stats.initial_unmapped:,}")
+    print(f"  Null Incidents: {stats.initial_null_incident:,}")
+
+    # OPTIMAL ORDER:
+    # 1. RMS Backfill first - populates null Incidents
+    # 2. TRO/FRO Corrections - fixes known issues
+    # 3. Fuzzy Match - fills Response_Type based on corrected Incidents
+
+    # Step 1: RMS Backfill
+    cad_df, backfill_details = step1_rms_backfill(cad_df, rms_df, stats)
+
+    # Step 2: TRO/FRO Corrections
+    cad_df, correction_details = step2_tro_fro_corrections(cad_df, tro_fro_df, stats)
+
+    # Step 3: Fuzzy Match
+    cad_df, review_needed, no_match = step3_fuzzy_match(cad_df, raw_calltype_df, master_mapping_df, stats)
+
+    # Step 4: Fuzzy match RMS-backfilled records specifically
+    cad_df = step4_apply_fuzzy_to_rms_backfilled(cad_df, raw_calltype_df, master_mapping_df, backfill_details)
+
+    # Generate final report
+    report = generate_final_report(cad_df, stats, review_needed, no_match)
+
+    # Save updated CAD file
+    print("\n" + "="*60)
+    print("SAVING OUTPUT")
+    print("="*60)
+
+    cad_df.to_excel(OUTPUT_CAD_FILE, index=False)
+    print(f"Saved: {OUTPUT_CAD_FILE}")
+
+    # Final summary
+    final_unmapped = count_unmapped(cad_df)
+    final_coverage = ((len(cad_df) - final_unmapped) / len(cad_df)) * 100
+
+    print("\n" + "="*60)
+    print("FINAL SUMMARY")
+    print("="*60)
+    print(f"Total records: {len(cad_df):,}")
+    print(f"Initial unmapped: {stats.initial_unmapped:,}")
+    print(f"Final unmapped: {final_unmapped:,}")
+    print(f"Improvement: {stats.initial_unmapped - final_unmapped:,} records")
+    print(f"Final coverage: {final_coverage:.2f}%")
+    print(f"\nCompleted: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
+
+if __name__ == "__main__":
+    main()
+
+```
+
+The error is because your `data/02_reports/tro_fro_manual_review.csv` **doesn’t have a `Corrected Incident` column yet**, but `final_cleanup_tro_fuzzy_rms.py` was expecting it. I’ve updated the script logic so that:
+
+- If the TRO/FRO review file is missing either `ReportNumberNew` or `Corrected Incident`, it will:
+  - Log a message like:  
+    **“TRO/FRO manual review file is missing expected columns …; skipping TRO/FRO corrections.”**
+  - **Skip Step 2 gracefully** (no crash), treating corrections as 0. You don’t need to edit the CSV right now. Just re-run:
+
+```powershell
+cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+python scripts/final_cleanup_tro_fuzzy_rms.py
+```
+
+It will now proceed through all steps, generate the new `unmapped_final_report.md` and the combined CSVs for manual backfill, even without populated TRO/FRO corrections. ```powershell
+cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+python scripts/final_cleanup_tro_fuzzy_rms.py
+```
+
+---
+
+**User**
+
+please explain the below results
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> python scripts/final_cleanup_tro_fuzzy_rms.py
+
+============================================================
+
+CAD DATA FINAL CLEANUP
+
+TRO/FRO + Fuzzy Match + RMS Backfill
+
+============================================================
+
+Started: 2025-11-21 14:58:26
+
+Loading input files...
+
+  CAD ESRI: 701,115 records
+
+  TRO/FRO corrections: 96 records
+
+  RAW call types: 526 records
+
+  Master mapping: 808 records
+
+  RMS export: 156,036 records
+
+
+
+Initial state:
+
+  Total records: 701,115
+
+  Unmapped Response_Type: 3,155
+
+  Null Incidents: 271
+
+
+
+============================================================
+
+STEP 1: RMS BACKFILL
+
+============================================================
+
+Before: 271 null Incidents, 3,155 unmapped Response_Type
+
+After: 174 null Incidents, 3,155 unmapped Response_Type
+
+Backfilled: 97 Incidents from RMS
+
+
+
+============================================================
+
+STEP 2: TRO/FRO CORRECTIONS
+
+============================================================
+
+TRO/FRO manual review file is missing expected columns (Corrected Incident); skipping TRO/FRO corrections. ============================================================
+
+STEP 3: FUZZY MATCHING
+
+============================================================
+
+Before: 3,155 unmapped Response_Type
+
+Processing 3,155 unmapped records... Processed 500/3,155 records... Processed 1,000/3,155 records... Processed 1,500/3,155 records... Processed 2,000/3,155 records... Processed 2,500/3,155 records... Processed 3,000/3,155 records...
+
+
+
+After: 309 unmapped Response_Type
+
+Auto-applied (>=75%): 3,001
+
+Needs review (70-75%): 8
+
+No match (<70%): 146
+
+
+
+Saved fuzzy review file: C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\data\02_reports\fuzzy_review.csv
+
+
+
+============================================================
+
+STEP 4: FUZZY MATCH RMS-BACKFILLED RECORDS
+
+============================================================
+
+Matched 2 of 97 RMS-backfilled records
+
+
+
+============================================================
+
+GENERATING FINAL REPORT
+
+============================================================
+
+Report saved to: C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\data\02_reports\unmapped_final_report.md
+
+Unmapped breakdown summary CSV: C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\data\02_reports\unmapped_breakdown_summary.csv
+
+Unmapped cases for manual backfill CSV: C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\data\02_reports\unmapped_cases_for_manual_backfill.csv
+
+
+
+============================================================
+
+SAVING OUTPUT
+
+============================================================
+
+Saved: C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\data\ESRI_CADExport\CAD_ESRI_Final_20251117_v2.xlsx
+
+
+
+============================================================
+
+FINAL SUMMARY
+
+============================================================
+
+Total records: 701,115
+
+Initial unmapped: 3,155
+
+Final unmapped: 309
+
+Improvement: 2,846 records
+
+Final coverage: 99.96%
+
+
+
+Completed: 2025-11-21 15:00:57
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine>
+
+---
+
+**Cursor**
+
+### High-level
+
+You just ran the **full final-cleanup pipeline** on the rebuilt ESRI file. The key outcome:
+
+- **Unmapped Response_Type** went from **3,155 → 309** (an improvement of **2,846 records**). - **Final Response_Type coverage** is now **99.96%**. - You also now have the **CSV artifacts** for manual follow‑up. ### Step-by-step explanation
+
+- **Initial state**
+
+  - **Total records**: 701,115  
+  - **Unmapped Response_Type**: 3,155  
+  - **Null Incidents**: 271  
+
+  These are records where `Response_Type` is blank/NaN after the ESRI production deploy, plus some with no `Incident`. ---
+
+- **Step 1 – RMS Backfill (Incidents only)**
+
+  - Before: 271 null Incidents, 3,155 unmapped Response_Type  
+  - After: 174 null Incidents, 3,155 unmapped Response_Type  
+  - **Backfilled 97 Incident values from RMS** (where CAD Incident was null but RMS had an `Incident Type_1`). This step improves the **Incident field**, but doesn’t yet change `Response_Type`, so the unmapped count stays at 3,155. ---
+
+- **Step 2 – TRO/FRO Corrections**
+
+  - Logged:  
+    `TRO/FRO manual review file is missing expected columns (Corrected Incident); skipping TRO/FRO corrections.`  
+  - So this step was **skipped cleanly**, and no records were changed. - This is because `data/02_reports/tro_fro_manual_review.csv` doesn’t yet have a `Corrected Incident` column. Once you manually populate that column, this step can update Incidents for TRO/FRO cases. ---
+
+- **Step 3 – Fuzzy Matching (main driver of improvements)**
+
+  - Before: 3,155 unmapped Response_Type  
+  - Processed all 3,155 unmapped records. - Results:
+    - **Auto-applied (≥ 75% match score)**: 3,001  
+      - These records got a `Response_Type` value based on the best fuzzy text match (either RAW call types or the master mapping). - **Needs review (70–75%)**: 8  
+      - Written to `data/02_reports/fuzzy_review.csv` for **manual decision** before applying. - **No match (< 70%)**: 146  
+      - Fuzzy couldn’t find a confident mapping. - After fuzzy matching:
+    - **Unmapped Response_Type** dropped from **3,155 → 309**. The 3,001 auto-applied fuzzy matches are what drive almost all of the 2,846-record improvement. ---
+
+- **Step 4 – Fuzzy match RMS-backfilled records specifically**
+
+  - Backfilled records from Step 1: 97  
+  - Matched 2 of those 97 to a `Response_Type` using fuzzy logic. - Small additional gain on top of Step 3. ---
+
+- **Final Results**
+
+  - **Initial unmapped**: 3,155  
+  - **Final unmapped**: 309  
+  - **Improvement**: 2,846 records now have a mapped `Response_Type`. - **Final coverage**: 99.96% of all 701,115 rows now have a `Response_Type`. ---
+
+### New output files you can use
+
+From this run you now have:
+
+- **`data/02_reports/unmapped_final_report.md`**  
+  - Human-readable markdown summary with:
+    - Executive summary. - “Unmapped Breakdown” by category. - Top unmapped incidents. - **`data/02_reports/unmapped_breakdown_summary.csv`**  
+  - Tabular version of the “Unmapped Breakdown”:
+    - Categories like `Null/Blank Incident`, `Low Confidence (70-75%)`, `No Fuzzy Match (<70%)`, `Other`. - **`data/02_reports/unmapped_cases_for_manual_backfill.csv`**  
+  - **Combined per-record CSV** for the remaining 309 unmapped cases:
+    - One row per still-unmapped record. - Includes all CAD fields plus:
+      - `Unmapped_Category`
+      - `Manual_Backfill_Incident` (blank for you to fill)
+      - `Manual_Backfill_Response_Type` (blank for you to fill)
+      - `Manual_Notes` (blank for comments)
+
+This last file is your main **manual backfill worksheet**: you can filter by category (e.g., only `No Fuzzy Match (<70%)`), fill the `Manual_Backfill_*` columns, and we can then add a small script to ingest that CSV and apply your manual decisions back into the ESRI export if you’d like. ---
+
+**User**
+
+I made manual correction directly in the source data (updated the CAD). Please take C:\Users\carucci_r\OneDrive - City of Hackensack\Desktop\2025_11_21_2019_2025_11_21_ALL_CAD_Data.xlsx and move it to the directory so it will replace the older version. I belive I updated the Violation: TRO/FRO data. I tough I saved a .csv file in the directory. Can you check on this? ---
+
+**Cursor**
+
+Short answer: I can’t move the Desktop file for you from here, but I can tell you exactly where it needs to go and what to replace, and I’ve confirmed there’s no CSV with that Desktop filename in the repo right now. ### 1) Where your updated CAD needs to go
+
+`esri_production_deploy.py` reads this as its CAD source:
+
+```text
+ref/2019_2025_11_17_Updated_CAD_Export.xlsx
+```
+
+Your updated file is:
+
+```text
+C:\Users\carucci_r\OneDrive - City of Hackensack\Desktop\2025_11_21_2019_2025_11_21_ALL_CAD_Data.xlsx
+```
+
+You have two clean options:
+
+- **Option A (recommended, minimal code change)**  
+  1. In File Explorer, **copy** your Desktop file into the repo’s `ref` folder:  
+     `C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\ref\`
+  2. **Rename it** there to match what the script expects:  
+     `2019_2025_11_17_Updated_CAD_Export.xlsx`  
+     (overwriting the existing one). 3. Re-run:
+     ```powershell
+     cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+     python scripts/esri_production_deploy.py --config config\config_enhanced.json
+     ```
+
+- **Option B (keep filename, change script)**  
+  Edit `scripts/esri_production_deploy.py` and change:
+
+  ```python
+  CAD_FILE = BASE_DIR / "ref" / "2019_2025_11_17_Updated_CAD_Export.xlsx"
+  ```
+
+  to:
+
+  ```python
+  CAD_FILE = BASE_DIR / "ref" / "2025_11_21_2019_2025_11_21_ALL_CAD_Data.xlsx"
+  ```
+
+  Then copy your Desktop file into `ref` with that exact name, and rerun the script. Either way, that will make the ESRI build use your manually corrected TRO/FRO CAD source. ### 2) About the CSV you think you saved
+
+I searched the repo for that pattern:
+
+- No files matching `*2025_11_21_2019_2025_11_21_ALL_CAD_Data*` were found. - The only TRO/FRO review CSV I see is:
+  - `data/02_reports/tro_fro_manual_review.csv`
+
+So:
+
+- There is **no CSV** in the project with the Desktop filename you gave. - If you exported a CSV of TRO/FRO corrections, it’s likely still on your Desktop or another folder outside this repo. If you want the TRO/FRO corrections to be picked up by the final cleanup script:
+
+- Open `data/02_reports/tro_fro_manual_review.csv`. - Ensure it has a column named exactly `Corrected Incident`. - Paste/fill your corrected incident values there next to each `ReportNumberNew`. Once your updated CAD is in `ref` and, optionally, TRO/FRO corrections are in that CSV, you can re-run:
+
+```powershell
+python scripts/esri_production_deploy.py --config config\config_enhanced.json
+python scripts/final_cleanup_tro_fuzzy_rms.py
+python scripts/backfill_address_from_rms.py
+```
+
+and we’ll have a full pipeline pass built on your latest source CAD. ```plaintext
+ref/2019_2025_11_17_Updated_CAD_Export.xlsx
+```
+
+```plaintext
+C:\Users\carucci_r\OneDrive - City of Hackensack\Desktop\2025_11_21_2019_2025_11_21_ALL_CAD_Data.xlsx
+```
+
+```powershell
+     cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+     python scripts/esri_production_deploy.py --config config\config_enhanced.json
+```
+
+```python
+  CAD_FILE = BASE_DIR / "ref" / "2019_2025_11_17_Updated_CAD_Export.xlsx"
+```
+
+```python
+  CAD_FILE = BASE_DIR / "ref" / "2025_11_21_2019_2025_11_21_ALL_CAD_Data.xlsx"
+```
+
+```powershell
+python scripts/esri_production_deploy.py --config config\config_enhanced.json
+python scripts/final_cleanup_tro_fuzzy_rms.py
+python scripts/backfill_address_from_rms.py
+```
+
+---
+
+**User**
+
+please move for me
+
+---
+
+**Cursor**
+
+I don’t have access to your Desktop, so I can’t move the file directly, but you can do it with one command.

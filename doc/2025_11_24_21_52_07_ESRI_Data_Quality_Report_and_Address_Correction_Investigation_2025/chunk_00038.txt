@@ -1,0 +1,790 @@
+Analyze Improvement
+```bash
+python scripts/analyze_address_improvement.py
+```
+
+---
+
+## Sample Data for Testing
+
+### Test Case 1: Single Record Correction
+```python
+ReportNumberNew: "19-053037"
+Expected Before: "Second Ward Park & , Hackensack, NJ, 07601"
+Expected After: "59 Polifly Road, Hackensack, NJ 07601"
+```
+
+### Test Case 2: Multiple Records Same Case
+```python
+ReportNumberNew: "19-002541" (appears 2-3 times in file)
+Expected Before: "Home & , Hackensack, NJ, 07601" (all records)
+Expected After: "225 State Street, Hackensack, NJ, 07601" (all records)
+```
+
+### Test Case 3: No Correction Available
+```python
+ReportNumberNew: "19-000001" (example - no correction in CSV)
+Expected: Address should remain unchanged
+```
+
+---
+
+## Address Correction CSV Structure
+
+### Columns
+- `ReportNumberNew`: Case number (e.g., "19-053037")
+- `FullAddress2`: Original address from ESRI file
+- `Corrected_Value`: Corrected address to apply
+- `Issue_Type`: Category of issue (e.g., "incomplete_intersection", "generic_location")
+- `CADNotes`: Additional context (optional)
+
+### Sample Records
+```csv
+ReportNumberNew,FullAddress2,Corrected_Value,Issue_Type
+19-053037,"Second Ward Park & , Hackensack, NJ, 07601","59 Polifly Road, Hackensack, NJ 07601",incomplete_intersection
+19-002541,"Home & , Hackensack, NJ, 07601","225 State Street, Hackensack, NJ, 07601",generic_location
+19-020045,"Carver Park & , Hackensack, NJ, 07601","302 Second Street, Hackensack, NJ 07601",incomplete_intersection
+```
+
+---
+
+## Key Code Sections to Review
+
+### 1. Address Correction Function
+**File**: `scripts/apply_manual_corrections.py`  
+**Lines**: 106-139  
+**Function**: `apply_address_corrections()`
+
+**Critical Points**:
+- Must deduplicate corrections before mapping
+- Must use dictionary mapping (not merge) to avoid duplicates
+- Must strip whitespace from `ReportNumberNew` for matching
+- Must apply to ALL records with matching `ReportNumberNew`
+
+### 2. Main Correction Application
+**File**: `scripts/apply_manual_corrections.py`  
+**Lines**: 221-225  
+**Function**: `main()`
+
+**Critical Points**:
+- Must update production file directly (not create new file)
+- Must create backup before updating
+- Must verify record count unchanged
+
+### 3. Verification Script
+**File**: `scripts/check_address_corrections_applied.py`  
+**Purpose**: Verify corrections were actually applied
+
+**Usage**:
+```bash
+python scripts/check_address_corrections_applied.py
+```
+
+---
+
+## Potential Issues to Investigate
+
+### Issue A: Case Number Format Mismatch
+**Symptom**: Corrections not matching even though `ReportNumberNew` looks identical
+
+**Possible Causes**:
+- Whitespace differences ("19-053037" vs " 19-053037 ")
+- Newline characters in CSV
+- Case sensitivity (shouldn't matter, but verify)
+
+**Solution**: Ensure `.astype(str).str.strip()` applied to both sides
+
+### Issue B: Multiple Corrections Per Case
+**Symptom**: Some cases have multiple correction records in CSV
+
+**Current Behavior**: `drop_duplicates(keep='first')` keeps first occurrence
+
+**Question**: Should we merge multiple corrections or keep first? ### Issue C: Records Without Corrections
+**Symptom**: Some records with invalid addresses don't have corrections in CSV
+
+**Expected**: These remain unchanged (not an error)
+
+**Action**: Document which invalid addresses cannot be corrected
+
+---
+
+## Success Criteria
+
+### Immediate Success
+1. ✅ Production file restored to 728,593 records (no duplicates)
+2. ✅ All 1,688 corrections from CSV applied to matching records
+3. ✅ Record count unchanged after corrections
+4. ✅ Invalid addresses reduced by ~7,000-9,000
+5. ✅ Verification script shows 100% of corrections applied
+
+### Quality Metrics Success
+1. ✅ Invalid addresses: 102,717 → ~93,000-95,000 (7-9% reduction)
+2. ✅ Valid addresses: 625,876 → ~633,000-635,000 (1-1.5% increase)
+3. ✅ Address quality report updated with correct metrics
+4. ✅ All sample corrections verified in production file
+
+---
+
+## Next Steps for Investigation
+
+1. **Restore Clean File**
+   - Use backup to restore `CAD_ESRI_Final_20251117_v2.xlsx` to 728,593 records
+   - Verify no duplicates beyond expected (multiple records per case)
+
+2. **Re-apply Corrections**
+   - Run `apply_manual_corrections.py` with fixed code
+   - Verify record count unchanged
+   - Verify corrections applied
+
+3. **Validate Results**
+   - Run `check_address_corrections_applied.py`
+   - Run `analyze_address_improvement.py`
+   - Generate updated quality report
+
+4. **Document Findings**
+   - Update `ESRI_Data_Quality_Report.md` with correct metrics
+   - Document which corrections were applied
+   - Note any corrections that couldn't be applied (and why)
+
+---
+
+## Contact Information
+
+**Project**: CAD Data Cleaning Engine  
+**Repository**: `C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine`  
+**Production File**: `data/ESRI_CADExport/CAD_ESRI_Final_20251117_v2.xlsx`  
+**Corrections File**: `manual_corrections/address_corrections.csv`
+
+---
+
+## Additional Notes
+
+- The `backfill_address_from_rms_with_geocode_validation.py` script uses ArcGIS Pro geocoding for validation, which would provide more accurate address validation than pattern-based matching
+- Consider running geocoding validation as a final quality check after corrections are applied
+- The duplicate issue may have been caused by the Hour field fix function - investigate if it's creating duplicates
+
+---
+
+*Investigation Summary Generated: November 24, 2025*  
+*For AI Assistant: Claude or similar*
+
+```
+
+
+Created an investigation summary document for another AI assistant to investigate the address correction issue. ## Investigation Summary Created
+
+**Location**: `data/02_reports/ADDRESS_CORRECTION_INVESTIGATION_SUMMARY.md`
+
+### Contents
+
+1. Problem statement — why only 0.9% improvement instead of ~9%
+2. File structure — paths to all relevant files
+3. Current state analysis — metrics and verification results
+4. Example corrections — 4 examples showing corrections not applied
+5. Root cause analysis — 3 issues identified with fixes
+6. Code sections — specific functions and line numbers to review
+7. Step-by-step process — how corrections should be applied
+8. Verification checklist — pre/post application checks
+9. Scripts to run — ordered list with expected outputs
+10. Sample data — test cases for validation
+11. Success criteria — metrics for success
+12. Next steps — investigation roadmap
+
+### Highlights
+
+- Paths: All file paths included (Windows format)
+- File names: Production files, backups, corrections, scripts
+- Examples: 4 real cases showing the problem
+- Code references: Specific functions and line numbers
+- Metrics: Before/after numbers and expected results
+
+The document is ready for another AI assistant (or developer) to:
+1. Understand the problem
+2. Locate all relevant files
+3. See examples of what's wrong
+4. Follow the investigation steps
+5. Verify the fix
+
+The summary explains why only 896 of 1,688 corrections were applied and provides a clear path to fix it. ---
+
+**User**
+
+@doc/Claude-CAD data cleaning with geocode validation.json please review clauds prompt for claude code is it missing anything? ---
+
+**Cursor**
+
+
+Reviewing the Claude Code prompt and comparing it with the investigation summary to identify gaps:
+
+
+```markdown
+# Claude Code Prompt Review & Enhancement Recommendations
+
+**Date**: November 24, 2025  
+**Prompt Reviewed**: From `doc/Claude-CAD data cleaning with geocode validation.json`  
+**Status**: Comprehensive but missing several critical elements
+
+---
+
+## ✅ What the Prompt Does Well
+
+1. **Emergency Prioritization**: Correctly identifies data integrity as highest priority
+2. **Phased Approach**: Logical sequence from restoration → fixes → validation
+3. **Duplicate Detection**: Comprehensive duplicate analysis requirements
+4. **Record Count Invariants**: Emphasizes maintaining 728,593 records throughout
+5. **Audit Trail**: Requires complete tracking of corrections
+6. **Validation Pipeline**: End-to-end verification strategy
+
+---
+
+## ❌ Critical Missing Elements
+
+### 1. **Hour Field Fix Duplicate Issue** ⚠️ CRITICAL
+
+**Missing**: The `fix_hour_field()` function in `apply_manual_corrections.py` may be creating duplicates. **Evidence from Investigation**:
+- File went from 728,593 → 955,759 records after running corrections
+- The Hour field fix processes ALL records and may be duplicating rows
+
+**What to Add**:
+```python
+# Task 2.3: Fix Hour Field Function (CRITICAL)
+File: scripts/apply_manual_corrections.py
+Function: fix_hour_field() (lines 141-184)
+
+CRITICAL: Verify this function doesn't create duplicates
+
+Current implementation uses:
+df['Hour'] = df['TimeOfCall'].apply(extract_time_from_timeofcall)
+
+RISK: If apply() is used incorrectly, could duplicate rows
+SOLUTION: Use vectorized operations:
+df['Hour'] = pd.to_datetime(df['TimeOfCall'], errors='coerce').dt.strftime('%H:%M')
+
+MUST ADD:
+- Record count check before/after Hour field fix
+- Assert no duplicates created
+- Verify TimeOfCall parsing doesn't corrupt data
+```
+
+### 2. **Complete File Path Structure** ⚠️ IMPORTANT
+
+**Missing**: Complete directory structure and file naming conventions
+
+**What to Add**:
+```markdown
+## Complete File Structure
+
+### Base Directory
+C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine
+
+### Critical Files
+Production:
+- data/ESRI_CADExport/CAD_ESRI_Final_20251117_v2.xlsx (728,593 records expected)
+
+Backups to Check:
+- data/ESRI_CADExport/CAD_ESRI_Final_20251117_v3.xlsx
+- data/ESRI_CADExport/archive/CAD_ESRI_Final_20251117_v2_pre_full_rebuild.xlsx
+- data/ESRI_CADExport/archive/CAD_ESRI_Final_20251117_pre_full_rebuild.xlsx
+
+Corrections:
+- manual_corrections/address_corrections.csv (1,696 records, 1,688 with corrections)
+- manual_corrections/disposition_corrections.csv (40,257 records)
+- manual_corrections/case_number_corrections.csv (20 records)
+- manual_corrections/how_reported_corrections.csv
+
+Reference Data:
+- data/rms/2019_2025_11_16_16_57_00_ALL_RMS_Export.xlsx
+- ref/hackensack_municipal_streets_from_lawsoft_25_11_24.xlsx
+- ref/facility_aliases.csv
+
+Scripts:
+- scripts/apply_manual_corrections.py (MUST FIX)
+- scripts/backfill_address_from_rms.py (pattern-based)
+- scripts/backfill_address_from_rms_with_geocode_validation.py (ArcGIS)
+- scripts/check_address_corrections_applied.py (verification)
+- scripts/generate_esri_quality_report.py (reporting)
+```
+
+### 3. **Integration with Other Correction Types** ⚠️ IMPORTANT
+
+**Missing**: How address corrections interact with disposition, case number, and how_reported corrections
+
+**What to Add**:
+```markdown
+## Correction Application Order (CRITICAL)
+
+The apply_manual_corrections.py script applies corrections in this order:
+1. How Reported corrections (33,849 records)
+2. Disposition corrections (265,183 records)
+3. Case Number corrections (1 record)
+4. Address corrections (1,688 corrections → 3,649+ records)
+5. Hour field fix (728,593 records)
+
+CRITICAL: Each step must verify:
+- Record count unchanged
+- No duplicates created
+- Previous corrections not overwritten
+
+MUST ADD validation after EACH correction type:
+```python
+# After each correction type
+assert len(df) == ORIGINAL_COUNT, f"Record count changed after {correction_type}!" assert df['ReportNumberNew'].nunique() == ORIGINAL_UNIQUE, f"Unique cases changed!" ```
+
+### 4. **Geocoding Script Configuration** ⚠️ IMPORTANT
+
+**Missing**: Specific configuration for the geocoding script
+
+**What to Add**:
+```markdown
+## Geocoding Script Configuration
+
+File: scripts/backfill_address_from_rms_with_geocode_validation.py
+
+Current Configuration:
+- LOCATOR_PATH: r"C:\GIS\Locators\Hackensack_Composite_Locator.loc"
+- MIN_SCORE: 90
+- ALLOWED_MATCH_TYPES: {"A", "M"}
+
+MUST VERIFY:
+1. Locator path exists and is accessible
+2. Locator is configured for Hackensack addresses
+3. Batch size is appropriate (suggest 2000-5000 per batch)
+4. Memory limits for large batches
+5. Timeout handling for geocoding operations
+
+ADD TO PROMPT:
+- Pre-flight check: Verify locator exists before processing
+- Configuration validation: Test locator with sample addresses
+- Error handling: What to do if locator is unavailable
+```
+
+### 5. **Testing Strategy Before Full Run** ⚠️ IMPORTANT
+
+**Missing**: Specific testing approach before processing 700K records
+
+**What to Add**:
+```markdown
+## Pre-Production Testing Strategy
+
+BEFORE running on full 700K dataset:
+
+1. Create Test Sample (10,000 records)
+   - Stratified sample across years (2019-2025)
+   - Include records with and without corrections
+   - Include natural duplicates (multiple records per case)
+   - Include edge cases (null addresses, generic locations)
+
+2. Test Scripts on Sample
+   - Run apply_manual_corrections.py on sample
+   - Verify: Record count unchanged
+   - Verify: Corrections applied correctly
+   - Verify: No duplicates created
+   - Verify: All data types preserved
+
+3. Test Geocoding on Sample
+   - Run backfill script on sample (if using geocoding)
+   - Verify: Geocoding works correctly
+   - Verify: Batch processing works
+   - Verify: Memory usage acceptable
+   - Measure: Processing time per 1000 records
+
+4. Validate Results
+   - Compare before/after metrics
+   - Verify corrections match expected values
+   - Check for data corruption
+   - Verify encoding (UTF-8 with BOM)
+
+5. Performance Benchmarking
+   - Time each operation
+   - Memory usage tracking
+   - Identify bottlenecks
+   - Estimate full run time
+
+ONLY proceed to full run if:
+- ✅ All tests pass
+- ✅ No duplicates created
+- ✅ All corrections verified
+- ✅ Performance acceptable
+- ✅ Backup created
+```
+
+### 6. **Rollback Procedures** ⚠️ IMPORTANT
+
+**Missing**: How to rollback if something goes wrong
+
+**What to Add**:
+```markdown
+## Rollback Procedures
+
+BEFORE starting any corrections:
+
+1. Create Full Backup
+   ```python
+   backup_file = f"CAD_ESRI_Final_20251117_v2_BACKUP_{timestamp}.xlsx"
+   shutil.copy2(production_file, backup_file)
+   ```
+
+2. Document Current State
+   - Record count
+   - Unique cases
+   - Address quality metrics
+   - File hash (MD5/SHA256)
+
+3. Create Checkpoint System
+   - After each correction type, create checkpoint
+   - Save intermediate state
+   - Allow resume from last checkpoint
+
+4. Rollback Steps
+   - If corruption detected: Restore from backup
+   - If corrections wrong: Restore from checkpoint
+   - If duplicates created: Restore from backup
+   - Verify restored file matches documented state
+
+5. Emergency Stop
+   - Script should detect errors and stop
+   - Preserve current state
+   - Log error details
+   - Provide rollback instructions
+```
+
+### 7. **Data Type Preservation** ⚠️ IMPORTANT
+
+**Missing**: Ensuring data types are preserved during corrections
+
+**What to Add**:
+```markdown
+## Data Type Preservation
+
+CRITICAL: When applying corrections, must preserve:
+- Numeric fields remain numeric (not converted to string)
+- Date fields remain datetime (not converted to string)
+- Boolean fields remain boolean
+- Categorical fields remain categorical (if using category dtype)
+
+MUST ADD:
+```python
+# Before applying corrections
+original_dtypes = df.dtypes.to_dict()
+
+# After applying corrections
+for col, dtype in original_dtypes.items():
+    if col in df.columns:
+        try:
+            df[col] = df[col].astype(dtype)
+        except (ValueError, TypeError):
+            # Log conversion issues but don't fail
+            print(f"Warning: Could not preserve dtype for {col}")
+```
+
+### 8. **Encoding Requirements** ⚠️ IMPORTANT
+
+**Missing**: UTF-8 with BOM requirement for ESRI compatibility
+
+**What to Add**:
+```markdown
+## Encoding Requirements
+
+ESRI requires UTF-8 with BOM for Excel files. MUST VERIFY:
+- All CSV files: UTF-8 with BOM
+- Excel output: UTF-8 with BOM
+- Special characters preserved correctly
+- No mojibake (encoding errors)
+
+ADD TO PROMPT:
+- Verify encoding before/after corrections
+- Test with special characters (accents, symbols)
+- Ensure BOM is present in output files
+```
+
+### 9. **Natural vs. Merge Duplicates Detection** ⚠️ CRITICAL
+
+**Missing**: Algorithm to distinguish natural duplicates from merge artifacts
+
+**What to Add**:
+```markdown
+## Duplicate Detection Algorithm
+
+CRITICAL: Need to distinguish:
+- Natural duplicates: Multiple CAD entries for same case (legitimate)
+- Merge artifacts: Cartesian product from merge operation (corruption)
+
+Natural Duplicate Pattern:
+- Same ReportNumberNew
+- Different TimeOfCall, Incident, Officer, etc. - Different row indices
+- Expected: ~187,135 natural duplicates
+
+Merge Artifact Pattern:
+- Same ReportNumberNew
+- IDENTICAL TimeOfCall, Incident, Officer, FullAddress2, etc. - Created by merge operation
+- Unexpected: Should be 0
+
+ADD TO PROMPT:
+```python
+def detect_merge_artifacts(df):
+    """Detect merge artifacts vs natural duplicates.""" # Natural duplicates: Same case, different data
+    natural = df.groupby('ReportNumberNew').apply(
+        lambda g: g.duplicated(subset=['TimeOfCall', 'Incident', 'Officer', 'FullAddress2']).sum()
+    )
+    
+    # Merge artifacts: Same case, identical data
+    artifacts = df.duplicated(
+        subset=['ReportNumberNew', 'TimeOfCall', 'Incident', 'Officer', 'FullAddress2'],
+        keep=False
+    ).sum()
+    
+    return {
+        'natural_duplicates': natural.sum(),
+        'merge_artifacts': artifacts,
+        'is_corrupted': artifacts > 0
+    }
+```
+```
+
+### 10. **Progress Reporting** ⚠️ IMPORTANT
+
+**Missing**: Real-time progress reporting for long operations
+
+**What to Add**:
+```markdown
+## Progress Reporting Requirements
+
+For 700K+ records, operations can take hours. Must provide:
+
+1. Progress Bars
+   - Use tqdm for all long operations
+   - Show: Current/total, ETA, speed
+   - Update frequency: Every 100-1000 records
+
+2. Checkpoint Logging
+   - Log every 10,000 records processed
+   - Save intermediate state
+   - Allow resume from checkpoint
+
+3. Status Updates
+   - Current operation
+   - Records processed
+   - Corrections applied
+   - Errors encountered
+   - Estimated time remaining
+
+4. Error Logging
+   - Detailed error messages
+   - Stack traces
+   - Record IDs that failed
+   - Recovery suggestions
+
+ADD TO PROMPT:
+- Implement tqdm progress bars
+- Create checkpoint system
+- Log to file (not just console)
+- Email/Slack notifications for completion (optional)
+```
+
+### 11. **Verification Sample Size** ⚠️ IMPORTANT
+
+**Missing**: How many records to verify manually
+
+**What to Add**:
+```markdown
+## Verification Strategy
+
+MUST verify corrections were applied correctly:
+
+1. Automated Verification
+   - Check all corrections match (100% verification)
+   - Compare CSV corrections to ESRI file
+   - Report mismatches
+
+2. Manual Sample Verification
+   - Random sample: 50-100 records
+   - Stratified sample: Include all correction types
+   - Visual inspection of before/after
+   - Verify address quality improved
+
+3. Statistical Verification
+   - Compare address quality distributions
+   - Verify improvement matches expectations
+   - Check for unexpected changes
+
+ADD TO PROMPT:
+- Automated: 100% of corrections verified
+- Manual: 50-100 random samples
+- Statistical: Distribution analysis
+```
+
+### 12. **Performance Benchmarks** ⚠️ IMPORTANT
+
+**Missing**: Expected performance metrics
+
+**What to Add**:
+```markdown
+## Performance Benchmarks
+
+Expected performance for 700K records:
+
+1. File Loading
+   - Excel read: < 30 seconds
+   - CSV read: < 10 seconds
+
+2. Correction Application
+   - Address corrections: < 5 minutes
+   - All corrections: < 15 minutes
+
+3. Geocoding (if used)
+   - 1000 addresses: ~2-5 minutes
+   - 100K addresses: ~3-5 hours
+   - Batch size: 2000-5000 optimal
+
+4. Validation
+   - Full validation: < 10 minutes
+   - Sample verification: < 5 minutes
+
+5. Total Pipeline
+   - Without geocoding: < 30 minutes
+   - With geocoding: < 6 hours
+
+ADD TO PROMPT:
+- Measure actual performance
+- Compare to benchmarks
+- Identify bottlenecks
+- Optimize if needed
+```
+
+---
+
+## 📋 Enhanced Prompt Additions
+
+### Section to Add: "Phase 0: Pre-Flight Checks"
+
+```markdown
+## PHASE 0: PRE-FLIGHT CHECKS (BEFORE ANY PROCESSING)
+
+### Task 0.1: Environment Validation
+- [ ] Python 3.9+ installed
+- [ ] Required packages: pandas, openpyxl, tqdm, arcpy (if geocoding)
+- [ ] ArcGIS Pro installed and licensed (if geocoding)
+- [ ] Locator file exists and accessible
+- [ ] Sufficient disk space (> 5GB free)
+- [ ] Sufficient memory (16GB+ recommended)
+
+### Task 0.2: File Integrity Checks
+- [ ] Production file exists and is readable
+- [ ] Backup files available
+- [ ] Correction CSVs exist and are readable
+- [ ] RMS export file exists (if using)
+- [ ] Reference files exist (street names, etc.) ### Task 0.3: Data Validation
+- [ ] Production file has expected record count (728,593)
+- [ ] No unexpected duplicates in production file
+- [ ] Correction CSVs have expected record counts
+- [ ] All required columns present
+- [ ] Data types are correct
+
+### Task 0.4: Backup Creation
+- [ ] Full backup of production file created
+- [ ] Backup verified (can be read back)
+- [ ] Backup location documented
+- [ ] Rollback procedure documented
+```
+
+### Section to Add: "Error Recovery Procedures"
+
+```markdown
+## ERROR RECOVERY PROCEDURES
+
+### Scenario 1: Duplicates Detected During Processing
+**Detection**: Record count increases unexpectedly
+**Action**:
+1. Stop processing immediately
+2. Log current state
+3. Restore from last checkpoint
+4. Identify root cause
+5. Fix script
+6. Resume from checkpoint
+
+### Scenario 2: Corrections Not Applying
+**Detection**: Verification shows corrections not applied
+**Action**:
+1. Check ReportNumberNew matching logic
+2. Verify CSV encoding (UTF-8 with BOM)
+3. Check for whitespace/newline issues
+4. Verify correction map creation
+5. Test with sample records
+6. Fix and re-apply
+
+### Scenario 3: Memory Error
+**Detection**: Out of memory during processing
+**Action**:
+1. Implement chunking
+2. Process in batches
+3. Clear memory after each batch
+4. Use more efficient data types
+5. Consider using dask for large operations
+
+### Scenario 4: Geocoding Failures
+**Detection**: Geocoding errors or timeouts
+**Action**:
+1. Reduce batch size
+2. Add retry logic
+3. Skip failed addresses (log for review)
+4. Continue with remaining addresses
+5. Generate report of failures
+```
+
+---
+
+## 🎯 Summary of Enhancements Needed
+
+### Critical (Must Add)
+1. ✅ Hour field fix duplicate detection
+2. ✅ Natural vs merge duplicate algorithm
+3. ✅ Complete file path structure
+4. ✅ Rollback procedures
+5. ✅ Pre-flight checks
+
+### Important (Should Add)
+6. ✅ Testing strategy before full run
+7. ✅ Integration with other correction types
+8. ✅ Geocoding script configuration
+9. ✅ Data type preservation
+10. ✅ Encoding requirements
+11. ✅ Progress reporting
+12. ✅ Verification sample size
+13. ✅ Performance benchmarks
+14. ✅ Error recovery procedures
+
+### Nice to Have (Could Add)
+15. Email/Slack notifications
+16. Automated testing suite
+17. Performance profiling
+18. Memory usage monitoring
+19. Parallel processing options (where safe)
+
+---
+
+## 📝 Recommended Prompt Structure Update
+
+The current prompt is excellent but should be reorganized:
+
+1. **Phase 0**: Pre-flight checks (NEW)
+2. **Phase 1**: Damage assessment & restoration (KEEP)
+3. **Phase 2**: Fix apply_manual_corrections.py (ENHANCE with Hour field fix)
+4. **Phase 3**: Validate backfill script (ENHANCE with configuration)
+5. **Phase 4**: End-to-end validation (ENHANCE with verification strategy)
+6. **Phase 5**: Correct quality reports (KEEP)
+7. **Phase 6**: Error recovery procedures (NEW)
+8. **Phase 7**: Performance optimization (ENHANCE with benchmarks)
+
+---
+
+*Review completed: November 24, 2025*
+
+```
+
+
+Created a review document identifying gaps in the Claude Code prompt. Summary:
+
+## Critical missing elements
+
+### 1. Hour field fix duplicate issue (critical)
+The prompt doesn't mention that `fix_hour_field()` may be creating duplicates. The file grew from 728,593 → 955,759 records, and this function may be the cause.

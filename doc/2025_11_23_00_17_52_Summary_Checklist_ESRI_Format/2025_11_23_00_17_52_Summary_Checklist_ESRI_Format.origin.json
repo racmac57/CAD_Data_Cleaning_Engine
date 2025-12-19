@@ -1,0 +1,54 @@
+{
+  "original_full_path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\02_ETL_Scripts\\CAD_Data_Cleaning_Engine\\doc\\Summary_Checklist_ESRI_Format.md",
+  "original_directory": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\02_ETL_Scripts\\CAD_Data_Cleaning_Engine\\doc",
+  "original_filename": "Summary_Checklist_ESRI_Format.md",
+  "operation": "MOVE",
+  "sent_at": "2025-11-23T05:17:48.4258441Z",
+  "size_bytes": 7642,
+  "modified_time": "2025-11-14T04:54:05.0000000Z",
+  "integrity_sha256": "4c54ac9c637b958a5b9ca73ba64a278cc9479bac2957b3bea5472258511ff91f",
+  "created_time": "2025-11-16T00:01:02.6542027Z",
+  "tags": [
+    "API",
+    "ai",
+    "code",
+    "config",
+    "data",
+    "docs",
+    "excel",
+    "function",
+    "input/output",
+    "json",
+    "legal",
+    "loop",
+    "markdown",
+    "police",
+    "python",
+    "regex",
+    "sql"
+  ],
+  "metadata_enrichment": {
+    "metadata": {
+      "project_name": "02_data",
+      "source_type": "documentation",
+      "language": "en",
+      "department": "admin",
+      "key_terms": [
+        "csv",
+        "mapping",
+        "rms",
+        "missing",
+        "columns",
+        "incidents"
+      ],
+      "enrichment_version": "1.0.0"
+    },
+    "summaries": {
+      "file_summary": "### Summary\n- ESRI’s reference extract has fixed headers (21 columns) and expects durations as strings, time fields as datetimes, and empty `latitude`/`longitude` (LawSoft doesn’t supply them). - The CAD batch script now emits ESRI-align...",
+      "first_line": "### Summary"
+    },
+    "enrichment_version": "1.0.0"
+  },
+  "last_processed_at": "2025-11-23T00:17:52.738376",
+  "department": "admin"
+}

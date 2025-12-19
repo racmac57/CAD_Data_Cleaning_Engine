@@ -1,0 +1,84 @@
+{
+  "source_file": "how_reported_script.md",
+  "source_path": "C:\\_chunker\\02_data\\how_reported_script.md",
+  "manifest_path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\KB_Shared\\04_output\\2025_11_23_00_17_53_how_reported_script\\2025_11_23_00_17_53_how_reported_script.origin.json",
+  "created_at": "2025_11_23_00_17_53",
+  "tags": [
+    "ai",
+    "code",
+    "config",
+    "data",
+    "docs",
+    "error handling",
+    "function",
+    "input/output",
+    "json",
+    "loop",
+    "markdown",
+    "police",
+    "python",
+    "regex",
+    "sql",
+    "variable"
+  ],
+  "metadata": {
+    "project_name": "02_data",
+    "source_type": "documentation",
+    "language": "en",
+    "department": "admin",
+    "key_terms": [
+      "9-1-1",
+      "how",
+      "reported",
+      "return",
+      "excel",
+      "911"
+    ],
+    "enrichment_version": "1.0.0"
+  },
+  "summaries": {
+    "file_summary": "I merged a robust “9-1-1” fix into your main processor and wired it into cleaning, validation, and CSV export. This slots into 01_validate_and_clean.py.",
+    "first_line": "I merged a robust “9-1-1” fix into your main processor and wired it into cleaning, validation, and CSV export. This slots into 01_validate_and_clean.py. "
+  },
+  "chunks": [
+    {
+      "chunk_id": "2025-11-23T00:17:53+00:00_how_reported_script_chunk1",
+      "chunk_index": 1,
+      "file": "chunk_00000.txt",
+      "tags": [
+        "9-1-1",
+        "ai",
+        "code",
+        "config",
+        "data",
+        "docs",
+        "error handling",
+        "excel",
+        "function",
+        "input/output",
+        "json",
+        "loop",
+        "markdown",
+        "police",
+        "python",
+        "regex",
+        "reported",
+        "return",
+        "sql",
+        "variable"
+      ],
+      "key_terms": [
+        "9-1-1",
+        "how",
+        "reported",
+        "return",
+        "excel",
+        "911"
+      ],
+      "summary": "I merged a robust “9-1-1” fix into your main processor and wired it into cleaning, validation, and CSV export.",
+      "char_length": 4422,
+      "byte_length": 4542
+    }
+  ],
+  "enrichment_version": "1.0.0"
+}

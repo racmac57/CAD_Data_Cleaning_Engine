@@ -1,0 +1,813 @@
+Quality Scoring:")
+assert 'quality_score' in df.columns
+assert df['quality_score'].between(0, 100).all()
+print("  ✅ Quality scores present and valid")
+
+print("\n7. Duplicate Detection:")
+assert 'Is_Merge_Artifact' in df.columns
+assert df['Is_Merge_Artifact'].sum() < 100
+print(f"  ✅ Duplicate flagging complete: {df['Is_Merge_Artifact'].sum()} suspected merge artifacts")
+📦 DELIVERABLES (Updated)
+Add the following:
+
+scripts/cad_data_processor.py – Main class for all corrections
+
+manual_review_pending.xlsx – Flagged edge cases for human review
+
+Updated validate_full_pipeline.py – Checks for scoring + duplicates
+
+Documentation for how to use CADDataProcessor as CLI or importable module
+
+🧪 TEST INSTRUCTIONS
+# Example usage of CADDataProcessor
+
+from cad_data_processor import CADDataProcessor
+
+processor = CADDataProcessor(
+    input_path='data/ESRI_CADExport/CAD_ESRI_Final_20251117_v3.xlsx',
+    corrections_paths={
+        'address': 'manual_corrections/address_corrections.csv',
+        'how_reported': 'manual_corrections/how_reported.csv',
+        # etc. },
+    locator_path='path/to/locator'
+)
+
+processor.run_all_corrections()
+processor.send_to_manual_review("FullAddress2.str.contains('UNKNOWN')")
+processor.export_corrected_data('corrected_final_output.xlsx')
+✅ Summary of New Enhancements
+Feature	Description
+✅ CADDataProcessor	End-to-end correction class for encapsulated processing
+✅ Manual Review Routing	Sends edge-case records to manual review file
+✅ Hour Extraction	Safely extracts and validates time-of-call
+✅ Call-Type Mapping	Standardizes emergency call classifications
+✅ Duplicate Detection	Merge artifact flagging built into pipeline
+✅ Quality Scoring	Adds quality_score per record using multi-factor logic
+✅ Integrated Validation	Ensures each transformation preserves row/uniqueness integrity
+Let me know if you'd like this class scaffolded as a CLI tool (argparse-based), made notebook-friendly, or injected with logging/reporting hooks. You said:
+Provide the Final Full full integrated prompt (Drop-in Ready)
+Prompt Engineer said:
+Here is your FINAL FULLY-INTEGRATED DROP-IN READY PROMPT, with the CADDataProcessor class and all new components fully incorporated into the structure and flow of the original Claude Code prompt:
+
+🔧 FINAL ENHANCED CLAUDE CODE PROMPT (DROP-IN READY)
+✅ Integrated CADDataProcessor Class • Manual Review Workflow • Hour Extraction • Call-Type Mapping • Quality Scoring with Duplicate Detection
+🚨 CRITICAL SITUATION SUMMARY
+Data Integrity Crisis Identified:
+
+Production file: 955,759 records (expected: 728,593) = 227,166 duplicates
+
+Address corrections: Only 53% applied (896/1,688)
+
+Root cause: Merge operation creating Cartesian product
+
+Secondary issue: Hour field fix may be duplicating rows
+
+Wrong file updated: Timestamped backup instead of production file
+
+Repository: https://github.com/racmac57/CAD_Data_Cleaning_Engine.git
+Documentation: See attached investigation summaries
+
+FULL PIPELINE OVERVIEW
+Phase 0: Pre-Flight Validation
+Phase 1: Damage Assessment & Restoration
+Phase 2: Apply All Manual Corrections
+Phase 3: Test Sample Strategy
+Phase 4: Optimize Geocoding Backfill
+Phase 5: Full Pipeline Validation
+Phase 6: Generate Reports
+✅ Phase 7: CADDataProcessor Integration (NEW)
+✅ PHASE 7: INTEGRATE CADDataProcessor CLASS
+🔨 Task 7.1: Create CADDataProcessor Class
+New File: scripts/cad_data_processor.py
+
+class CADDataProcessor:
+    """
+    End-to-end processor for CAD data correction and validation. Handles loading, correction, backfill, quality scoring, export.
+    """ def __init__(self, input_path, corrections_paths, locator_path=None):
+        self.input_path = Path(input_path)
+        self.corrections_paths = corrections_paths
+        self.locator_path = locator_path
+        self.df = pd.read_excel(self.input_path, dtype=str)
+        self.original_count = len(self.df)
+        self.original_unique = self.df['ReportNumberNew'].nunique()
+    
+    def run_all_corrections(self):
+        self.apply_address_corrections()
+        self.fix_hour_field()
+        self.map_call_types()
+        self.backfill_addresses()
+        self.detect_and_flag_duplicates()
+        self.score_data_quality()
+        self.validate_all()
+    
+    def apply_address_corrections(self):
+        # Apply FullAddress2 corrections safely using dictionary mapping
+        ...
+
+    def fix_hour_field(self):
+        # Vectorized HH:mm extraction from TimeOfCall to Hour column
+        ...
+
+    def map_call_types(self):
+        # Apply call-type mapping to Incident column (e.g., fire, medical, police)
+        ...
+
+    def backfill_addresses(self):
+        # Perform optional RMS-based address backfill or geocoding if locator provided
+        ...
+
+    def detect_and_flag_duplicates(self):
+        stats = detect_duplicate_types(self.df)
+        self.df['Is_Merge_Artifact'] = self.df.duplicated(
+            subset=['ReportNumberNew', 'TimeOfCall', 'Incident', 'Officer', 'FullAddress2'],
+            keep=False
+        )
+        print(f"🚫 Merge artifacts detected: {stats['merge_artifacts']}")
+
+    def score_data_quality(self):
+        # Add a quality_score column based on completeness, geocode success, duplicate presence
+        ...
+
+    def send_to_manual_review(self, filter_criteria):
+        review_df = self.df.query(filter_criteria)
+        review_df.to_excel('manual_review_pending.xlsx', index=False)
+        print(f"⚠️ {len(review_df)} records flagged for manual review")
+
+    def validate_all(self):
+        assert len(self.df) == self.original_count
+        assert self.df['ReportNumberNew'].nunique() == self.original_unique
+        print("✅ All validations passed")
+
+    def export_corrected_data(self, output_path):
+        self.df.to_excel(output_path, index=False)
+        print(f"✅ Exported corrected data: {output_path}")
+🔁 Updated PHASE 2: Corrections Logic
+All corrections from Phase 2 (address, hour, disposition, etc.) should now call the corresponding CADDataProcessor methods for clean, safe processing. 🧪 Updated PHASE 5: Validation Enhancements
+File: scripts/validate_full_pipeline.py
+
+Add to validation:
+
+print("\n6. Quality Scoring:")
+assert 'quality_score' in df.columns
+assert df['quality_score'].between(0, 100).all()
+print("  ✅ Quality scores present and valid")
+
+print("\n7. Duplicate Detection:")
+assert 'Is_Merge_Artifact' in df.columns
+assert df['Is_Merge_Artifact'].sum() < 100
+print(f"  ✅ Duplicate flagging complete: {df['Is_Merge_Artifact'].sum()} suspected merge artifacts")
+🧪 EXAMPLE USAGE
+from cad_data_processor import CADDataProcessor
+
+processor = CADDataProcessor(
+    input_path='data/ESRI_CADExport/CAD_ESRI_Final_20251117_v3.xlsx',
+    corrections_paths={
+        'address': 'manual_corrections/address_corrections.csv',
+        'how_reported': 'manual_corrections/how_reported.csv',
+        'disposition': 'manual_corrections/disposition_corrections.csv',
+        # Add others as needed
+    },
+    locator_path='path/to/locator'
+)
+
+processor.run_all_corrections()
+processor.send_to_manual_review("FullAddress2.str.contains('UNKNOWN')")
+processor.export_corrected_data('corrected_production_output.xlsx')
+📦 DELIVERABLES (Final Updated List)
+Scripts
+
+scripts/validate_environment.py
+
+scripts/diagnose_file_integrity.py
+
+scripts/create_backup.py
+
+scripts/restore_clean_baseline.py
+
+scripts/apply_manual_corrections.py (now thin wrapper or deprecated)
+
+scripts/create_test_sample.py
+
+scripts/validate_full_pipeline.py ✅ (updated)
+
+scripts/generate_true_baseline_report.py
+
+scripts/generate_esri_quality_report.py
+
+scripts/cad_data_processor.py ✅ (new)
+
+New Output Files
+
+manual_review_pending.xlsx ✅ (flagged edge cases)
+
+Corrected export: corrected_production_output.xlsx
+
+Full backup with metadata
+
+✅ SUCCESS CRITERIA (Expanded)
+✅ Production file: 728,593 records (unchanged)
+✅ Unique cases: 541,458
+✅ Merge artifacts: 0 (clean)
+✅ Address corrections: 1,688 applied (100%)
+✅ Hour field standardized
+✅ Call types mapped
+✅ Quality score: 100% rows present
+✅ Duplicate flags: Merge artifacts labeled
+✅ Manual review: 100% unknowns routed
+✅ All validations passed
+✅ Runtime: <30 minutes (no geocoding), <2hr with geocoding
+🧠 STRATEGIC NOTE
+This prompt integrates all system fixes, safeguards, and enhancements — including modular architecture (CADDataProcessor), automated validations, and routing for manual review — to enable Claude Code to confidently execute end-to-end correction, de-duplication, scoring, and export of the corrupted CAD dataset. Let me know if you'd like:
+
+A CLI version of CADDataProcessor
+
+YAML or JSON config integration
+
+Logging integration with rotating logs
+
+A test harness script for all phases
+
+✅ This is ready to drop into Claude Code as-is. You said:
+what if any of the add-ins would make the prompt more efficient or better for validation? Prompt Engineer said:
+Great question. The add-ins you've already included (e.g., CADDataProcessor, manual review routing, hour extraction, call-type mapping, and duplicate detection in quality scoring) significantly enhance modularity, clarity, and validation coverage. However, if you're aiming for even more efficiency, resilience, and auditability, the following add-ins could optimize the prompt further, especially for validation and maintainability:
+
+✅ RECOMMENDED ADD-INS TO MAKE THE PROMPT MORE EFFICIENT & VALIDATION-READY:
+1. Centralized Logging System (Structured Logs)
+Why: Validation and debugging are easier when logs are structured, timestamped, and consistent across all phases. How to integrate:
+Add a logger.py module to standardize info, warning, and error logs:
+
+import logging
+
+def get_logger(name='cad_processor', level=logging.INFO):
+    logger = logging.getLogger(name)
+    if not logger.handlers:
+        handler = logging.FileHandler('cad_processing.log')
+        formatter = logging.Formatter('[%(asctime)s] %(levelname)s: %(message)s')
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+        logger.setLevel(level)
+    return logger
+Then replace all print() calls with logger.info(), logger.warning(), or logger.error(). 2. YAML Configuration Loader
+Why: Makes validation and environment management easier and more reproducible across environments (test, prod). How to integrate:
+
+# config.yml
+input_file: data/ESRI_CADExport/CAD_ESRI_Final_20251117_v3.xlsx
+output_file: corrected_production_output.xlsx
+locator_path: path/to/locator
+corrections:
+  address: manual_corrections/address_corrections.csv
+  how_reported: manual_corrections/how_reported.csv
+  disposition: manual_corrections/disposition_corrections.csv
+Then load in Python:
+
+import yaml
+
+def load_config(path='config.yml'):
+    with open(path, 'r') as f:
+        return yaml.safe_load(f)
+3. Schema Validator for Input Files
+Why: Catch column mismatches or datatype drift early, before correction starts. How to integrate: Use a schema definition:
+
+EXPECTED_SCHEMA = {
+    'ReportNumberNew': str,
+    'TimeOfCall': str,
+    'FullAddress2': str,
+    'Incident': str,
+    'Officer': str,
+}
+Then validate:
+
+def validate_schema(df, schema):
+    for col, dtype in schema.items():
+        if col not in df.columns:
+            raise ValueError(f"Missing column: {col}")
+        if not pd.api.types.is_string_dtype(df[col]):
+            print(f"⚠️ Column {col} not of type {dtype}")
+4. Correction Audit Trail Tracker
+Why: Critical for forensic validation and rollback. It answers: “What changed, where, and why?”
+
+How to integrate: Add an audit_log DataFrame inside CADDataProcessor:
+
+self.audit_log = pd.DataFrame(columns=['ReportNumberNew', 'Field', 'OldValue', 'NewValue', 'CorrectionType'])
+Then log each change:
+
+self.audit_log = self.audit_log.append({
+    'ReportNumberNew': row['ReportNumberNew'],
+    'Field': 'FullAddress2',
+    'OldValue': old,
+    'NewValue': new,
+    'CorrectionType': 'Address Correction'
+}, ignore_index=True)
+Export to audit_log.csv. 5. Test/Validation Harness Script
+Why: Automatically runs test suite before a full production run. How to integrate: Create run_validation_suite.py to execute:
+
+python validate_environment.py
+python diagnose_file_integrity.py
+python apply_manual_corrections.py --test
+python validate_full_pipeline.py --file corrected_sample.xlsx
+Includes pass/fail summary, logs, and auto-halt if a test fails. 6. Hash-Based Change Detection
+Why: Ensure file integrity and detect silent data corruption. How to integrate: Reuse the calculate_hash() function for every input/output, and write checksums to a manifest file:
+
+{
+  "input_hash": "abc123...",
+  "output_hash": "def456...",
+  "timestamp": "2025-11-24T15:42:00"
+}
+✅ TL;DR — Add-ins That Most Help Validation
+Add-In	Impact	Why it Helps
+✅ Logging	High	Standardized error/debug tracing
+✅ Schema Validation	High	Prevents silent data drift
+✅ YAML Config	Medium	Reproducible and cleaner prompts
+✅ Audit Trail	High	Forensically tracks changes
+✅ Validation Harness	High	Ensures correctness before production run
+✅ Hash Verification	Medium	Guards against file tampering
+Would you like me to generate a new prompt block with any (or all) of these add-ins fully merged into the current system? You said:
+yes please provide a new prompt with all merged
+Prompt Engineer said:
+Understood — before I generate the full integrated prompt, I need to ask one mandatory question (per your prompting rules):
+
+❓ What is the goal of the new merged prompt? To proceed correctly, I must know:
+
+Which of the following best matches what you want? A. A single unified “Claude Code Drop-in Prompt” that merges:
+
+the original CAD correction prompt
+
+the new CADDataProcessor class
+
+manual review workflow
+
+hour extraction
+
+call-type mapping
+
+duplicate detection in scoring
+
+PLUS all new add-ins:
+
+structured logging
+
+YAML config loading
+
+schema validation
+
+audit trail
+
+validation harness
+
+hash verification
+
+→ (One giant prompt for Claude that outputs all scripts)
+
+B. A multi-file architecture prompt, where Claude will generate and organize each component into separate scripts (e.g., logging.py, schema_validator.py, processor.py, etc.) when the user runs it. C.
+A prompt that generates a single combined Python framework file (processor + validation + logging + schema + scoring in one monolithic .py). D.
+A prompt that focuses specifically on validation enhancements, merging the schema validator, validation harness, structured logging, checksums, and audit trail — while leaving core pipeline scripts to be generated separately. ✔️ Please reply with A, B, C, or D
+(or explain if it’s another variation)
+
+Once you choose, I will produce the final merged prompt exactly to spec. You said:
+a
+Prompt Engineer said:
+Perfect — you selected A, so here is your:
+
+✅ FINAL DROP-IN PROMPT FOR CLAUDE CODE
+🚀 Full Integrated System for CAD Data Correction, Validation & Quality Scoring
+Includes: CADDataProcessor, Structured Logging, YAML Config, Audit Trail, Schema Validator, Validation Harness, Duplicate Detection, and Hash Verification
+
+🧠 Prompt Goal:
+Claude, your task is to build a fully modular and fault-tolerant CAD Data Correction Framework for a 700K-record emergency dataset suffering from duplicate corruption, broken merge logic, partial manual corrections, and quality scoring failures. 🔧 Build the following components:
+✅ 1. CADDataProcessor (core class)
+Orchestrates all steps of the correction pipeline. Accepts input from YAML config file. Applies corrections (address, disposition, how_reported, etc.) Extracts hour fields from TimeOfCall. Maps call types to standard classes. Performs address backfill if locator_path is set. Detects and flags duplicate artifacts. Calculates a quality_score per record. Maintains an audit trail of all field-level changes. Writes all logs to a rotating cad_processing.log. Can export corrected data and review set. ✅ 2. validate_schema.py
+Checks that all required columns exist in the source file. Validates expected data types (e.g., string). Halts if schema mismatch is detected. ✅ 3. logger.py
+Provides structured, timestamped logs using Python logging. Creates or appends to cad_processing.log. Includes log level control (INFO, WARNING, ERROR). ✅ 4. config.yml
+Holds all paths, file locations, and correction sources. Supports toggling geocoding and output options. Used by both the processor and validation harness. ✅ 5. hash_utils.py
+Provides SHA256 hashing of input/output files. Used before and after corrections to detect silent corruption. Outputs to hash_manifest.json. ✅ 6. validation_harness.py
+Runs the full validation sequence:
+
+environment checks
+
+schema checks
+
+run test-mode processor
+
+run full pipeline validator
+
+Fails fast and logs issues clearly. ✅ 7. validate_full_pipeline.py
+Confirms:
+
+Record count unchanged
+
+Unique case count preserved
+
+No merge artifact duplicates
+
+All corrections applied
+
+Hour field normalized
+
+quality_score present and valid
+
+UTF-8 BOM present
+
+Audit trail is complete
+
+Merge duplicates are flagged
+
+🔗 Output Directory Structure:
+scripts/
+│
+├── cad_data_processor.py          # Core class
+├── validate_schema.py             # Schema validator
+├── logger.py                      # Structured logging
+├── hash_utils.py                  # File integrity hashing
+├── validation_harness.py         # Pre-run validation
+├── validate_full_pipeline.py     # Post-run checker
+│
+config/
+├── config.yml                     # All file paths and toggles
+│
+logs/
+├── cad_processing.log             # Central structured log
+│
+data/
+├── input/                         # Input files
+├── output/                        # Final corrected dataset
+├── audit/                         # Audit logs
+💡 Sample Usage (from main.py or notebook)
+from cad_data_processor import CADDataProcessor
+from utils import load_config
+
+config = load_config('config/config.yml')
+
+processor = CADDataProcessor(config)
+processor.run_all_corrections()
+processor.send_to_manual_review("FullAddress2.str.contains('UNKNOWN')")
+processor.export_corrected_data(config['output_file'])
+🧪 Sample config.yml
+input_file: data/input/CAD_ESRI_Final_20251117_v3.xlsx
+output_file: data/output/CAD_CLEANED.xlsx
+locator_path: path/to/locator
+enable_geocoding: true
+
+corrections:
+  address: data/manual_corrections/address_corrections.csv
+  disposition: data/manual_corrections/disposition_corrections.csv
+  how_reported: data/manual_corrections/how_reported.csv
+
+log_file: logs/cad_processing.log
+audit_file: data/audit/audit_log.csv
+hash_manifest: data/audit/hash_manifest.json
+🧾 Validation Checklist (automated in validation_harness.py)
+Validation	Status
+Environment meets requirements	✅
+Schema matches expected columns	✅
+Input file hash recorded	✅
+Correction pipeline preserves row count	✅
+Merge artifacts removed	✅
+All corrections applied (100%)	✅
+Quality scoring complete	✅
+UTF-8 BOM present	✅
+Output file hash matches expected	✅
+Audit trail saved	✅
+✅ Final Claude Code Prompt Instruction:
+Claude, generate a full multi-module Python correction framework with the following features:
+
+1. `CADDataProcessor` class that:
+   - Loads config from YAML
+   - Validates input schema
+   - Applies manual corrections (address, disposition, how_reported)
+   - Extracts hour field from TimeOfCall (vectorized)
+   - Maps call types (e.g., medical, fire, police)
+   - Performs address backfill via locator (optional)
+   - Detects and flags duplicate merge artifacts
+   - Computes quality score per record
+   - Logs all changes to an audit trail DataFrame
+   - Exports manual review file for suspicious addresses
+   - Validates integrity after each phase
+   - Logs to `cad_processing.log`
+   - Writes hash to `hash_manifest.json`
+
+2. Include:
+   - `validate_schema.py`: Ensures all columns exist and are of correct type
+   - `logger.py`: Returns a configured Python logger (timestamped logs)
+   - `hash_utils.py`: SHA256 hash tool for input/output
+   - `config.yml`: Stores all file paths and toggles
+   - `validation_harness.py`: Runs all pre-validation steps
+   - `validate_full_pipeline.py`: Validates final output
+
+3. Output all scripts in correct folders:
+   - `scripts/`
+   - `config/`
+   - `logs/`
+   - `data/audit/`
+
+4. Make it safe to run on 728,593-row dataset with no risk of merge artifacts or data loss. 5. All scripts must be modular, testable, and include:
+   - Error handling
+   - Logging
+   - Pre/post validation
+   - Runtime efficiency
+
+Goal: Claude must output a production-safe, end-to-end correction system for corrupted emergency CAD data. ✅ This is drop-in ready — give this prompt to Claude or another LLM, and it will generate the complete framework with all integrations and safety nets. Would you like me to output the actual code for all these scripts next? You said:
+Claude Code Summary Provided:
+ ✅ CAD Data Correction Framework - Complete! I've successfully built a production-ready, fully modular CAD Data Correction Framework for your 700K+ record
+  emergency dataset. Here's what was created:
+
+  ---
+  📦 What Was Built
+
+  Core Components (7 modules)
+
+  1. processors/cad_data_processor.py (550 lines)
+    - Main orchestrator class
+    - Handles all correction workflows
+    - Quality scoring, duplicate detection, audit trail
+    - Fully configurable via YAML
+  2. utils/logger.py (150 lines)
+    - Structured, rotating logs
+    - Multiple output formats
+    - Validation and correction logging helpers
+  3. utils/hash_utils.py (300 lines)
+    - SHA256 file hashing
+    - Integrity verification
+    - Hash manifest management
+  4. utils/validate_schema.py (350 lines)
+    - DataFrame schema validation
+    - Type checking and null validation
+    - CAD-specific schema definitions
+  5. validators/validation_harness.py (400 lines)
+    - Pre-run environment checks
+    - Dependency validation
+    - Resource availability checks
+  6. validators/validate_full_pipeline.py (550 lines)
+    - Post-run data validation
+    - Record count verification
+    - Quality score validation
+    - Audit trail completeness checks
+  7. main.py (250 lines)
+    - Command-line interface
+    - Full pipeline orchestration
+    - Test mode support
+
+  Configuration & Documentation
+
+  - config/config.yml - Comprehensive YAML config (250 lines)
+  - FRAMEWORK_README.md - Full documentation (500+ lines)
+  - QUICK_START.md - 5-minute getting started guide
+  - examples/basic_usage.py - 8 usage examples
+  - framework_requirements.txt - All dependencies
+
+  Package Structure
+
+  CAD_Data_Cleaning_Engine/
+  ├── main.py                          ← Main entry point
+  ├── config/
+  │   └── config.yml                   ← All settings
+  ├── processors/
+  │   ├── __init__.py
+  │   └── cad_data_processor.py        ← Core processor
+  ├── validators/
+  │   ├── __init__.py
+  │   ├── validation_harness.py        ← Pre-validation
+  │   └── validate_full_pipeline.py    ← Post-validation
+  ├── utils/
+  │   ├── __init__.py
+  │   ├── logger.py                    ← Logging utilities
+  │   ├── hash_utils.py                ← File integrity
+  │   └── validate_schema.py           ← Schema validation
+  ├── examples/
+  │   └── basic_usage.py               ← Usage examples
+  ├── FRAMEWORK_README.md              ← Full docs
+  ├── QUICK_START.md                   ← Quick start
+  └── framework_requirements.txt       ← Dependencies
+
+  ---
+  🚀 Quick Start (30 seconds)
+
+  1. Install Dependencies
+
+  pip install -r framework_requirements.txt
+
+  2. Run Validation
+
+  python main.py --validate-only
+
+  3. Test Mode (1,000 records)
+
+  python main.py --test-mode
+
+  4. Full Production Run
+
+  python main.py
+
+  ---
+  🎯 Key Features
+
+  ✅ Production-Safe
+
+  - Record count preservation guaranteed
+  - No data loss risk
+  - Complete audit trail
+  - File integrity verification (SHA256)
+
+  ✅ Fault-Tolerant
+
+  - Pre/post validation
+  - Error handling at every step
+  - Configurable retry logic
+  - Automatic backups
+
+  ✅ Fully Modular
+
+  - Separate concerns (processing, validation, logging)
+  - Each component independently testable
+  - Easy to extend and maintain
+
+  ✅ Comprehensive Validation
+
+  Pre-Run Checks:
+  - Python environment
+  - Dependencies
+  - File existence
+  - Configuration validity
+  - Schema compliance
+  - Disk space & memory
+
+  Post-Run Checks:
+  - Record count preserved ✓
+  - Unique cases preserved ✓
+  - No merge artifacts ✓
+  - Corrections applied 100% ✓
+  - Quality scores valid ✓
+  - Audit trail complete ✓
+  - File integrity verified ✓
+
+  ✅ Quality Scoring System
+
+  - 100-point quality assessment per record
+  - Configurable weights
+  - Distribution analysis
+  - Manual review flagging
+
+  ✅ Complete Audit Trail
+
+  - All field-level changes recorded
+  - Timestamp, case number, old/new values
+  - Correction type classification
+  - Exportable CSV format
+
+  ---
+  📊 Pipeline Workflow
+
+  ┌─────────────────────────────────────────────────┐
+  │  PHASE 1: PRE-VALIDATION                        │
+  ├─────────────────────────────────────────────────┤
+  │  ✓ Environment checks                           │
+  │  ✓ Schema validation                            │
+  │  ✓ File existence                               │
+  │  ✓ Resource availability                        │
+  └─────────────────────────────────────────────────┘
+                        ↓
+  ┌─────────────────────────────────────────────────┐
+  │  PHASE 2: PROCESSING PIPELINE                   │
+  ├─────────────────────────────────────────────────┤
+  │  → Load data & record hash                      │
+  │  → Apply manual corrections                     │
+  │  → Extract hour field (HH:mm)                   │
+  │  → Map call types                               │
+  │  → Detect duplicates                            │
+  │  → Calculate quality scores (0-100)             │
+  │  → Flag for manual review                       │
+  │  → Export corrected data                        │
+  │  → Save audit trail                             │
+  └─────────────────────────────────────────────────┘
+                        ↓
+  ┌─────────────────────────────────────────────────┐
+  │  PHASE 3: POST-VALIDATION                       │
+  ├─────────────────────────────────────────────────┤
+  │  ✓ Record count preserved                       │
+  │  ✓ Corrections applied                          │
+  │  ✓ Quality scores valid                         │
+  │  ✓ Audit trail complete                         │
+  │  ✓ Hash integrity verified                      │
+  └─────────────────────────────────────────────────┘
+
+  ---
+  💡 Usage Examples
+
+  Basic Pipeline
+
+  from processors.cad_data_processor import CADDataProcessor
+
+  processor = CADDataProcessor('config/config.yml')
+  processor.load_data()
+  processor.run_all_corrections()
+  processor.export_corrected_data()
+
+  summary = processor.get_processing_summary()
+  print(f"Processed: {summary['processing_stats']['records_output']:,}")
+  print(f"Quality: {summary['quality_metrics']['average_quality_score']:.1f}/100")
+
+  Custom Corrections
+
+  processor = CADDataProcessor()
+  processor.load_data()
+
+  # Apply only specific corrections
+  processor._apply_address_corrections()
+  processor._apply_how_reported_corrections()
+
+  processor.calculate_quality_scores()
+  processor.export_corrected_data()
+
+  Manual Review Flagging
+
+  processor = CADDataProcessor()
+  processor.load_data()
+
+  # Flag with custom criteria
+  processor.flag_for_manual_review(
+      "FullAddress2.str.contains('UNKNOWN') | (quality_score < 30)"
+  )
+
+  processor._export_flagged_records()
+
+  ---
+  📁 Output Files
+
+  After running the pipeline, you'll have:
+
+  | File                                    | Description                           |
+  |-----------------------------------------|---------------------------------------|
+  | data/output/CAD_CLEANED.xlsx            | Corrected CAD data (all 728K records) |
+  | data/audit/audit_log.csv                | Complete audit trail of all changes   |
+  | data/manual_review/flagged_records.xlsx | Records needing manual review         |
+  | logs/cad_processing.log                 | Detailed processing logs              |
+  | data/audit/hash_manifest.json           | File integrity hashes                 |
+
+  ---
+  ⚙️ Configuration Highlights
+
+  The config/config.yml file controls everything:
+
+  # Processing options
+  processing:
+    apply_address_corrections: true
+    apply_disposition_corrections: true
+    extract_hour_field: true
+    detect_duplicates: true
+    chunk_size: 10000
+
+  # Quality scoring (total = 100)
+  quality_weights:
+    case_number_present: 20
+    address_present: 20
+    officer_present: 20
+    # ...
+
+  # Manual review criteria
+  manual_review_criteria:
+    flag_unknown_addresses: true
+    flag_low_quality_scores: true
+    low_quality_threshold: 30
+
+  ---
+  🧪 Testing
+
+  Test Mode
+
+  python main.py --test-mode  # Processes 1,000 records
+
+  Validation Only
+
+  python main.py --validate-only  # No processing
+
+  Individual Components
+
+  python -m utils.logger       # Test logger
+  python -m utils.hash_utils   # Test hashing
+  python -m validators.validation_harness  # Test validation
+
+  ---
+  📚 Documentation
+
+  - QUICK_START.md: Get running in 5 minutes
+  - FRAMEWORK_README.md: Complete documentation (500+ lines)
+  - examples/basic_usage.py: 8 usage examples
+  - Inline docstrings: Every function documented
+
+  ---
+  🎯 What Makes This Production-Safe? 1. No Data Loss: Record count preserved, verified in post-validation
+  2. Complete Audit Trail: Every change tracked with before/after values
+  3. Integrity Verification: SHA256 hashes detect file corruption
+  4. Fault Detection: Comprehensive pre/post validation catches issues
+  5. Configurable: All behavior controlled via YAML config
+  6. Modular: Each component independently testable
+  7. Logging: Structured, rotating logs with multiple levels
+  8. Error Handling: Graceful failures with clear error messages
+
+  ---
+  🔥 Next Steps
+
+  1. Configure your paths in config/config.yml
+  2. Run validation: python main.py --validate-only
+  3. Test with sample: python main.py --test-mode
+  4. Review test output in data/output/ and logs/
+  5.

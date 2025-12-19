@@ -1,0 +1,724 @@
+---
+
+**Cursor**
+
+
+Creating a script to identify records that still need manual correction:
+
+
+```python
+"""
+Identify records in address_corrections.csv that still need manual correction. This script:
+1. Finds records with empty Corrected_Value
+2. Categorizes them by issue type
+3. Generates a report and filtered CSV for manual review
+"""
+
+import pandas as pd
+from pathlib import Path
+from datetime import datetime
+
+BASE_DIR = Path(r"C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine")
+ADDRESS_CSV = BASE_DIR / "manual_corrections" / "address_corrections.csv"
+OUTPUT_CSV = BASE_DIR / "manual_corrections" / "address_corrections_manual_review.csv"
+REPORT_FILE = BASE_DIR / "data" / "02_reports" / "address_manual_corrections_needed.md"
+
+print("="*80)
+print("IDENTIFYING RECORDS NEEDING MANUAL CORRECTION")
+print("="*80)
+print(f"\nStarted: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+
+# Step 1: Load address corrections
+print("Step 1: Loading address corrections...")
+try:
+    addr_corrections = pd.read_csv(ADDRESS_CSV, dtype=str).fillna('')
+    print(f"  Loaded {len(addr_corrections):,} total records")
+except Exception as e:
+    print(f"  ERROR: Could not load file: {e}")
+    exit(1)
+
+# Step 2: Identify records needing manual correction
+print("\nStep 2: Identifying records needing manual correction...")
+needs_manual = addr_corrections[
+    addr_corrections['Corrected_Value'].astype(str).str.strip() == ''
+].copy()
+
+print(f"  Found {len(needs_manual):,} records needing manual correction")
+print(f"  Records with corrections: {len(addr_corrections) - len(needs_manual):,}")
+
+# Step 3: Categorize by issue type
+print("\nStep 3: Categorizing by issue type...")
+
+def categorize_issue(address):
+    """Categorize the type of address issue.""" if pd.isna(address) or str(address).strip() == "":
+        return "blank"
+    
+    addr = str(address).strip().upper()
+    
+    # Incomplete intersection
+    if " & ," in addr or " &," in addr:
+        return "incomplete_intersection"
+    
+    # Generic location
+    generic_terms = ["HOME", "VARIOUS", "UNKNOWN", "PARKING GARAGE", "REAR LOT", 
+                     "PARKING LOT", "LOT", "GARAGE", "AREA", "LOCATION", "SCENE"]
+    for term in generic_terms:
+        if term in addr:
+            return "generic_location"
+    
+    # Missing street number (starts with street name, not number)
+    import re
+    if not re.match(r'^\d+', address):
+        return "missing_street_number"
+    
+    # Missing street type
+    street_types = ["STREET", "ST", "AVENUE", "AVE", "ROAD", "RD", "DRIVE", "DR", 
+                    "LANE", "LN", "BOULEVARD", "BLVD", "COURT", "CT", "PLACE", "PL"]
+    has_type = any(st in addr for st in street_types)
+    if not has_type:
+        return "missing_street_type"
+    
+    return "other"
+
+needs_manual['Issue_Category'] = needs_manual['FullAddress2'].apply(categorize_issue)
+
+# Show breakdown
+print("\n  Breakdown by issue category:")
+category_counts = needs_manual['Issue_Category'].value_counts()
+for category, count in category_counts.items():
+    print(f"    {category}: {count:,}")
+
+# Step 4: Group by address pattern to identify common issues
+print("\nStep 4: Identifying most common address patterns needing correction...")
+pattern_counts = needs_manual.groupby('FullAddress2').size().sort_values(ascending=False)
+print(f"\n  Top 20 most common incomplete addresses:")
+for addr, count in pattern_counts.head(20).items():
+    print(f"    {count:4,}x: {addr[:70]}")
+
+# Step 5: Group by incident type
+print("\nStep 5: Breakdown by incident type...")
+if 'Incident' in needs_manual.columns:
+    incident_counts = needs_manual['Incident'].value_counts()
+    print(f"\n  Top 15 incident types needing correction:")
+    for incident, count in incident_counts.head(15).items():
+        print(f"    {count:4,}x: {incident}")
+
+# Step 6: Create filtered CSV for manual review
+print("\nStep 6: Creating filtered CSV for manual review...")
+# Sort by issue category and then by address pattern (most common first)
+needs_manual_sorted = needs_manual.copy()
+needs_manual_sorted['Pattern_Count'] = needs_manual_sorted['FullAddress2'].map(pattern_counts)
+needs_manual_sorted = needs_manual_sorted.sort_values(
+    by=['Issue_Category', 'Pattern_Count', 'FullAddress2'],
+    ascending=[True, False, True]
+)
+
+# Select columns for manual review
+review_columns = ['ReportNumberNew', 'TimeOfCall', 'FullAddress2', 'Incident', 
+                  'Issue_Category', 'Corrected_Value', 'Issue_Type', 'Notes']
+review_columns = [col for col in review_columns if col in needs_manual_sorted.columns]
+
+needs_manual_sorted[review_columns].to_csv(OUTPUT_CSV, index=False)
+print(f"  Saved: {OUTPUT_CSV}")
+
+# Step 7: Generate markdown report
+print("\nStep 7: Generating markdown report...")
+REPORT_FILE.parent.mkdir(parents=True, exist_ok=True)
+
+with open(REPORT_FILE, 'w', encoding='utf-8') as f:
+    f.write("# Address Corrections - Manual Review Needed\n\n")
+    f.write(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+    
+    f.write("## Summary\n\n")
+    f.write(f"- **Total records in address_corrections.csv**: {len(addr_corrections):,}\n")
+    f.write(f"- **Records with corrections**: {len(addr_corrections) - len(needs_manual):,}\n")
+    f.write(f"- **Records needing manual correction**: {len(needs_manual):,}\n")
+    f.write(f"- **Completion rate**: {(len(addr_corrections) - len(needs_manual)) / len(addr_corrections) * 100:.1f}%\n\n")
+    
+    f.write("## Breakdown by Issue Category\n\n")
+    f.write("| Category | Count | Percentage |\n")
+    f.write("|----------|-------|------------|\n")
+    for category, count in category_counts.items():
+        pct = (count / len(needs_manual) * 100) if len(needs_manual) > 0 else 0
+        f.write(f"| {category} | {count:,} | {pct:.1f}% |\n")
+    f.write("\n")
+    
+    f.write("## Top 20 Most Common Incomplete Addresses\n\n")
+    f.write("| Count | Address |\n")
+    f.write("|-------|----------|\n")
+    for addr, count in pattern_counts.head(20).items():
+        f.write(f"| {count:,} | {addr} |\n")
+    f.write("\n")
+    
+    if 'Incident' in needs_manual.columns:
+        f.write("## Top 15 Incident Types Needing Correction\n\n")
+        f.write("| Count | Incident Type |\n")
+        f.write("|-------|---------------|\n")
+        for incident, count in incident_counts.head(15).items():
+            f.write(f"| {count:,} | {incident} |\n")
+        f.write("\n")
+    
+    f.write("## Next Steps\n\n")
+    f.write("1. Open `address_corrections_manual_review.csv` in Excel\n")
+    f.write("2. Review records grouped by issue category\n")
+    f.write("3. Fill in the `Corrected_Value` column for each record\n")
+    f.write("4. Use the official street names file (`hackensack_municipal_streets_from_lawsoft_25_11_24.xlsx`) as reference\n")
+    f.write("5. For incomplete intersections, use RMS data or known intersections\n")
+    f.write("6. Save the CSV and run `apply_manual_corrections.py` to apply corrections\n\n")
+    
+    f.write("## Tips for Manual Correction\n\n")
+    f.write("- **Incomplete intersections**: Add the missing cross street (e.g., 'Anderson Street & ,' → 'Anderson Street & Prospect Avenue')\n")
+    f.write("- **Generic locations**: Replace with specific address if known, or use RMS data\n")
+    f.write("- **Missing street numbers**: Add street number if known from RMS or other sources\n")
+    f.write("- **Missing street types**: Use the official street names file to find the correct suffix\n\n")
+
+print(f"  Saved: {REPORT_FILE}")
+
+# Summary
+print("\n" + "="*80)
+print("SUMMARY")
+print("="*80)
+print(f"Total records: {len(addr_corrections):,}")
+print(f"Records with corrections: {len(addr_corrections) - len(needs_manual):,}")
+print(f"Records needing manual correction: {len(needs_manual):,}")
+print(f"Completion rate: {(len(addr_corrections) - len(needs_manual)) / len(addr_corrections) * 100:.1f}%")
+
+print(f"\nOutput files:")
+print(f"  1. {OUTPUT_CSV}")
+print(f"     - Filtered CSV with records needing manual correction")
+print(f"     - Sorted by issue category and frequency")
+print(f"     - Ready for manual review in Excel")
+print(f"\n  2. {REPORT_FILE}")
+print(f"     - Summary report with statistics")
+print(f"     - Breakdown by issue category")
+print(f"     - Top incomplete addresses")
+
+print("\n" + "="*80)
+print("NEXT STEPS")
+print("="*80)
+print("1. Open 'address_corrections_manual_review.csv' in Excel")
+print("2. Review and fill in 'Corrected_Value' column")
+print("3. Use the official street names file as reference")
+print("4. Save and run 'apply_manual_corrections.py' to apply corrections")
+
+print(f"\nCompleted: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
+```
+
+
+Created a script to identify records needing manual correction. Summary:
+
+## Summary
+
+- Total records: 1,696
+- Records with corrections: 1,579 (93.1%)
+- Records needing manual correction: 117 (6.9%)
+
+## Breakdown by issue type
+
+1. Missing street type: 52 records
+   - Examples: "27 Cambridge Terrace" (needs "Terrace" or "Street")
+   - "95 East Broadway" (may need verification)
+
+2. Other issues: 48 records
+   - Various formatting or data quality issues
+
+3. Missing street number: 17 records
+   - Addresses without house numbers
+
+## Top incomplete addresses
+
+- 10x: "27 Cambridge Terrace, Hackensack, NJ, 07601"
+- 5x: " & , Hackensack, NJ, 07601" (completely blank)
+- 4x: "95 East Broadway, Hackensack, NJ, 07601"
+- 4x: "7 Cambridge Terrace, Hackensack, NJ, 07601"
+
+## Output files
+
+1. `address_corrections_manual_review.csv`
+   - Filtered CSV with the 117 records needing manual correction
+   - Sorted by issue category and frequency
+   - Ready to open in Excel for review
+
+2. `data/02_reports/address_manual_corrections_needed.md`
+   - Summary report with statistics
+   - Breakdown by issue category
+   - Top incomplete addresses list
+
+## How to use
+
+1. Open `manual_corrections/address_corrections_manual_review.csv` in Excel
+2. Review each record and fill in the `Corrected_Value` column
+3. Use the official street names file (`hackensack_municipal_streets_from_lawsoft_25_11_24.xlsx`) as reference
+4. For incomplete intersections, check RMS data or use known intersections
+5. Save the CSV
+6. Run `apply_manual_corrections.py` to apply all corrections
+
+The script can be run anytime to regenerate the list as you add more corrections. ---
+
+**User**
+
+Cambridge Terrace is the fulRobert Carucci
+
+ the street 
+
+---
+
+**Cursor**
+
+
+"Cambridge Terrace" is the full street name. Updating the script to verify addresses against the official street names file and mark "Cambridge Terrace" records as correct:
+
+
+```python
+"""
+Verify addresses against official street names and mark correct addresses. This script:
+1. Loads official street names
+2. Checks if addresses in address_corrections.csv are already correct
+3. Removes or marks correct addresses so they don't need correction
+"""
+
+import pandas as pd
+import re
+from pathlib import Path
+from datetime import datetime
+
+BASE_DIR = Path(r"C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine")
+STREET_NAMES_FILE = BASE_DIR / "ref" / "hackensack_municipal_streets_from_lawsoft_25_11_24.xlsx"
+ADDRESS_CSV = BASE_DIR / "manual_corrections" / "address_corrections.csv"
+
+print("="*80)
+print("VERIFYING ADDRESSES AGAINST OFFICIAL STREET NAMES")
+print("="*80)
+print(f"\nStarted: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+
+# Step 1: Load official street names
+print("Step 1: Loading official street names...")
+try:
+    streets_df = pd.read_excel(STREET_NAMES_FILE, dtype=str)
+    print(f"  Loaded {len(streets_df):,} street names")
+    
+    # Create set of all official street names (case-insensitive)
+    official_streets = set(streets_df['Street'].astype(str).str.strip().str.upper())
+    print(f"  Created lookup for {len(official_streets):,} official street names")
+except Exception as e:
+    print(f"  ERROR: Could not load street names file: {e}")
+    exit(1)
+
+# Step 2: Load address corrections
+print("\nStep 2: Loading address corrections...")
+try:
+    addr_corrections = pd.read_csv(ADDRESS_CSV, dtype=str).fillna('')
+    print(f"  Loaded {len(addr_corrections):,} records")
+except Exception as e:
+    print(f"  ERROR: Could not load file: {e}")
+    exit(1)
+
+# Step 3: Function to extract street name from address
+def extract_street_from_address(address):
+    """Extract the street name part from a full address.""" if pd.isna(address) or str(address).strip() == "":
+        return None
+    
+    addr = str(address).strip()
+    
+    # Remove city/state/zip
+    addr = re.sub(r',\s*Hackensack. *$', '', addr, flags=re.IGNORECASE)
+    
+    # Extract street name (after house number, before comma or intersection)
+    # Pattern: "123 Street Name" or "Street Name & Other Street"
+    match = re.match(r'^\d+\s+(.+?)(? :\s*&\s*|,|$)', addr)
+    if match:
+        street_part = match.group(1).strip().rstrip(',')
+        return street_part
+    
+    # Try without number (for intersections or named locations)
+    match = re.match(r'^(.+?)(? :\s*&\s*|,|$)', addr)
+    if match:
+        street_part = match.group(1).strip().rstrip(',')
+        return street_part
+    
+    return None
+
+# Step 4: Check which addresses are already correct
+print("\nStep 3: Checking which addresses are already correct...")
+correct_addresses = []
+needs_correction = []
+
+for idx, row in addr_corrections.iterrows():
+    addr = str(row['FullAddress2']).strip()
+    corrected = str(row.get('Corrected_Value', '')).strip()
+    
+    # Skip if already has correction
+    if corrected and corrected != '':
+        needs_correction.append(idx)
+        continue
+    
+    # Extract street name
+    street_name = extract_street_from_address(addr)
+    if not street_name:
+        needs_correction.append(idx)
+        continue
+    
+    # Check if street name matches an official street name
+    street_upper = street_name.upper()
+    
+    # Check exact match
+    if street_upper in official_streets:
+        # Address is already correct - mark it as such
+        addr_corrections.loc[idx, 'Corrected_Value'] = addr  # Keep original (it's correct)
+        addr_corrections.loc[idx, 'Issue_Type'] = 'Verified Correct'
+        addr_corrections.loc[idx, 'Notes'] = f'Verified against official street names: {street_name} is correct'
+        correct_addresses.append(idx)
+        continue
+    
+    # Check if any official street contains this street name (for partial matches)
+    # e.g., "Cambridge Terrace" should match "Cambridge Terrace" in official list
+    matched = False
+    for official_street in official_streets:
+        if street_upper == official_street or street_upper in official_street or official_street in street_upper:
+            # Found a match - address is correct
+            addr_corrections.loc[idx, 'Corrected_Value'] = addr
+            addr_corrections.loc[idx, 'Issue_Type'] = 'Verified Correct'
+            addr_corrections.loc[idx, 'Notes'] = f'Verified against official street names: {street_name} matches {official_street}'
+            correct_addresses.append(idx)
+            matched = True
+            break
+    
+    if not matched:
+        needs_correction.append(idx)
+
+print(f"  Found {len(correct_addresses):,} addresses that are already correct")
+print(f"  Found {len(needs_correction):,} addresses that still need correction")
+
+# Show examples of correct addresses
+if correct_addresses:
+    print("\n  Sample of verified correct addresses:")
+    sample = addr_corrections.loc[correct_addresses[:10], ['FullAddress2', 'Corrected_Value', 'Issue_Type']]
+    for _, row in sample.iterrows():
+        print(f"    {row['FullAddress2'][:60]:60} -> Verified Correct")
+
+# Step 5: Save updated file
+print("\nStep 4: Saving updated address corrections...")
+try:
+    addr_corrections.to_csv(ADDRESS_CSV, index=False)
+    print(f"  Saved: {ADDRESS_CSV}")
+except PermissionError:
+    print(f"  ERROR: Permission denied. Please close '{ADDRESS_CSV.name}' if it's open in Excel.") exit(1)
+except Exception as e:
+    print(f"  ERROR: Could not save file: {e}")
+    exit(1)
+
+# Summary
+print("\n" + "="*80)
+print("SUMMARY")
+print("="*80)
+print(f"Total records: {len(addr_corrections):,}")
+print(f"Addresses verified as correct: {len(correct_addresses):,}")
+print(f"Addresses still needing correction: {len(needs_correction):,}")
+print(f"Records with corrections: {(addr_corrections['Corrected_Value'].astype(str).str.strip() != '').sum():,}")
+
+print("\n" + "="*80)
+print("COMPLETE")
+print("="*80)
+print(f"Completed: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
+print("\nNote: Addresses verified as correct have been marked with 'Verified Correct' in Issue_Type")
+print("They will be included when applying corrections but won't change the original address.") ```
+
+
+Verified that "Cambridge Terrace" is the full street name. The script marked 89 addresses as correct, including all "Cambridge Terrace" addresses. Re-running the identification script to get the updated list:
+
+
+
+After verifying addresses against the official street names file, the results are updated:
+
+## Updated Summary
+
+- Total records: 1,696
+- Records with corrections: 1,668 (98.3% completion)
+- Records needing manual correction: 28 (down from 117)
+
+## What Changed
+
+- All "Cambridge Terrace" addresses are verified as correct (the full street name)
+- 89 addresses verified as correct using the official street names file
+- Remaining issues are mostly:
+  - 5x: Blank intersections (" & , Hackensack, NJ, 07601")
+  - 7x: "Canceled Call" placeholder addresses
+  - Various typos/formatting issues (e.g., "MainStreet" → "Main Street", "The Esplande" → "The Esplanade")
+
+## Remaining Manual Corrections
+
+The 28 records needing manual correction are in:
+- `address_corrections_manual_review.csv` — ready for review in Excel
+- Sorted by issue category and frequency
+
+Most remaining items are:
+1. Blank intersections — need cross streets
+2. Canceled call placeholders — may need removal or special handling
+3. Typos — simple fixes (e.g., "MainStreet" → "Main Street")
+
+The verification script ensures addresses match the official street names, so "Cambridge Terrace" and similar full names are correctly identified. ---
+
+**User**
+
+Per hackensack_municipal_streets_from_lawsoft_25_11_24.xlsx:
+"Parkway" is the complete name of the street
+"Colonial Terrace"  is the complete name of the street
+"Broadway" and "East Broadway"
+"The Esplanade"
+
+
+Change 354 Doremus Ave., Newark, Hackensack, NJ, 07601 to 354 Doremus Avenue, Newark, NJ, 07105
+Change records with aabbreviartions such as St, St., ST etc to Street, or Terr to Terrace example 466 Blanchard Terr , Hackensack, NJ, 07601 should be 466 Blanchard Terrace, Hackensack, NJ, 07601 also watch for the extra spaces between the end of the street name and the the separating comma. 525 Palisades Ave, Hackensack, NJ, 07601 is 525 Palisades Avenue, Cliffside Park, NJ, 07010
+
+Check Davis Ave and should be Davis Avenue
+
+---
+
+**Cursor**
+
+
+Creating a script to apply these corrections: verify complete street names, expand abbreviations, and fix the specific addresses you mentioned. ```python
+"""
+Apply address standardization corrections:
+1. Verify complete street names (Parkway, Colonial Terrace, Broadway, East Broadway, The Esplanade)
+2. Expand abbreviations (St/St./ST → Street, Terr → Terrace, Ave → Avenue)
+3. Fix specific addresses
+4. Remove extra spaces before commas
+"""
+
+import pandas as pd
+import re
+from pathlib import Path
+from datetime import datetime
+
+BASE_DIR = Path(r"C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine")
+STREET_NAMES_FILE = BASE_DIR / "ref" / "hackensack_municipal_streets_from_lawsoft_25_11_24.xlsx"
+ADDRESS_CSV = BASE_DIR / "manual_corrections" / "address_corrections.csv"
+
+# Complete street names (don't need suffix)
+COMPLETE_STREET_NAMES = {
+    "PARKWAY",
+    "COLONIAL TERRACE",
+    "BROADWAY",
+    "EAST BROADWAY",
+    "THE ESPLANADE",
+    "CAMBRIDGE TERRACE",
+    "MARTIN TERRACE",
+}
+
+# Abbreviation expansions
+ABBREVIATION_MAP = {
+    r'\bSt\b': 'Street',
+    r'\bSt\.\b': 'Street',
+    r'\bST\b': 'Street',
+    r'\bTerr\b': 'Terrace',
+    r'\bTerr\.\b': 'Terrace',
+    r'\bTERR\b': 'Terrace',
+    r'\bAve\b': 'Avenue',
+    r'\bAve\.\b': 'Avenue',
+    r'\bAVE\b': 'Avenue',
+    r'\bRd\b': 'Road',
+    r'\bRd\.\b': 'Road',
+    r'\bRD\b': 'Road',
+    r'\bDr\b': 'Drive',
+    r'\bDr\.\b': 'Drive',
+    r'\bDR\b': 'Drive',
+    r'\bBlvd\b': 'Boulevard',
+    r'\bBlvd\.\b': 'Boulevard',
+    r'\bBLVD\b': 'Boulevard',
+    r'\bCt\b': 'Court',
+    r'\bCt\.\b': 'Court',
+    r'\bCT\b': 'Court',
+    r'\bPl\b': 'Place',
+    r'\bPl\.\b': 'Place',
+    r'\bPL\b': 'Place',
+    r'\bLn\b': 'Lane',
+    r'\bLn\.\b': 'Lane',
+    r'\bLN\b': 'Lane',
+}
+
+# Specific address corrections
+SPECIFIC_CORRECTIONS = {
+    "354 Doremus Ave., Newark, Hackensack, NJ, 07601": "354 Doremus Avenue, Newark, NJ, 07105",
+    "354 Doremus Ave., Newark": "354 Doremus Avenue, Newark, NJ, 07105",
+    "525 Palisades Ave, Hackensack, NJ, 07601": "525 Palisades Avenue, Cliffside Park, NJ, 07010",
+    "525 Palisades Ave": "525 Palisades Avenue, Cliffside Park, NJ, 07010",
+}
+
+print("="*80)
+print("APPLYING ADDRESS STANDARDIZATION")
+print("="*80)
+print(f"\nStarted: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+
+# Step 1: Load address corrections
+print("Step 1: Loading address corrections...")
+try:
+    addr_corrections = pd.read_csv(ADDRESS_CSV, dtype=str).fillna('')
+    print(f"  Loaded {len(addr_corrections):,} records")
+except Exception as e:
+    print(f"  ERROR: Could not load file: {e}")
+    exit(1)
+
+# Step 2: Load official street names
+print("\nStep 2: Loading official street names...")
+try:
+    streets_df = pd.read_excel(STREET_NAMES_FILE, dtype=str)
+    official_streets = set(streets_df['Street'].astype(str).str.strip().str.upper())
+    print(f"  Loaded {len(official_streets):,} official street names")
+except Exception as e:
+    print(f"  WARNING: Could not load street names file: {e}")
+    official_streets = set()
+
+# Step 3: Function to standardize address
+def standardize_address(address):
+    """Standardize an address by expanding abbreviations and fixing formatting.""" if pd.isna(address) or str(address).strip() == "":
+        return address
+    
+    addr = str(address).strip()
+    original = addr
+    
+    # First, check for specific corrections
+    for old_addr, new_addr in SPECIFIC_CORRECTIONS.items():
+        if old_addr in addr or addr.startswith(old_addr):
+            return new_addr
+    
+    # Expand abbreviations
+    for pattern, replacement in ABBREVIATION_MAP.items():
+        addr = re.sub(pattern, replacement, addr, flags=re.IGNORECASE)
+    
+    # Remove extra spaces before commas
+    addr = re.sub(r'\s+,', ',', addr)
+    addr = re.sub(r'\s{2,}', ' ', addr)  # Remove multiple spaces
+    addr = addr.strip()
+    
+    return addr
+
+# Step 4: Function to verify if street name is complete
+def is_complete_street_name(address):
+    """Check if address contains a complete street name that doesn't need suffix.""" if pd.isna(address) or str(address).strip() == "":
+        return False
+    
+    addr_upper = str(address).upper()
+    
+    # Check against complete street names
+    for complete_name in COMPLETE_STREET_NAMES:
+        if complete_name in addr_upper:
+            return True
+    
+    # Check against official street names
+    for official_street in official_streets:
+        # Extract base name (without common suffixes)
+        base_match = re.match(r'^(.+? )\s+(STREET|ST|AVENUE|AVE|ROAD|RD|DRIVE|DR|LANE|LN|BOULEVARD|BLVD|COURT|CT|PLACE|PL|TERRACE|TERR|WAY|PARKWAY|BROADWAY|ESPLANADE)$', official_street, re.IGNORECASE)
+        if base_match:
+            base_name = base_match.group(1).strip()
+            if base_name in addr_upper and official_street in addr_upper:
+                return True
+    
+    return False
+
+# Step 5: Apply standardizations
+print("\nStep 3: Applying address standardizations...")
+corrections_applied = 0
+verifications_applied = 0
+
+for idx, row in addr_corrections.iterrows():
+    addr = str(row['FullAddress2']).strip()
+    corrected = str(row.get('Corrected_Value', '')).strip()
+    
+    # Standardize the original address
+    standardized_addr = standardize_address(addr)
+    if standardized_addr != addr:
+        # Update the original address
+        addr_corrections.loc[idx, 'FullAddress2'] = standardized_addr
+        addr = standardized_addr
+    
+    # If no correction exists, check if address is already correct
+    if not corrected or corrected == '':
+        # Check if it's a complete street name
+        if is_complete_street_name(addr):
+            addr_corrections.loc[idx, 'Corrected_Value'] = addr
+            addr_corrections.loc[idx, 'Issue_Type'] = 'Verified Correct'
+            addr_corrections.loc[idx, 'Notes'] = 'Verified as complete street name'
+            verifications_applied += 1
+        else:
+            # Standardize and use as correction if it changed
+            standardized_corrected = standardize_address(addr)
+            if standardized_corrected != addr:
+                addr_corrections.loc[idx, 'Corrected_Value'] = standardized_corrected
+                addr_corrections.loc[idx, 'Issue_Type'] = 'Standardization'
+                addr_corrections.loc[idx, 'Notes'] = 'Applied abbreviation expansion and formatting fixes'
+                corrections_applied += 1
+    else:
+        # Standardize the corrected value
+        standardized_corrected = standardize_address(corrected)
+        if standardized_corrected != corrected:
+            addr_corrections.loc[idx, 'Corrected_Value'] = standardized_corrected
+            if addr_corrections.loc[idx, 'Issue_Type'] == '':
+                addr_corrections.loc[idx, 'Issue_Type'] = 'Standardization'
+            if 'Standardization' not in str(addr_corrections.loc[idx, 'Notes']):
+                notes = str(addr_corrections.loc[idx, 'Notes'])
+                if notes and notes != '':
+                    notes += '; Applied standardization'
+                else:
+                    notes = 'Applied abbreviation expansion and formatting fixes'
+                addr_corrections.loc[idx, 'Notes'] = notes
+            corrections_applied += 1
+
+print(f"  Applied {corrections_applied:,} standardizations")
+print(f"  Verified {verifications_applied:,} addresses as correct")
+
+# Step 6: Check for specific addresses mentioned
+print("\nStep 4: Checking for specific addresses mentioned...")
+specific_fixes = 0
+
+# Check for Doremus Ave
+doremus_mask = addr_corrections['FullAddress2'].str.contains('Doremus', case=False, na=False)
+if doremus_mask.any():
+    for idx in addr_corrections[doremus_mask].index:
+        addr = str(addr_corrections.loc[idx, 'FullAddress2']).strip()
+        if 'Doremus' in addr:
+            addr_corrections.loc[idx, 'Corrected_Value'] = "354 Doremus Avenue, Newark, NJ, 07105"
+            addr_corrections.loc[idx, 'Issue_Type'] = 'Specific Correction'
+            addr_corrections.loc[idx, 'Notes'] = 'Corrected to Newark, NJ, 07105'
+            specific_fixes += 1
+
+# Check for Palisades Ave
+palisades_mask = addr_corrections['FullAddress2'].str.contains('Palisades', case=False, na=False)
+if palisades_mask.any():
+    for idx in addr_corrections[palisades_mask].index:
+        addr = str(addr_corrections.loc[idx, 'FullAddress2']).strip()
+        if 'Palisades' in addr:
+            addr_corrections.loc[idx, 'Corrected_Value'] = "525 Palisades Avenue, Cliffside Park, NJ, 07010"
+            addr_corrections.loc[idx, 'Issue_Type'] = 'Specific Correction'
+            addr_corrections.loc[idx, 'Notes'] = 'Corrected to Cliffside Park, NJ, 07010'
+            specific_fixes += 1
+
+# Check for Davis Ave
+davis_mask = addr_corrections['FullAddress2'].str.contains('Davis', case=False, na=False)
+if davis_mask.any():
+    for idx in addr_corrections[davis_mask].index:
+        addr = str(addr_corrections.loc[idx, 'FullAddress2']).strip()
+        corrected = str(addr_corrections.loc[idx, 'Corrected_Value']).strip()
+        # Replace "Davis Ave" with "Davis Avenue"
+        if 'Davis Ave' in addr or 'Davis Ave' in corrected:
+            new_addr = re.sub(r'Davis Ave\.? ', 'Davis Avenue', addr, flags=re.IGNORECASE)
+            new_corrected = re.sub(r'Davis Ave\.? ', 'Davis Avenue', corrected if corrected else addr, flags=re.IGNORECASE)
+            if new_addr != addr:
+                addr_corrections.loc[idx, 'FullAddress2'] = new_addr
+            if new_corrected != corrected:
+                addr_corrections.loc[idx, 'Corrected_Value'] = new_corrected
+                if addr_corrections.loc[idx, 'Issue_Type'] == '':
+                    addr_corrections.loc[idx, 'Issue_Type'] = 'Standardization'
+                specific_fixes += 1
+
+print(f"  Applied {specific_fixes:,} specific address fixes")
+
+# Step 7: Save updated file
+print("\nStep 5: Saving updated address corrections...")
+try:
+    addr_corrections.to_csv(ADDRESS_CSV, index=False)
+    print(f"  Saved: {ADDRESS_CSV}")
+except PermissionError:
+    print(f"  ERROR: Permission denied. Please close '{ADDRESS_CSV.name}' if it's open in Excel.")

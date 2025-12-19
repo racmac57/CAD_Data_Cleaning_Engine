@@ -1,0 +1,96 @@
+{
+  "version": "1.0",
+  "generated_on": "2025-12-16",
+  "purpose": "RMS-driven backfill into CAD",
+  "join": {
+    "left_system": "CAD",
+    "join_type": "left",
+    "cad_key": "ReportNumberNew",
+    "rms_key": "Case Number",
+    "key_normalization": {
+      "trim": true,
+      "collapse_internal_whitespace": true,
+      "remove_nonprinting": true
+    }
+  },
+  "dedupe": {
+    "rms_key": "Case Number",
+    "policy": "keep_best",
+    "sort_priority": [
+      {
+        "field": "Report Date",
+        "direction": "desc"
+      },
+      {
+        "field": "Report Time",
+        "direction": "desc"
+      }
+    ],
+    "tie_breaker": "first"
+  },
+  "mappings": [
+    {
+      "cad_internal_field": "Incident",
+      "rms_source_fields_priority": [
+        "Incident Type_1",
+        "Incident Type_2",
+        "Incident Type_3"
+      ],
+      "update_when": "cad_null_or_blank",
+      "accept_when": "rms_not_null_or_blank",
+      "audit_field": "Incident_source"
+    },
+    {
+      "cad_internal_field": "FullAddress2",
+      "rms_source_fields_priority": [
+        "FullAddress"
+      ],
+      "update_when": "cad_null_or_blank",
+      "accept_when": "rms_not_null_or_blank",
+      "audit_field": "FullAddress2_source"
+    },
+    {
+      "cad_internal_field": "Grid",
+      "rms_source_fields_priority": [
+        "Grid"
+      ],
+      "update_when": "cad_null_or_blank",
+      "accept_when": "rms_not_null_or_blank",
+      "audit_field": "Grid_source"
+    },
+    {
+      "cad_internal_field": "PDZone",
+      "rms_source_fields_priority": [
+        "Zone"
+      ],
+      "update_when": "cad_null_or_blank",
+      "accept_when": "rms_not_null_or_blank",
+      "audit_field": "PDZone_source"
+    },
+    {
+      "cad_internal_field": "Officer",
+      "rms_source_fields_priority": [
+        "Officer of Record"
+      ],
+      "update_when": "cad_null_or_blank",
+      "accept_when": "rms_not_null_or_blank",
+      "audit_field": "Officer_source"
+    }
+  ],
+  "audit": {
+    "add_fields": [
+      "merge_run_id",
+      "merge_timestamp",
+      "merge_join_key",
+      "merge_match_flag",
+      "merge_rms_row_count_for_key"
+    ],
+    "source_fields": [
+      "Incident_source",
+      "FullAddress2_source",
+      "Grid_source",
+      "PDZone_source",
+      "Officer_source"
+    ]
+  }
+}

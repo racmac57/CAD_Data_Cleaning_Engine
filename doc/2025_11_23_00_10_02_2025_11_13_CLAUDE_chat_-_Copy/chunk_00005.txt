@@ -1,0 +1,234 @@
+:2C|39)', incident_norm)\\n            if prefix_match:\\n                issues.append(\\\"Missing space before hyphen in statute format\\\")\\n            \\n            # Check for spaces within statute part\\n            if ' ' in statute:\\n                issues.append(\\\"Spaces in statute part\\\")\\n        \\n        # Add to anomalies if issues found\\n        if issues:\\n            anomaly_rows.append({\\n                'Raw_Value': row['Raw_Value'],\\n                'Current_Incident_Norm': incident_norm,\\n                'Issues': '; '.join(issues),\\n                'Suggested_Fix': clean_call_type(incident_norm),\\n                'Source': row['Source']\\n            })\\n    \\n    return pd.DataFrame(anomaly_rows)\\n\\ndef identify_unmapped_incidents(mapping_df, hist_counts):\\n    \\\"\\\"\\\"Create a list of unmapped incidents from historical data.\\\"\\\"\\\"\\n    # Get all raw values that have mappings\\n    mapped_raw = set(mapping_df['Raw_Value'])\\n    \\n    # Find unmapped incidents\\n    unmapped = []\\n    for incident, count in hist_counts.items():\\n        if incident not in mapped_raw and not pd.isna(incident):\\n            unmapped.append({\\n                'Raw_Value': incident,\\n                'Suggested_Norm': clean_call_type(incident),\\n                'Count': count,\\n                'Status': 'Needs Mapping'\\n            })\\n    \\n    # Create dataframe and sort by count\\n    unmapped_df = pd.DataFrame(unmapped)\\n    if not unmapped_df.empty:\\n        unmapped_df = unmapped_df.sort_values('Count', ascending=False)\\n    \\n    return unmapped_df\\n\\ndef identify_mapping_changes(mapping_df):\\n    \\\"\\\"\\\"Identify changes in mappings from original to new normalized values.\\\"\\\"\\\"\\n    changes = []\\n    \\n    # Only look at 'Approved' status rows\\n    approved_df = mapping_df[mapping_df['Status'] == 'Approved']\\n    \\n    for _, row in approved_df.iterrows():\\n        raw = row['Raw_Value']\\n        current_norm = row['Incident_Norm']\\n        new_norm = clean_call_type(raw)\\n        \\n        # Check if normalization would change\\n        if current_norm != new_norm:\\n            changes.append({\\n                'Raw_Value': raw,\\n                'Old_Incident_Norm': current_norm,\\n                'New_Incident_Norm': new_norm,\\n                'Reason': 'Normalization rule change'\\n            })\\n    \\n    return pd.DataFrame(changes)\\n\\ndef suggest_clean_edits(anomalies_df):\\n    \\\"\\\"\\\"Suggest edits to the clean file based on anomalies.\\\"\\\"\\\"\\n    if anomalies_df.empty:\\n        return pd.DataFrame()\\n    \\n    edits = []\\n    \\n    for _, row in anomalies_df.iterrows():\\n        edits.append({\\n            'Current_Value': row['Current_Incident_Norm'],\\n            'Suggested_Value': row['Suggested_Fix'],\\n            'Issues': row['Issues']\\n        })\\n    \\n    return pd.DataFrame(edits)\\n\\ndef main():\\n    # Create master mapping\\n    print(\\\"Creating master mapping...\\\")\\n    mapping_df, hist_counts = create_master_mapping()\\n    \\n    # Identify duplicates\\n    print(\\\"Identifying duplicates...\\\")\\n    duplicates_df = identify_duplicates(mapping_df)\\n    \\n    # Identify anomalies\\n    print(\\\"Identifying anomalies...\\\")\\n    anomalies_df = identify_anomalies(mapping_df)\\n    \\n    # Identify unmapped incidents\\n    print(\\\"Identifying unmapped incidents...\\\")\\n    unmapped_df = identify_unmapped_incidents(mapping_df, hist_counts)\\n    \\n    # Identify mapping changes\\n    print(\\\"Identifying mapping changes...\\\")\\n    changes_df = identify_mapping_changes(mapping_df)\\n    \\n    # Suggest clean edits\\n    print(\\\"Suggesting clean file edits...\\\")\\n    edits_df = suggest_clean_edits(anomalies_df)\\n    \\n    # Save outputs\\n    mapping_df.to_csv(OUTPUT_DIR / 'CallType_Master_Mapping.csv', index=False)\\n    duplicates_df.to_csv(OUTPUT_DIR / 'duplicates_review.csv', index=False)\\n    anomalies_df.to_csv(OUTPUT_DIR / 'anomalies.csv', index=False)\\n    unmapped_df.to_csv(OUTPUT_DIR / 'unmapped_incidents.csv', index=False)\\n    changes_df.to_csv(OUTPUT_DIR / 'mapping_changes.csv', index=False)\\n    edits_df.to_csv(OUTPUT_DIR / 'suggested_clean_edits.csv', index=False)\\n    \\n    print(f\\\"Master mapping created with {len(mapping_df)} entries\\\")\\n    print(f\\\"Found {len(duplicates_df)} potential duplicate sets\\\")\\n    print(f\\\"Found {len(anomalies_df)} anomalies\\\")\\n    print(f\\\"Found {len(unmapped_df)} unmapped incidents\\\")\\n    print(f\\\"Found {len(changes_df)} mapping changes\\\")\\n    print(f\\\"Suggested {len(edits_df)} edits to clean file\\\")\\n    \\n    print(\\\"\\\\nAll files saved to:\\\", OUTPUT_DIR)\\n\\nif __name__ == '__main__':\\n    main()\\n\", \"filename\": \"/home/claude/work/build_master_mapping.py\"}"
+        }
+      },
+      {
+        "type": "tool_result",
+        "name": "create_file",
+        "content": [
+          {
+            "type": "text",
+            "text": "File created successfully: /home/claude/work/build_master_mapping.py",
+            "uuid": "8b9384a0-8c66-4415-afca-5793579da163"
+          }
+        ],
+        "is_error": false,
+        "display_content": {
+          "type": "text",
+          "text": "File created successfully: /home/claude/work/build_master_mapping.py"
+        }
+      },
+      {
+        "start_timestamp": "2025-11-14T02:56:25.411432+00:00",
+        "stop_timestamp": "2025-11-14T02:56:25.857053+00:00",
+        "type": "tool_use",
+        "name": "bash_tool",
+        "input": {
+          "command": "cd /home/claude/work && python build_master_mapping.py",
+          "description": "Building the master mapping"
+        },
+        "message": "Building the master mapping",
+        "display_content": {
+          "type": "json_block",
+          "json_block": "{\"language\": \"bash\", \"code\": \"cd /home/claude/work && python build_master_mapping.py\"}"
+        }
+      },
+      {
+        "type": "tool_result",
+        "name": "bash_tool",
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"returncode\":0,\"stdout\":\"Creating master mapping...\\nIdentifying duplicates...\\nIdentifying anomalies...\\nIdentifying unmapped incidents...\\nIdentifying mapping changes...\\nSuggesting clean file edits...\\nMaster mapping created with 821 entries\\nFound 300 potential duplicate sets\\nFound 33 anomalies\\nFound 0 unmapped incidents\\nFound 0 mapping changes\\nSuggested 33 edits to clean file\\n\\nAll files saved to: /home/claude/work\\n\",\"stderr\":\"\"}",
+            "uuid": "5c4962f4-5dee-4f38-acae-0deffe271ca6"
+          }
+        ],
+        "is_error": false,
+        "display_content": {
+          "type": "json_block",
+          "json_block": "{\"returncode\":0,\"stdout\":\"Creating master mapping...\\nIdentifying duplicates...\\nIdentifying anomalies...\\nIdentifying unmapped incidents...\\nIdentifying mapping changes...\\nSuggesting clean file edits...\\nMaster mapping created with 821 entries\\nFound 300 potential duplicate sets\\nFound 33 anomalies\\nFound 0 unmapped incidents\\nFound 0 mapping changes\\nSuggested 33 edits to clean file\\n\\nAll files saved to: /home/claude/work\\n\",\"stderr\":\"\"}"
+        }
+      },
+      {
+        "start_timestamp": "2025-11-14T02:56:29.093636+00:00",
+        "stop_timestamp": "2025-11-14T02:56:29.379644+00:00",
+        "type": "text",
+        "text": "\n\nLet's examine the results:",
+        "citations": []
+      },
+      {
+        "start_timestamp": "2025-11-14T02:56:29.519723+00:00",
+        "stop_timestamp": "2025-11-14T02:56:30.204774+00:00",
+        "type": "tool_use",
+        "name": "bash_tool",
+        "input": {
+          "command": "cd /home/claude/work && head -n 5 CallType_Master_Mapping.csv",
+          "description": "Checking master mapping"
+        },
+        "message": "Checking master mapping",
+        "display_content": {
+          "type": "json_block",
+          "json_block": "{\"language\": \"bash\", \"code\": \"cd /home/claude/work && head -n 5 CallType_Master_Mapping.csv\"}"
+        }
+      },
+      {
+        "type": "tool_result",
+        "name": "bash_tool",
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"returncode\":0,\"stdout\":\"Raw_Value,Incident_Norm,Category_Type,Response_Type,Statute,Source,Status,Note,Normalized\\n(Child Safety Seat Installation **USE CAR SEAT INSTALL),(child Safety Seat Installation **use Car Seat Install),,,,Historical CAD,Needs Review,Count in historical data: 2,childsafetyseatinstallationusecarseatinstall\\n0,0,,,,Historical CAD,Needs Review,Count in historical data: 7,0\\n1,1,,,,Historical CAD,Needs Review,Count in historical data: 1,1\\n9-1-1 Inform,9-1-1 Inform,,,,Historical CAD,Needs Review,Count in historical data: 1,911inform\\n\",\"stderr\":\"\"}",
+            "uuid": "ff0f93a4-2521-4b5e-9d40-6c3c0e093fb3"
+          }
+        ],
+        "is_error": false,
+        "display_content": {
+          "type": "json_block",
+          "json_block": "{\"returncode\":0,\"stdout\":\"Raw_Value,Incident_Norm,Category_Type,Response_Type,Statute,Source,Status,Note,Normalized\\n(Child Safety Seat Installation **USE CAR SEAT INSTALL),(child Safety Seat Installation **use Car Seat Install),,,,Historical CAD,Needs Review,Count in historical data: 2,childsafetyseatinstallationusecarseatinstall\\n0,0,,,,Historical CAD,Needs Review,Count in historical data: 7,0\\n1,1,,,,Historical CAD,Needs Review,Count in historical data: 1,1\\n9-1-1 Inform,9-1-1 Inform,,,,Historical CAD,Needs Review,Count in historical data: 1,911inform\\n\",\"stderr\":\"\"}"
+        }
+      },
+      {
+        "start_timestamp": "2025-11-14T02:56:32.534704+00:00",
+        "stop_timestamp": "2025-11-14T02:56:33.058394+00:00",
+        "type": "tool_use",
+        "name": "bash_tool",
+        "input": {
+          "command": "cd /home/claude/work && head -n 5 anomalies.csv",
+          "description": "Checking anomalies"
+        },
+        "message": "Checking anomalies",
+        "display_content": {
+          "type": "json_block",
+          "json_block": "{\"language\": \"bash\", \"code\": \"cd /home/claude/work && head -n 5 anomalies.csv\"}"
+        }
+      },
+      {
+        "type": "tool_result",
+        "name": "bash_tool",
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"returncode\":0,\"stdout\":\"Raw_Value,Current_Incident_Norm,Issues,Suggested_Fix,Source\\nAdmis,Admis,Acronym 'AD' not in correct case,Admis,Historical CAD\\nApplicant Peddling/Ad Material License,Applicant Peddling/Ad Material License,Acronym 'AD' not in correct case,Applicant Peddling/Ad Material License,Historical CAD\\nHazardous Road Condition -General,Hazardous Road Condition -general,Acronym 'AD' not in correct case,Hazardous Road Condition -general,Historical CAD\\nHazardous Road Condition -General ,Hazardous Road Condition -general,Acronym 'AD' not in correct case,Hazardous Road Condition -general,Historical CAD\\n\",\"stderr\":\"\"}",
+            "uuid": "b86e3039-237f-4a1b-8b23-552ad1f795ba"
+          }
+        ],
+        "is_error": false,
+        "display_content": {
+          "type": "json_block",
+          "json_block": "{\"returncode\":0,\"stdout\":\"Raw_Value,Current_Incident_Norm,Issues,Suggested_Fix,Source\\nAdmis,Admis,Acronym 'AD' not in correct case,Admis,Historical CAD\\nApplicant Peddling/Ad Material License,Applicant Peddling/Ad Material License,Acronym 'AD' not in correct case,Applicant Peddling/Ad Material License,Historical CAD\\nHazardous Road Condition -General,Hazardous Road Condition -general,Acronym 'AD' not in correct case,Hazardous Road Condition -general,Historical CAD\\nHazardous Road Condition -General ,Hazardous Road Condition -general,Acronym 'AD' not in correct case,Hazardous Road Condition -general,Historical CAD\\n\",\"stderr\":\"\"}"
+        }
+      },
+      {
+        "start_timestamp": "2025-11-14T02:56:35.329654+00:00",
+        "stop_timestamp": "2025-11-14T02:56:35.908884+00:00",
+        "type": "tool_use",
+        "name": "bash_tool",
+        "input": {
+          "command": "cd /home/claude/work && head -n 5 duplicates_review.csv",
+          "description": "Checking duplicates"
+        },
+        "message": "Checking duplicates",
+        "display_content": {
+          "type": "json_block",
+          "json_block": "{\"language\": \"bash\", \"code\": \"cd /home/claude/work && head -n 5 duplicates_review.csv\"}"
+        }
+      },
+      {
+        "type": "tool_result",
+        "name": "bash_tool",
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"returncode\":0,\"stdout\":\"Normalized_Group,Current_Incident_Norm,Raw_Values,Sources,Suggested_Keeper,Action\\ngroup,Group,\\\"group; group ; group\\n; Group\\n; Group\\\",Historical CAD; Historical CAD; Historical CAD; Historical CAD; Current CAD,Group,Review\\ncdspossessioninfluence2c3510,CDS/Possession: Influence - 2C:35-10,CDS/Possession: Influence - 2C:35-10,Current CAD,CDS/Possession: Influence - 2C:35-10,Review\\n\",\"stderr\":\"\"}",
+            "uuid": "75efa194-fc3c-4da8-bba8-506813b91579"
+          }
+        ],
+        "is_error": false,
+        "display_content": {
+          "type": "json_block",
+          "json_block": "{\"returncode\":0,\"stdout\":\"Normalized_Group,Current_Incident_Norm,Raw_Values,Sources,Suggested_Keeper,Action\\ngroup,Group,\\\"group; group ; group\\n; Group\\n; Group\\\",Historical CAD; Historical CAD; Historical CAD; Historical CAD; Current CAD,Group,Review\\ncdspossessioninfluence2c3510,CDS/Possession: Influence - 2C:35-10,CDS/Possession: Influence - 2C:35-10,Current CAD,CDS/Possession: Influence - 2C:35-10,Review\\n\",\"stderr\":\"\"}"
+        }
+      },
+      {
+        "start_timestamp": "2025-11-14T02:56:38.525393+00:00",
+        "stop_timestamp": "2025-11-14T02:56:39.153621+00:00",
+        "type": "tool_use",
+        "name": "bash_tool",
+        "input": {
+          "command": "cd /home/claude/work && head -n 5 suggested_clean_edits.csv",
+          "description": "Checking suggested edits"
+        },
+        "message": "Checking suggested edits",
+        "display_content": {
+          "type": "json_block",
+          "json_block": "{\"language\": \"bash\", \"code\": \"cd /home/claude/work && head -n 5 suggested_clean_edits.csv\"}"
+        }
+      },
+      {
+        "type": "tool_result",
+        "name": "bash_tool",
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"returncode\":0,\"stdout\":\"Current_Value,Suggested_Value,Issues\\nAdmis,Admis,Acronym 'AD' not in correct case\\nApplicant Peddling/Ad Material License,Applicant Peddling/Ad Material License,Acronym 'AD' not in correct case\\nHazardous Road Condition -general,Hazardous Road Condition -general,Acronym 'AD' not in correct case\\nHazardous Road Condition -general,Hazardous Road Condition -general,Acronym 'AD' not in correct case\\n\",\"stderr\":\"\"}",
+            "uuid": "1a42f1b1-68c2-4c70-a410-6061a1eede4f"
+          }
+        ],
+        "is_error": false,
+        "display_content": {
+          "type": "json_block",
+          "json_block": "{\"returncode\":0,\"stdout\":\"Current_Value,Suggested_Value,Issues\\nAdmis,Admis,Acronym 'AD' not in correct case\\nApplicant Peddling/Ad Material License,Applicant Peddling/Ad Material License,Acronym 'AD' not in correct case\\nHazardous Road Condition -general,Hazardous Road Condition -general,Acronym 'AD' not in correct case\\nHazardous Road Condition -general,Hazardous Road Condition -general,Acronym 'AD' not in correct case\\n\",\"stderr\":\"\"}"
+        }
+      },
+      {
+        "start_timestamp": "2025-11-14T02:56:41.193918+00:00",
+        "stop_timestamp": "2025-11-14T02:56:41.623119+00:00",
+        "type": "text",
+        "text": "\n\nLet's check the full columns in the master mapping to ensure we have all the required information:",
+        "citations": []
+      },
+      {
+        "start_timestamp": "2025-11-14T02:56:41.813440+00:00",
+        "stop_timestamp": "2025-11-14T02:56:43.004152+00:00",
+        "type": "tool_use",
+        "name": "bash_tool",
+        "input": {
+          "command": "cd /home/claude/work && wc -l CallType_Master_Mapping.csv duplicates_review.csv anomalies.csv unmapped_incidents.csv mapping_changes.csv suggested_clean_edits.csv",
+          "description": "Counting rows in each output file"
+        },
+        "message": "Counting rows in each output file",
+        "display_content": {
+          "type": "json_block",
+          "json_block": "{\"language\": \"bash\", \"code\": \"cd /home/claude/work && wc -l CallType_Master_Mapping.csv duplicates_review.csv anomalies.csv unmapped_incidents.csv mapping_changes.csv suggested_clean_edits.csv\"}"
+        }
+      },
+      {
+        "type": "tool_result",
+        "name": "bash_tool",
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"returncode\":0,\"stdout\":\"   835 CallType_Master_Mapping.csv\\n   314 duplicates_review.csv\\n    34 anomalies.csv\\n     1 unmapped_incidents.csv\\n     1 mapping_changes.csv\\n    34 suggested_clean_edits.csv\\n  1219 total\\n\",\"stderr\":\"\"}",
+            "uuid": "7a562e02-772c-4c59-9ba7-ce9c3e9f20de"
+          }
+        ],
+        "is_error": false,
+        "display_content": {
+          "type": "json_block",
+          "json_block": "{\"returncode\":0,\"stdout\":\"   835 CallType_Master_Mapping.csv\\n   314 duplicates_review.csv\\n    34 anomalies.csv\\n     1 unmapped_incidents.csv\\n     1 mapping_changes.csv\\n    34 suggested_clean_edits.csv\\n  1219 total\\n\",\"stderr\":\"\"}"
+        }
+      },
+      {
+        "start_timestamp": "2025-11-14T02:56:44.855636+00:00",
+        "stop_timestamp": "2025-11-14T02:56:45.237304+00:00",
+        "type": "text",
+        "text": "\n\nNow, I'll create an enhanced version of the cleaning script that incorporates all the business rules:",
+        "citations": []
+      },
+      {
+        "start_timestamp": "2025-11-14T02:56:45.428250+00:00",
+        "stop_timestamp": "2025-11-14T02:57:28.380496+00:00",
+        "type": "tool_use",
+        "name": "create_file",
+        "input": {
+          "path": "/home/claude/work/enhanced_clean_calltypes.py",
+          "file_text": "#!/usr/bin/env python3\n# 2025-11-14-02-58-49\n# CAD_Cleaning/clean_calltypes.py\n# Author: R. A. Carucci\n# Purpose: Clean and normalize CAD call types according to standardized rules\n\nfrom pathlib import Path\nimport re\nimport pandas as pd\nimport csv\nimport os\nfrom datetime import datetime\nimport sys\n\n# Paths - update these for your environment\nWORKBOOK_PATH = Path(\n    r\"C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\09_Reference\\Classifications\\CallTypes\\CallType_Categories.xlsx\"\n)\nMASTER_MAPPING_PATH = Path(\n    r\"C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\09_Reference\\Classifications\\CallTypes\\CallType_Master_Mapping.csv\"\n)\nHISTORICAL_DATA_PATH = Path(\n    r\"C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\09_Reference\\Classifications\\CallTypes\\2019_2025_10_Call_Types_Incidents_csv.txt\"\n)\n\n# Pattern for statute suffixes:\n# \" - 2C:12-1b\" or \" - 39:4-50.2\" at the end of the string\nSTATUTE_SUFFIX_RE = re.compile(\n    r\"\\s*-\\s*((? :2C|39):[0-9A-Za-z.\\-]+)\\s*$\"\n)\n\n# Small words to keep lowercase in title case\nSMALL_WORDS = {'a', 'an', 'and', 'as', 'at', 'but', 'by', 'for', 'if', 'in', \n               'of', 'on', 'or', 'the', 'to', 'with', 'nor'}\n\n# Known acronyms to preserve\nACRONYMS = {'ABC', 'AD', 'ALPR', 'TAS', 'JV', 'A.T.R.A. ', 'A.C.O.R.N. ', 'DV', 'DWI', \n            'MV', 'MVA', 'EMS', 'DPW', 'DOA', 'CDS', 'UCC', 'CPR', 'AED'}\n\ndef smart_title_case(text):\n    \"\"\"Apply smart title case with preservation of acronyms and small words.\"\"\"\n    if not text:\n        return \"\"\n    \n    # Special case for 9-1-1 Emergency\n    text = re.sub(r'9-1-1[eE]mergency', '9-1-1 Emergency', text)\n    \n    # Split text into words\n    words = text.split()\n    result = []\n    \n    # Process each word\n    for i, word in enumerate(words):\n        # Check if it's an acronym (full match)\n        if word.upper() in ACRONYMS:\n            result.append(word.upper())\n        # Check for acronym parts (partial match)\n        elif any(acronym in word.upper() for acronym in ACRONYMS):\n            # Try to find acronym substrings\n            found = False\n            for acronym in ACRONYMS:\n                if acronym in word.upper():\n                    # Replace the acronym part with the correct case\n                    word_upper = word.upper()\n                    pos = word_upper.find(acronym)\n                    if pos >= 0:\n                        new_word = word[:pos] + acronym + word[pos+len(acronym):]\n                        # Capitalize the rest of the word if it's at the start\n                        if i == 0 and pos == 0 and len(new_word) > len(acronym):\n                            rest = new_word[len(acronym):]\n                            new_word = acronym + rest.capitalize()\n                        result.append(new_word)\n                        found = True\n                        break\n            \n            # If no acronym parts found, process normally\n            if not found:\n                # First word or after a colon always capitalized\n                if i == 0 or (i > 0 and words[i-1].endswith(':')):\n                    result.append(word.capitalize())\n                # Small words in the middle stay lowercase\n                elif word.lower() in SMALL_WORDS and i != 0 and i != len(words) - 1:\n                    result.append(word.lower())\n                # Other words get capitalized\n                else:\n                    result.append(word.capitalize())\n        # First word or after a colon always capitalized\n        elif i == 0 or (i > 0 and words[i-1].endswith(':')):\n            result.append(word.capitalize())\n        # Small words in the middle stay lowercase\n        elif word.lower() in SMALL_WORDS and i != 0 and i != len(words) - 1:\n            result.append(word.lower())\n        # Other words get capitalized\n        else:\n            result.append(word.capitalize())\n    \n    return ' '.join(result)\n\ndef clean_call_type(value) -> str:\n    \"\"\"Normalize a single 'Call Type' value.\"\"\"\n    if pd.isna(value):\n        return \"\"\n\n    s = str(value)\n\n    # Trim and collapse internal whitespace\n    s = s.strip()\n    s = re.sub(r\"\\s+\", \" \", s)\n\n    # Replace em dash, en dash, and non-breaking space with regular chars\n    s = s.replace(\"\\u2014\", \"-\").replace(\"\\u2013\", \"-\").replace(\"\\u00A0\", \" \")\n    \n    # Remove other hidden Unicode characters\n    s = ''.join(c for c in s if ord(c) < 128 or c.isalpha())\n\n    # Try to find a statute suffix\n    m = STATUTE_SUFFIX_RE.search(s)\n    if not m:\n        # No \" - 2C\" or \" - 39\" style suffix\n        return smart_title_case(s)\n\n    # Text before the suffix\n    base_text = s[: m.start()]\n    base_text = base_text.rstrip(\" -\")\n    base_text = smart_title_case(base_text)\n\n    # Statute part with spaces removed\n    statute = m.group(1).replace(\" \", \"\")\n\n    # Final normalized form\n    return f\"{base_text} - {statute}\"\n\ndef load_master_mapping(mapping_path):\n    \"\"\"Load the master mapping from CSV.\"\"\"\n    if not mapping_path.exists():\n        print(f\"Master mapping file not found: {mapping_path}\")\n        return {}\n    \n    mapping = {}\n    try:\n        with open(mapping_path, 'r', newline='') as f:\n            reader = csv.DictReader(f)\n            for row in reader:\n                if 'Raw_Value' in row and 'Incident_Norm' in row and row['Status'] == 'Approved':\n                    mapping[row['Raw_Value']] = row['Incident_Norm']\n        \n        print(f\"Loaded {len(mapping)} approved mappings from {mapping_path}\")\n        return mapping\n    except Exception as e:\n        print(f\"Error loading master mapping: {e}\")\n        return {}\n\ndef create_unmapped_report(raw_values, master_mapping, output_path):\n    \"\"\"Create a report of unmapped values.\"\"\"\n    unmapped = []\n    \n    for value in raw_values:\n        if value and value not in master_mapping:\n            unmapped.append({\n                'Raw_Value': value,\n                'Suggested_Norm': clean_call_type(value)\n            })\n    \n    if unmapped:\n        try:\n            # Write to CSV\n            with open(output_path, 'w', newline='') as f:\n                writer = csv.DictWriter(f, fieldnames=['Raw_Value', 'Suggested_Norm'])\n                writer.writeheader()\n                writer.writerows(unmapped)\n            \n            print(f\"Wrote {len(unmapped)} unmapped values to {output_path}\")\n        except Exception as e:\n            print(f\"Error writing unmapped report: {e}\")\n    else:\n        print(\"No unmapped values found\")\n\ndef main() -> None:\n    # Parse command-line arguments\n    import argparse\n    parser = argparse.ArgumentParser(description='Clean and normalize CAD call types. ')\n    parser.add_argument('--input', help='Path to input file with call types')\n    parser.add_argument('--output', help='Path to output file for cleaned call types')\n    parser.add_argument('--column', default='Call Type', help='Column name containing call types')\n    parser.add_argument('--check-mapping', action='store_true', \n                        help='Check against master mapping and report unmapped values')\n    args = parser.parse_args()\n    \n    # Use input path if provided, otherwise use default\n    input_path = Path(args.input) if args.input else WORKBOOK_PATH\n    \n    # Use output path if provided, otherwise use default\n    output_base = input_path.stem + \"_clean\"\n    output_path = Path(args.output) if args.output else input_path.with_name(f\"{output_base}.csv\")\n    \n    # Define other output paths\n    changes_path = output_path.with_name(f\"{output_base}_changes.csv\")\n    unmapped_path = output_path.with_name(f\"{output_base}_unmapped.csv\")\n    \n    print(f\"Input file: {input_path}\")\n    print(f\"Output file: {output_path}\")\n    print(f\"Column name: {args.column}\")\n    \n    # Load the data\n    try:\n        # Try to determine file type from extension\n        ext = input_path.suffix.lower()\n        \n        if ext == '.xlsx' or ext == '.xls':\n            df = pd.read_excel(input_path)\n        elif ext == '.csv':\n            df = pd.read_csv(input_path)\n        elif ext == '.txt':\n            # Try different delimiters\n            for sep in [',', '\\t', '|', ';']:\n                try:\n                    df = pd.read_csv(input_path, sep=sep)\n                    # Check if the column exists\n                    if args.column in df.columns:\n                        print(f\"Successfully loaded file with delimiter: '{sep}'\")\n                        break\n                except:\n                    continue\n            else:\n                # If all separators fail\n                raise ValueError(f\"Could not determine delimiter for text file {input_path}\")\n        else:\n            raise ValueError(f\"Unsupported file format: {ext}\")\n        \n    except Exception as e:\n        print(f\"Error loading input file: {e}\")\n        sys.exit(1)\n    \n    # Check if the column exists\n    if args.column not in df.columns:\n        print(f\"Column '{args.column}' not found.

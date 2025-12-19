@@ -1,0 +1,50 @@
+{
+  "version": "1.0",
+  "generated_on": "2025-12-16",
+  "join": {
+    "left_system": "CAD",
+    "join_type": "left",
+    "cad_key": "ReportNumberNew",
+    "rms_key": "Case Number",
+    "key_normalization": {
+      "trim": true,
+      "collapse_internal_whitespace": true,
+      "remove_nonprinting": true
+    }
+  },
+  "dedupe": {
+    "rms_key": "Case Number",
+    "policy": "keep_best",
+    "sort_priority": [
+      {
+        "field": "Report Date",
+        "direction": "desc"
+      },
+      {
+        "field": "Report Time",
+        "direction": "desc"
+      }
+    ],
+    "tie_breaker": "first"
+  },
+  "overwrite_rules": {
+    "default_update_when": "cad_null_or_blank",
+    "default_accept_when": "rms_not_null_or_blank"
+  },
+  "provenance": {
+    "cad_source_default": "Hackensack_CAD_Data.xlsx",
+    "rms_source_default": "HPD_RMS_Export.xlsx"
+  },
+  "audit_fields": [
+    "merge_run_id",
+    "merge_timestamp",
+    "merge_join_key",
+    "merge_match_flag",
+    "merge_rms_row_count_for_key",
+    "Incident_source",
+    "FullAddress2_source",
+    "Grid_source",
+    "PDZone_source",
+    "Officer_source"
+  ]
+}

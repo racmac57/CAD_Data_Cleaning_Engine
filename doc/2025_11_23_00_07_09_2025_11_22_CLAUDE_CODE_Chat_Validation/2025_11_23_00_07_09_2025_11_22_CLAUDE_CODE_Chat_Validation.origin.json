@@ -1,0 +1,54 @@
+{
+  "original_full_path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\02_ETL_Scripts\\CAD_Data_Cleaning_Engine\\test\\2025_11_22_CLAUDE_CODE_Chat_Validation.md",
+  "original_directory": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\02_ETL_Scripts\\CAD_Data_Cleaning_Engine\\test",
+  "original_filename": "2025_11_22_CLAUDE_CODE_Chat_Validation.md",
+  "operation": "MOVE",
+  "sent_at": "2025-11-23T05:06:57.0245564Z",
+  "size_bytes": 458611,
+  "modified_time": "2025-11-23T05:06:16.9607261Z",
+  "integrity_sha256": "2a41d4ea4ba107c99e8a58293c848bf97ff1d52ec87258caa9c85c7920789a51",
+  "created_time": "2025-11-22T07:50:31.8287029Z",
+  "tags": [
+    "API",
+    "ai",
+    "code",
+    "config",
+    "data",
+    "docs",
+    "error handling",
+    "excel",
+    "function",
+    "input/output",
+    "it-ops",
+    "json",
+    "loop",
+    "markdown",
+    "police",
+    "python",
+    "sql"
+  ],
+  "metadata_enrichment": {
+    "metadata": {
+      "project_name": "02_data",
+      "source_type": "documentation",
+      "language": "en",
+      "department": "admin",
+      "key_terms": [
+        "csv",
+        "test",
+        "files",
+        "carucci_r",
+        "xlsx",
+        "data"
+      ],
+      "enrichment_version": "1.0.0"
+    },
+    "summaries": {
+      "file_summary": "────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\n> \n─────────────────────────────────────────────────────────────────────────────────────────────────────────────────...",
+      "first_line": "────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────"
+    },
+    "enrichment_version": "1.0.0"
+  },
+  "last_processed_at": "2025-11-23T00:07:08.922895",
+  "department": "admin"
+}

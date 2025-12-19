@@ -1,0 +1,760 @@
+*0760", addr, re.IGNORECASE))
+        
+        if has_street:
+            if has_city_state_zip:
+                return "valid_standard", "Valid standard address"
+            return "incomplete", "Missing city/state/zip"
+        return "missing_street_type", "No street type suffix"
+
+    # No number, possible named location
+    if re.search(STREET_REGEX, addr, re.IGNORECASE):
+        return "missing_street_number", "Street name without number"
+
+    if re.match(r"^(Hackensack|NJ|0760)", addr, re.IGNORECASE):
+        return "incomplete", "City/state only"
+
+    return "missing_street_number", "No street number"
+
+print("="*80)
+print("BACKFILLING INCOMPLETE ADDRESSES FROM RMS")
+print("="*80)
+print(f"\nStarted: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+
+# Step 1: Load ESRI file
+print("Step 1: Loading ESRI file...")
+esri_df = pd.read_excel(ESRI_FILE, dtype=str)
+print(f"  Loaded {len(esri_df):,} records")
+
+# Step 2: Identify incomplete addresses
+print("\nStep 2: Identifying incomplete addresses...")
+incomplete_results = esri_df['FullAddress2'].apply(is_incomplete_address)
+incomplete_mask = incomplete_results.apply(lambda x: x[0])
+incomplete_addresses = esri_df[incomplete_mask].copy()
+print(f"  Found {len(incomplete_addresses):,} records with incomplete addresses")
+
+# Show breakdown by issue type
+issue_types = incomplete_results[incomplete_mask].apply(lambda x: x[1])
+print(f"\n  Breakdown by issue type:")
+for issue_type, count in issue_types.value_counts().items():
+    print(f"    {issue_type}: {count:,}")
+
+# Step 3: Load RMS export
+print("\nStep 3: Loading RMS export...")
+rms_df = pd.read_excel(RMS_PATH, dtype=str)
+print(f"  Loaded {len(rms_df):,} RMS records")
+
+# Find address column in RMS
+rms_address_col = None
+for col in rms_df.columns:
+    if 'address' in col.lower() or 'location' in col.lower():
+        rms_address_col = col
+        break
+
+if not rms_address_col:
+    for col in ['FullAddress', 'Address', 'Location', 'Incident Location']:
+        if col in rms_df.columns:
+            rms_address_col = col
+            break
+
+if not rms_address_col:
+    print(f"  Available RMS columns: {list(rms_df.columns)[:10]}...")
+    raise ValueError("Could not identify RMS address column")
+
+print(f"  Using RMS column: {rms_address_col}")
+
+# Create RMS lookup: Case Number -> Address
+rms_lookup = rms_df.set_index('Case Number')[rms_address_col].to_dict()
+print(f"  Created lookup for {len(rms_lookup):,} RMS case numbers")
+
+# Step 4: Match incomplete addresses to RMS
+print("\nStep 4: Matching incomplete addresses to RMS...")
+incomplete_addresses['RMS_Address'] = incomplete_addresses['ReportNumberNew'].astype(str).str.strip().map(rms_lookup)
+rms_matches = incomplete_addresses[incomplete_addresses['RMS_Address'].notna()].copy()
+print(f"  Found {len(rms_matches):,} incomplete addresses that match RMS Case Number")
+
+# Step 5: Validate RMS addresses (must be complete/valid)
+print("\nStep 5: Validating RMS addresses...")
+rms_matches['RMS_Category'] = rms_matches['RMS_Address'].apply(lambda x: categorize_address(x)[0])
+valid_cats = {"valid_standard", "valid_intersection"}
+rms_matches['RMS_Is_Valid'] = rms_matches['RMS_Category'].isin(valid_cats)
+valid_rms_matches = rms_matches[rms_matches['RMS_Is_Valid']].copy()
+print(f"  Found {len(valid_rms_matches):,} RMS addresses that are complete/valid")
+print(f"  RMS address categories: {rms_matches['RMS_Category'].value_counts().to_dict()}")
+
+# Step 6: Load rule-based corrections
+print("\nStep 6: Loading rule-based corrections...")
+try:
+    rules_df = pd.read_csv(RULES_FILE, dtype=str).fillna('')
+    print(f"  Loaded {len(rules_df):,} rules")
+except Exception as e:
+    print(f"  ERROR: Could not load rule file: {e}")
+    rules_df = pd.DataFrame()
+
+# Step 7: Load existing address corrections
+print("\nStep 7: Loading existing address corrections...")
+if ADDRESS_CSV.exists():
+    addr_corrections = pd.read_csv(ADDRESS_CSV, dtype=str).fillna('')
+    print(f"  Loaded {len(addr_corrections):,} existing records")
+    
+    # Remove all default center-point intersections (Issue_Type == 'Default Center-Point Intersection')
+    before_remove = len(addr_corrections)
+    addr_corrections = addr_corrections[
+        addr_corrections['Issue_Type'] != 'Default Center-Point Intersection'
+    ].copy()
+    removed = before_remove - len(addr_corrections)
+    if removed > 0:
+        print(f"  Removed {removed:,} default center-point intersections")
+else:
+    addr_corrections = pd.DataFrame(columns=[
+        'ReportNumberNew', 'TimeOfCall', 'FullAddress2', 'Incident', 
+        'Corrected_Value', 'Issue_Type', 'Notes'
+    ])
+    print("  Creating new file")
+
+# Step 8: Apply RMS backfills
+print("\nStep 8: Applying RMS backfills...")
+rms_backfill = valid_rms_matches[[
+    'ReportNumberNew', 'TimeOfCall', 'FullAddress2', 'Incident'
+]].copy()
+rms_backfill['Corrected_Value'] = valid_rms_matches['RMS_Address']
+rms_backfill['Issue_Type'] = 'RMS Backfill'
+rms_backfill['Notes'] = 'Backfilled from RMS export'
+
+# Remove existing records that will be updated by RMS
+existing_report_nums = set(addr_corrections['ReportNumberNew'].astype(str).str.strip())
+rms_report_nums = set(rms_backfill['ReportNumberNew'].astype(str).str.strip())
+
+# Keep existing records that aren't in RMS backfill
+addr_corrections_keep = addr_corrections[
+    ~addr_corrections['ReportNumberNew'].astype(str).str.strip().isin(rms_report_nums)
+].copy()
+
+# Step 9: Apply rule-based corrections
+print("\nStep 9: Applying rule-based corrections...")
+rules_applied = 0
+
+# Create a combined dataset for rule application
+combined_df = pd.concat([addr_corrections_keep, rms_backfill], ignore_index=True)
+
+for idx, rule in rules_df.iterrows():
+    incident_filter = str(rule['If Incident is']).strip()
+    address_pattern = str(rule['And/Or If FullAddress2 is']).strip()
+    corrected_value = str(rule['Then Change FullAddress2 to']).strip()
+    
+    # Skip empty rules or empty corrections
+    if not address_pattern or not corrected_value:
+        continue
+    
+    # Build match mask
+    mask = combined_df['FullAddress2'].astype(str).str.strip() == address_pattern
+    
+    # If incident filter is specified, add it to the mask
+    if incident_filter:
+        mask = mask & (combined_df['Incident'].astype(str).str.strip() == incident_filter)
+    
+    # Apply correction
+    matches = mask.sum()
+    if matches > 0:
+        # Override existing corrections with rule-based corrections
+        combined_df.loc[mask, 'Corrected_Value'] = corrected_value
+        combined_df.loc[mask, 'Issue_Type'] = 'Rule-Based Correction'
+        combined_df.loc[mask, 'Notes'] = f'Applied from rule file: {incident_filter if incident_filter else "Any Incident"}'
+        rules_applied += matches
+
+print(f"  Applied {rules_applied:,} rule-based corrections")
+
+# Step 10: Save updated file
+print("\nStep 10: Saving updated address corrections...")
+try:
+    combined_df.to_csv(ADDRESS_CSV, index=False)
+    print(f"  Saved: {ADDRESS_CSV}")
+except PermissionError:
+    print(f"  ERROR: Permission denied. Please close '{ADDRESS_CSV.name}' if it's open in Excel.") exit(1)
+except Exception as e:
+    print(f"  ERROR: Could not save file: {e}")
+    exit(1)
+
+# Summary
+print("\n" + "="*80)
+print("SUMMARY")
+print("="*80)
+print(f"Total incomplete addresses: {len(incomplete_addresses):,}")
+print(f"RMS matches found: {len(rms_matches):,}")
+print(f"Valid RMS addresses (complete): {len(valid_rms_matches):,}")
+print(f"Rule-based corrections applied: {rules_applied:,}")
+print(f"\nUpdated address_corrections.csv:")
+print(f"  Total records: {len(combined_df):,}")
+print(f"  RMS backfilled: {len(rms_backfill):,}")
+print(f"  Rule-based corrections: {rules_applied:,}")
+print(f"  Existing records kept: {len(addr_corrections_keep):,}")
+
+print(f"\nSaved: {ADDRESS_CSV}")
+print(f"Completed: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
+print(f"\nNext step: Run apply_manual_corrections.py to apply these corrections to the ESRI file")
+
+
+```
+
+
+## Summary
+
+### 1. Removed default center-point intersections
+- Removed 85,755 default center-point intersections that were incorrectly added
+
+### 2. Identified incomplete addresses
+- Found 87,040 incomplete addresses:
+  - 86,985 incomplete intersections (missing cross street: "Street & ,")
+  - 48 generic locations
+  - 7 missing street numbers
+
+### 3. RMS backfill
+- Matched 2,486 incomplete addresses to RMS Case Numbers
+- Found 433 valid RMS addresses to backfill
+- Applied RMS backfills to `address_corrections.csv`
+
+### 4. Rule-based corrections
+- Applied 1,139 rule-based corrections from `test/updates_corrections_FullAddress2.csv`
+- Rules take precedence over RMS backfills
+
+### Final status
+- Total records in `address_corrections.csv`: 1,627
+- RMS backfilled: 433
+- Rule-based corrections: 1,139
+- Existing records kept: 1,194
+
+The script now:
+- Identifies incomplete addresses (missing street numbers or incomplete intersections)
+- Backfills from RMS data where available
+- Applies rule-based corrections from your CSV file
+- Does not use default center-point intersections
+
+Next step: Run `apply_manual_corrections.py` to apply these corrections to the ESRI production file. ---
+
+**User**
+
+C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\ref\hackensack_municipal_streets_from_lawsoft_25_11_24.xlsx
+
+which list all the street names from the CAD Software, does this info change Example in the address_corrections.csv one of the records that needed correcting was 2 University Plaza, Hackensack, NJ 07601 the corrected street name is 2 University Plaza Drive, Hackensack, NJ 07601, which is listed on the above linked file. alos I think I may have delted in error the address_corrections.csv
+
+---
+
+**Cursor**
+
+
+Checking if `address_corrections.csv` exists, then reviewing the street names file to improve address corrections:
+
+
+
+The `address_corrections.csv` file exists (296KB). Checking the street names file and creating a script to use it for address corrections:
+
+
+```python
+"""
+Apply street name corrections using the official Hackensack street names file. This script:
+1. Loads the official street names from hackensack_municipal_streets_from_lawsoft_25_11_24.xlsx
+2. Identifies addresses that are missing street type suffixes (e.g., "University Plaza" -> "University Plaza Drive")
+3. Applies corrections to address_corrections.csv
+"""
+
+import pandas as pd
+import re
+from pathlib import Path
+from datetime import datetime
+
+BASE_DIR = Path(r"C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine")
+STREET_NAMES_FILE = BASE_DIR / "ref" / "hackensack_municipal_streets_from_lawsoft_25_11_24.xlsx"
+ESRI_FILE = BASE_DIR / "data" / "ESRI_CADExport" / "CAD_ESRI_Final_20251117_v2.xlsx"
+ADDRESS_CSV = BASE_DIR / "manual_corrections" / "address_corrections.csv"
+
+print("="*80)
+print("APPLYING STREET NAMES CORRECTIONS")
+print("="*80)
+print(f"\nStarted: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+
+# Step 1: Load official street names
+print("Step 1: Loading official street names...")
+try:
+    streets_df = pd.read_excel(STREET_NAMES_FILE, dtype=str)
+    print(f"  Loaded {len(streets_df):,} street names")
+    print(f"  Columns: {list(streets_df.columns)}")
+except Exception as e:
+    print(f"  ERROR: Could not load street names file: {e}")
+    exit(1)
+
+# Create a lookup: street name without suffix -> full street name with suffix
+# Example: "University Plaza" -> "University Plaza Drive"
+street_lookup = {}
+for _, row in streets_df.iterrows():
+    street_name = str(row['Street']).strip()
+    if street_name:
+        # Extract base name (without suffix)
+        # For "University Plaza Drive", base would be "University Plaza"
+        base_match = re.match(r'^(.+? )\s+(Drive|Street|Avenue|Road|Place|Court|Lane|Boulevard|Way|Circle|Terrace|Parkway|Highway|Plaza|Square|Trail|Path|Alley|Walk|Expressway|Turnpike|Route)$', street_name, re.IGNORECASE)
+        if base_match:
+            base_name = base_match.group(1).strip()
+            # Store mapping: base name -> full name
+            if base_name not in street_lookup:
+                street_lookup[base_name.upper()] = street_name
+            # Also store the full name itself
+            street_lookup[street_name.upper()] = street_name
+
+print(f"  Created lookup for {len(street_lookup):,} street name variations")
+
+# Step 2: Load ESRI file to find addresses needing correction
+print("\nStep 2: Loading ESRI file...")
+esri_df = pd.read_excel(ESRI_FILE, dtype=str)
+print(f"  Loaded {len(esri_df):,} records")
+
+# Step 3: Load existing address corrections
+print("\nStep 3: Loading existing address corrections...")
+if ADDRESS_CSV.exists():
+    addr_corrections = pd.read_csv(ADDRESS_CSV, dtype=str).fillna('')
+    print(f"  Loaded {len(addr_corrections):,} existing records")
+else:
+    addr_corrections = pd.DataFrame(columns=[
+        'ReportNumberNew', 'TimeOfCall', 'FullAddress2', 'Incident', 
+        'Corrected_Value', 'Issue_Type', 'Notes'
+    ])
+    print("  Creating new file")
+
+# Step 4: Find addresses in ESRI that need street name corrections
+print("\nStep 4: Identifying addresses needing street name corrections...")
+
+# Get addresses that are not yet in corrections or don't have corrections
+esri_addresses = esri_df[['ReportNumberNew', 'TimeOfCall', 'FullAddress2', 'Incident']].copy()
+existing_report_nums = set(addr_corrections['ReportNumberNew'].astype(str).str.strip())
+esri_addresses = esri_addresses[
+    ~esri_addresses['ReportNumberNew'].astype(str).str.strip().isin(existing_report_nums)
+].copy()
+
+print(f"  Checking {len(esri_addresses):,} addresses not yet in corrections")
+
+# Function to extract street name from address
+def extract_street_name(address):
+    """Extract street name from address for matching.""" if pd.isna(address) or str(address).strip() == "":
+        return None
+    
+    addr = str(address).strip()
+    
+    # Remove city/state/zip
+    addr = re.sub(r',\s*Hackensack. *$', '', addr, flags=re.IGNORECASE)
+    
+    # Extract street name (before comma or end)
+    # Pattern: "123 Street Name" or "Street Name & Other Street"
+    match = re.match(r'^\d+\s+(.+?)(? :\s*&\s*|$)', addr)
+    if match:
+        street_part = match.group(1).strip()
+        return street_part
+    
+    # Try without number (for intersections or named locations)
+    match = re.match(r'^(.+?)(? :\s*&\s*|$)', addr)
+    if match:
+        street_part = match.group(1).strip()
+        return street_part
+    
+    return None
+
+# Find addresses that need corrections
+new_corrections = []
+corrections_applied = 0
+
+for idx, row in esri_addresses.iterrows():
+    addr = str(row['FullAddress2']).strip()
+    if not addr:
+        continue
+    
+    # Extract street name
+    street_name = extract_street_name(addr)
+    if not street_name:
+        continue
+    
+    # Check if street name (without suffix) is in lookup
+    street_upper = street_name.upper()
+    if street_upper in street_lookup:
+        full_street_name = street_lookup[street_upper]
+        
+        # Only correct if the address doesn't already have the full street name
+        if full_street_name.upper() not in addr.upper():
+            # Build corrected address
+            # Replace the street name part with the full street name
+            corrected_addr = re.sub(
+                rf'\b{re.escape(street_name)}\b',
+                full_street_name,
+                addr,
+                count=1,
+                flags=re.IGNORECASE
+            )
+            
+            # Only add if correction is different
+            if corrected_addr != addr:
+                new_corrections.append({
+                    'ReportNumberNew': str(row['ReportNumberNew']).strip(),
+                    'TimeOfCall': str(row.get('TimeOfCall', '')),
+                    'FullAddress2': addr,
+                    'Incident': str(row.get('Incident', '')),
+                    'Corrected_Value': corrected_addr,
+                    'Issue_Type': 'Street Name Correction',
+                    'Notes': f'Applied official street name: {street_name} -> {full_street_name}'
+                })
+                corrections_applied += 1
+
+print(f"  Found {corrections_applied:,} addresses needing street name corrections")
+
+# Step 5: Also check existing corrections that might need updates
+print("\nStep 5: Checking existing corrections for street name updates...")
+existing_updates = 0
+
+for idx, row in addr_corrections.iterrows():
+    addr = str(row['FullAddress2']).strip()
+    corrected = str(row.get('Corrected_Value', '')).strip()
+    
+    # Skip if already corrected or empty
+    if not corrected or corrected == '':
+        continue
+    
+    # Extract street name from original address
+    street_name = extract_street_name(addr)
+    if not street_name:
+        continue
+    
+    # Check if street name needs correction
+    street_upper = street_name.upper()
+    if street_upper in street_lookup:
+        full_street_name = street_lookup[street_upper]
+        
+        # Check if corrected address also needs the street name fix
+        if full_street_name.upper() not in corrected.upper():
+            # Update the corrected value
+            updated_corrected = re.sub(
+                rf'\b{re.escape(street_name)}\b',
+                full_street_name,
+                corrected,
+                count=1,
+                flags=re.IGNORECASE
+            )
+            
+            if updated_corrected != corrected:
+                addr_corrections.loc[idx, 'Corrected_Value'] = updated_corrected
+                if addr_corrections.loc[idx, 'Issue_Type'] == '':
+                    addr_corrections.loc[idx, 'Issue_Type'] = 'Street Name Correction'
+                existing_updates += 1
+
+print(f"  Updated {existing_updates:,} existing corrections")
+
+# Step 6: Add new corrections
+if new_corrections:
+    new_df = pd.DataFrame(new_corrections)
+    addr_corrections = pd.concat([addr_corrections, new_df], ignore_index=True)
+    print(f"\n  Added {len(new_corrections):,} new corrections")
+
+# Step 7: Save updated file
+print("\nStep 7: Saving updated address corrections...")
+try:
+    addr_corrections.to_csv(ADDRESS_CSV, index=False)
+    print(f"  Saved: {ADDRESS_CSV}")
+except PermissionError:
+    print(f"  ERROR: Permission denied. Please close '{ADDRESS_CSV.name}' if it's open in Excel.") exit(1)
+except Exception as e:
+    print(f"  ERROR: Could not save file: {e}")
+    exit(1)
+
+# Summary
+print("\n" + "="*80)
+print("SUMMARY")
+print("="*80)
+print(f"Total records in address_corrections.csv: {len(addr_corrections):,}")
+print(f"New street name corrections added: {len(new_corrections):,}")
+print(f"Existing corrections updated: {existing_updates:,}")
+print(f"Total corrections with values: {(addr_corrections['Corrected_Value'].astype(str).str.strip() != '').sum():,}")
+
+# Show sample corrections
+if new_corrections:
+    print("\nSample of street name corrections:")
+    for i, corr in enumerate(new_corrections[:10]):
+        print(f"  {corr['FullAddress2'][:50]:50} -> {corr['Corrected_Value'][:60]}")
+
+print("\n" + "="*80)
+print("COMPLETE")
+print("="*80)
+print(f"Completed: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
+```
+
+
+Found 67 addresses needing street name corrections. Checking the two "2 University Plaza" records and fixing them:
+
+
+```python
+"""
+Apply street name corrections using the official Hackensack street names file. This script:
+1. Loads the official street names from hackensack_municipal_streets_from_lawsoft_25_11_24.xlsx
+2. Identifies addresses that are missing street type suffixes (e.g., "University Plaza" -> "University Plaza Drive")
+3. Applies corrections to address_corrections.csv
+"""
+
+import pandas as pd
+import re
+from pathlib import Path
+from datetime import datetime
+
+BASE_DIR = Path(r"C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine")
+STREET_NAMES_FILE = BASE_DIR / "ref" / "hackensack_municipal_streets_from_lawsoft_25_11_24.xlsx"
+ESRI_FILE = BASE_DIR / "data" / "ESRI_CADExport" / "CAD_ESRI_Final_20251117_v2.xlsx"
+ADDRESS_CSV = BASE_DIR / "manual_corrections" / "address_corrections.csv"
+
+print("="*80)
+print("APPLYING STREET NAMES CORRECTIONS")
+print("="*80)
+print(f"\nStarted: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+
+# Step 1: Load official street names
+print("Step 1: Loading official street names...")
+try:
+    streets_df = pd.read_excel(STREET_NAMES_FILE, dtype=str)
+    print(f"  Loaded {len(streets_df):,} street names")
+    print(f"  Columns: {list(streets_df.columns)}")
+except Exception as e:
+    print(f"  ERROR: Could not load street names file: {e}")
+    exit(1)
+
+# Create a lookup: street name without suffix -> full street name with suffix
+# Example: "University Plaza" -> "University Plaza Drive"
+street_lookup = {}
+for _, row in streets_df.iterrows():
+    street_name = str(row['Street']).strip()
+    if street_name:
+        # Extract base name (without suffix)
+        # For "University Plaza Drive", base would be "University Plaza"
+        base_match = re.match(r'^(.+? )\s+(Drive|Street|Avenue|Road|Place|Court|Lane|Boulevard|Way|Circle|Terrace|Parkway|Highway|Plaza|Square|Trail|Path|Alley|Walk|Expressway|Turnpike|Route)$', street_name, re.IGNORECASE)
+        if base_match:
+            base_name = base_match.group(1).strip()
+            # Store mapping: base name -> full name
+            if base_name not in street_lookup:
+                street_lookup[base_name.upper()] = street_name
+            # Also store the full name itself
+            street_lookup[street_name.upper()] = street_name
+
+print(f"  Created lookup for {len(street_lookup):,} street name variations")
+
+# Step 2: Load ESRI file to find addresses needing correction
+print("\nStep 2: Loading ESRI file...")
+esri_df = pd.read_excel(ESRI_FILE, dtype=str)
+print(f"  Loaded {len(esri_df):,} records")
+
+# Step 3: Load existing address corrections
+print("\nStep 3: Loading existing address corrections...")
+if ADDRESS_CSV.exists():
+    addr_corrections = pd.read_csv(ADDRESS_CSV, dtype=str).fillna('')
+    print(f"  Loaded {len(addr_corrections):,} existing records")
+else:
+    addr_corrections = pd.DataFrame(columns=[
+        'ReportNumberNew', 'TimeOfCall', 'FullAddress2', 'Incident', 
+        'Corrected_Value', 'Issue_Type', 'Notes'
+    ])
+    print("  Creating new file")
+
+# Step 4: Find addresses in ESRI that need street name corrections
+print("\nStep 4: Identifying addresses needing street name corrections...")
+
+# Get addresses that are not yet in corrections or don't have corrections
+esri_addresses = esri_df[['ReportNumberNew', 'TimeOfCall', 'FullAddress2', 'Incident']].copy()
+existing_report_nums = set(addr_corrections['ReportNumberNew'].astype(str).str.strip())
+esri_addresses = esri_addresses[
+    ~esri_addresses['ReportNumberNew'].astype(str).str.strip().isin(existing_report_nums)
+].copy()
+
+print(f"  Checking {len(esri_addresses):,} addresses not yet in corrections")
+
+# Function to extract street name from address
+def extract_street_name(address):
+    """Extract street name from address for matching.""" if pd.isna(address) or str(address).strip() == "":
+        return None
+    
+    addr = str(address).strip()
+    
+    # Remove city/state/zip
+    addr = re.sub(r',\s*Hackensack. *$', '', addr, flags=re.IGNORECASE)
+    
+    # Extract street name (before comma or end)
+    # Pattern: "123 Street Name" or "Street Name & Other Street"
+    match = re.match(r'^\d+\s+(.+?)(? :\s*&\s*|,|$)', addr)
+    if match:
+        street_part = match.group(1).strip()
+        # Remove trailing comma if present
+        street_part = street_part.rstrip(',')
+        return street_part
+    
+    # Try without number (for intersections or named locations)
+    match = re.match(r'^(.+?)(? :\s*&\s*|,|$)', addr)
+    if match:
+        street_part = match.group(1).strip()
+        # Remove trailing comma if present
+        street_part = street_part.rstrip(',')
+        return street_part
+    
+    return None
+
+# Find addresses that need corrections
+new_corrections = []
+corrections_applied = 0
+
+for idx, row in esri_addresses.iterrows():
+    addr = str(row['FullAddress2']).strip()
+    if not addr:
+        continue
+    
+    # Extract street name
+    street_name = extract_street_name(addr)
+    if not street_name:
+        continue
+    
+    # Check if street name (without suffix) is in lookup
+    street_upper = street_name.upper()
+    if street_upper in street_lookup:
+        full_street_name = street_lookup[street_upper]
+        
+        # Only correct if the address doesn't already have the full street name
+        if full_street_name.upper() not in addr.upper():
+            # Build corrected address
+            # Replace the street name part with the full street name
+            corrected_addr = re.sub(
+                rf'\b{re.escape(street_name)}\b',
+                full_street_name,
+                addr,
+                count=1,
+                flags=re.IGNORECASE
+            )
+            
+            # Only add if correction is different
+            if corrected_addr != addr:
+                new_corrections.append({
+                    'ReportNumberNew': str(row['ReportNumberNew']).strip(),
+                    'TimeOfCall': str(row.get('TimeOfCall', '')),
+                    'FullAddress2': addr,
+                    'Incident': str(row.get('Incident', '')),
+                    'Corrected_Value': corrected_addr,
+                    'Issue_Type': 'Street Name Correction',
+                    'Notes': f'Applied official street name: {street_name} -> {full_street_name}'
+                })
+                corrections_applied += 1
+
+print(f"  Found {corrections_applied:,} addresses needing street name corrections")
+
+# Step 5: Also check existing corrections that might need updates
+print("\nStep 5: Checking existing corrections for street name updates...")
+existing_updates = 0
+
+for idx, row in addr_corrections.iterrows():
+    addr = str(row['FullAddress2']).strip()
+    corrected = str(row.get('Corrected_Value', '')).strip()
+    
+    # Skip if already corrected or empty
+    if not corrected or corrected == '':
+        continue
+    
+    # Extract street name from original address
+    street_name = extract_street_name(addr)
+    if not street_name:
+        continue
+    
+    # Check if street name needs correction
+    street_upper = street_name.upper()
+    if street_upper in street_lookup:
+        full_street_name = street_lookup[street_upper]
+        
+        # Check if corrected address also needs the street name fix
+        if full_street_name.upper() not in corrected.upper():
+            # Update the corrected value
+            updated_corrected = re.sub(
+                rf'\b{re.escape(street_name)}\b',
+                full_street_name,
+                corrected,
+                count=1,
+                flags=re.IGNORECASE
+            )
+            
+            if updated_corrected != corrected:
+                addr_corrections.loc[idx, 'Corrected_Value'] = updated_corrected
+                if addr_corrections.loc[idx, 'Issue_Type'] == '':
+                    addr_corrections.loc[idx, 'Issue_Type'] = 'Street Name Correction'
+                existing_updates += 1
+
+print(f"  Updated {existing_updates:,} existing corrections")
+
+# Step 6: Add new corrections
+if new_corrections:
+    new_df = pd.DataFrame(new_corrections)
+    addr_corrections = pd.concat([addr_corrections, new_df], ignore_index=True)
+    print(f"\n  Added {len(new_corrections):,} new corrections")
+
+# Step 7: Save updated file
+print("\nStep 7: Saving updated address corrections...")
+try:
+    addr_corrections.to_csv(ADDRESS_CSV, index=False)
+    print(f"  Saved: {ADDRESS_CSV}")
+except PermissionError:
+    print(f"  ERROR: Permission denied. Please close '{ADDRESS_CSV.name}' if it's open in Excel.") exit(1)
+except Exception as e:
+    print(f"  ERROR: Could not save file: {e}")
+    exit(1)
+
+# Summary
+print("\n" + "="*80)
+print("SUMMARY")
+print("="*80)
+print(f"Total records in address_corrections.csv: {len(addr_corrections):,}")
+print(f"New street name corrections added: {len(new_corrections):,}")
+print(f"Existing corrections updated: {existing_updates:,}")
+print(f"Total corrections with values: {(addr_corrections['Corrected_Value'].astype(str).str.strip() != '').sum():,}")
+
+# Show sample corrections
+if new_corrections:
+    print("\nSample of street name corrections:")
+    for i, corr in enumerate(new_corrections[:10]):
+        print(f"  {corr['FullAddress2'][:50]:50} -> {corr['Corrected_Value'][:60]}")
+
+print("\n" + "="*80)
+print("COMPLETE")
+print("="*80)
+print(f"Completed: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
+
+```
+
+
+Fixing the two "University Plaza" records directly:
+
+
+
+Verifying the fix:
+
+
+
+## Summary
+
+### 1. File status
+- `address_corrections.csv` exists (296KB)
+- Not deleted; it's intact
+
+### 2. Street names integration
+- Created `scripts/apply_street_names_corrections.py` that uses the official street names file
+- The script:
+  - Loads all 273 street names from `hackensack_municipal_streets_from_lawsoft_25_11_24.xlsx`
+  - Identifies addresses missing street type suffixes (e.g., "University Plaza" → "University Plaza Drive")
+  - Applies corrections automatically
+
+### 3. University Plaza corrections
+- All 9 University Plaza records now have corrections
+- The 2 missing ones are fixed: "2 University Plaza" → "2 University Plaza Drive"
+
+### 4. Results
+- Total records in `address_corrections.csv`: 1,696
+- Street name corrections added: 69 (67 new + 2 University Plaza fixes)
+- Total corrections with values: 1,577
+
+The script uses the official street names file to automatically correct addresses that are missing their proper street type suffix (like "University Plaza" → "University Plaza Drive"). This ensures consistency with the official municipal street names. Should I run the script again to catch any other addresses that might need street name corrections, or proceed with applying all corrections to the ESRI file? ---
+
+**User**
+
+how do I determine which records need manual correcting?

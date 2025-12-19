@@ -1,0 +1,683 @@
+✅ **0 Null/Empty Incidents** - All records have valid incident values
+       289 +
+       290 +  **Status:** All incident values in the test dataset are correctly mapped and validated. 291 +
+       292 +  ---
+       293 +
+       294 +  ### **2. Address Quality Report**
+       295 +  - **Location:** `/test/Address_Quality_Report.csv`
+       296 +  - **Records Analyzed:** 3,770
+       297 +  - **Records with Issues:** 178 (4.7%)
+       298 +  - **Records OK:** 3,592 (95.3%)
+       299 +
+       300 +  **Top 3 Critical Issues:**
+       301 +
+       302 +  1. **GENERIC_PLACEHOLDER** - 87 occurrences (48.9% of issues, CRITICAL severity)
+       303 +     - Examples: "Park Street & ,", "Carver Park & ,", "Johnson Park & ,"
+       304 +     - Issue: Generic location names that don't provide specific address information
+       305 +     - Action Needed: Replace with actual physical addresses
+       306 +
+       307 +  2. **MISSING_STREET_TYPE** - 56 occurrences (31.5% of issues, MEDIUM severity)
+       308 +     - Examples: "41 Route 4 East", "375 Route 17 South", "2 Bergen County Plaza"
+       309 +     - Issue: Valid addresses but missing standard street type designations (St, Ave, Rd, etc.) 310 +     - Action Needed: Verify if these are acceptable exceptions or need street type added
+       311 +
+       312 +  3. **INCOMPLETE_INTERSECTION** - 35 occurrences (19.7% of issues, HIGH severity)
+       313 +     - Examples: "Euclid Avenue & ,", "South State Street & ,", "Lehigh Street & ,"
+       314 +     - Issue: Intersection format with missing cross street (ends with "& ,")
+       315 +     - Action Needed: Add second street name to complete intersection
+       316 +
+       317 +  **Severity Breakdown:**
+       318 +  - **CRITICAL:** 87 records (48.9%) - Generic placeholders requiring manual address lookup
+       319 +  - **HIGH:** 35 records (19.7%) - Incomplete intersections missing cross street
+       320 +  - **MEDIUM:** 56 records (31.5%) - Missing street type designation
+       321 +
+       322 +  **Note:** This validation was run on the test subset (`2025_11_17_CAD_With_RMS.csv`). Running the
+           + same validation on the full master file will identify the complete scope of address quality issues
+           + across all 700K+ records. 323 +
+       324 +  ---
+       325 +
+       326 +  **Created:** 2025-11-22
+       327 +  **Last Updated:** 2025-11-22 - Added Data Quality Validation Reports
+       328 +
+
+● ✅ Data Quality Validation Complete
+
+  I've successfully completed the 2-part data quality check on your CAD data. Here's the comprehensive summary:
+
+  ---
+  📊 Overall Statistics
+
+  Dataset: /test/2025_11_17_CAD_With_RMS.csv
+  - Total Records Reviewed: 3,770
+  - Validation Reference: /ref/manual_call_type.csv (418 valid types, 278 variants)
+
+  ---
+  🎯 Part 1: Incident Field Validation
+
+  Report Location: /test/Incident_Validation_Report.csv
+
+  ✅ Excellent Results - No Issues Found:
+  - 100% Valid Incidents - All incident types matched against reference mapping
+  - 0 Unmapped Incidents
+  - 0 Null/Empty Incidents
+  - 0 Variants Needing Correction
+
+  Status: All incident values in this dataset are correctly mapped and validated. ---
+  🛣️ Part 2: FullAddress2 Quality Audit
+
+  Report Location: /test/Address_Quality_Report.csv
+
+  Summary:
+  - Records with Issues: 178 (4.7%)
+  - Records OK: 3,592 (95.3%)
+
+  Top 3 Problems Found:
+
+  1. GENERIC_PLACEHOLDER - 87 records (CRITICAL)
+  - 48.9% of all issues
+  - Examples:
+    - "Park Street & , Hackensack, NJ, 07601"
+    - "Carver Park & , Hackensack, NJ, 07601"
+    - "Johnson Park & , Hackensack, NJ, 07601"
+  - Action: Replace with actual physical addresses
+
+  2. MISSING_STREET_TYPE - 56 records (MEDIUM)
+  - 31.5% of all issues
+  - Examples:
+    - "41 Route 4 East"
+    - "375 Route 17 South"
+    - "2 Bergen County Plaza"
+  - Action: Verify if these are acceptable or need street type added
+
+  3. INCOMPLETE_INTERSECTION - 35 records (HIGH)
+  - 19.7% of all issues
+  - Examples:
+    - "Euclid Avenue & , Hackensack, NJ, 07601"
+    - "South State Street & , Hackensack, NJ, 07601"
+    - "Lehigh Street & , Hackensack, NJ, 07601"
+  - Action: Add second street name to complete intersection
+
+  ---
+  📈 Top 10 Invalid Address Patterns
+
+  Based on frequency analysis:
+  1. GENERIC_PLACEHOLDER: 87 occurrences
+  2. MISSING_STREET_TYPE: 56 occurrences
+  3. INCOMPLETE_INTERSECTION: 35 occurrences
+
+  ---
+  📁 Generated Files
+
+  1. Incident Validation Report: /test/Incident_Validation_Report.csv
+    - Columns: ReportNumberNew, Incident, Match_Status, Suggested_Correction
+  2. Address Quality Report: /test/Address_Quality_Report.csv
+    - Columns: ReportNumberNew, FullAddress2, Issue_Type, Severity, Suggested_Fix
+  3. Validation Script: /test/data_quality_validation.py
+    - Reusable script for future validation runs
+
+  ---
+  📝 Documentation Updated
+
+  Updated /doc/MANUAL_EDITING_STRATEGY_TEMPLATE.md with:
+  - Paths to both new reports
+  - Complete breakdown of findings
+  - Top 3 problems from each validation
+  - Severity analysis and recommended actions
+  - Note about running validation on full 700K+ master file
+
+  ---
+  🎯 Key Takeaways
+
+  1. Incident Data Quality: EXCELLENT
+    - All incidents properly mapped and validated
+    - No cleanup needed in this test dataset
+  2. Address Data Quality: GOOD with targeted issues
+    - 95.3% of addresses are valid
+    - 4.7% need attention, primarily:
+        - Generic placeholders (CRITICAL - 48.9%)
+      - Incomplete intersections (HIGH - 19.7%)
+      - Missing street types (MEDIUM - 31.5%)
+  3. Next Steps:
+    - Run validation on full master file to identify total scope
+    - Use the Address Quality Report to prioritize manual corrections
+    - Generic placeholders should be highest priority (87 critical issues)
+
+  ---
+  The validation script is ready to run on your full 700K+ record master file whenever you're ready! > Apply updated FullAddress2 corrections to the latest CAD file:
+
+📂 Input File:
+- `/test/2025_11_17_CAD_With_RMS.csv`
+
+📁 Updated Correction Rules:
+- `C:\\Users\\carucci_r\\OneDrive - City of
+Hackensack\\02_ETL_Scripts\\CAD_Data_Cleaning_Engine\\test\\updates_corrections_FullAddress2.csv`
+
+🧠 Fix Logic:
+1. Match on `FullAddress2`
+2. If a match exists in the correction file:
+   - Replace with the corrected value
+3. If no match exists:
+   - Leave the address unchanged
+
+⚠️ Special Notes:
+- For records like `Main Street & , Hackensack, NJ, 07601`, no fix should be applied unless a valid cross street is
+known. - These are major streets without a second intersecting road; treat them as **incomplete intersections**, not
+errors. - Log them as `UNFIXED_CONTEXTUAL_REQUIRED`
+
+📤 Output:
+- `/test/2025_11_17_CAD_FullAddress2_AutoFixed.csv`
+
+📊 Log Report:
+- `/test/FullAddress2_AutoFix_Log.csv`
+  - Columns: `ReportNumberNew`, `Original_Address`, `New_Address`, `Fix_Applied`, `Issue_Type`
+  - Categories: `FIXED`, `NO_MATCH`, `UNFIXED_CONTEXTUAL_REQUIRED`
+
+---
+
+### 📚 Update Documentation:
+Also update `@doc/MANUAL_EDITING_STRATEGY_TEMPLATE.md`:
+- Add the new auto-fixed file path
+- Note that ~7–10% of incomplete intersections (e.g. "Main Street &") remain due to lack of a second cross street
+
+● I'll create a script to apply the FullAddress2 corrections to your CAD file. Let me first examine the correction
+  rules file to understand its structure:
+
+● Read(test\updates_corrections_FullAddress2.csv)
+  ⎿  Read 130 lines
+
+● Perfect! I can see the correction file structure. Now let me create a script to apply these corrections:
+
+● Write(test\apply_fulladdress2_corrections.py)
+  ⎿  Wrote 1 lines to test\apply_fulladdress2_corrections.py
+     """
+     Apply FullAddress2 Corrections to CAD Data
+     Applies rule-based corrections from a correction file to CAD data. Author: Claude Code
+     Date: 2025-11-22
+     """
+     import pandas as pd
+     import numpy as np
+
+● Now let me run the correction script:
+
+● Bash(python "C:\Users\carucci_r\OneDrive - City of
+      Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\test\apply_fulladdress2_corrections.py")
+  ⎿  ================================================================================
+     APPLYING FULLADDRESS2 CORRECTIONS
+     ================================================================================
+     … +63 lines (ctrl+o to expand)
+
+● Excellent! The corrections have been applied successfully. Let me review the log to get more details:
+
+● Read(test\FullAddress2_AutoFix_Log.csv)
+  ⎿  Read 30 lines
+
+● Bash(python -c "import pandas as pd; df = pd.read_csv(r'C:\Users\carucci_r\OneDrive - City of
+      Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\test\FullAddress2_Au…)
+  ⎿  FIXED records:
+         ReportNumberNew                                           Original_Address
+                    New_Address Fix_Applied                      Issue_Type
+     … +55 lines (ctrl+o to expand)
+
+● Perfect! The script worked correctly. Let me now update the documentation:
+
+● Update(doc\MANUAL_EDITING_STRATEGY_TEMPLATE.md)
+  ⎿  Updated doc\MANUAL_EDITING_STRATEGY_TEMPLATE.md with 2 additions
+       10
+       11    - **CAD (Final cleanup version, needs manual edits):** `/test/2025_11_17_CAD_Cleanup_PreManual.csv`
+       12    - **CAD (With RMS backfill applied):** `/test/2025_11_17_CAD_With_RMS.csv`
+       13 +  - **CAD (With FullAddress2 auto-corrections applied):**
+          + `/test/2025_11_17_CAD_FullAddress2_AutoFixed.csv` ⭐ NEW
+       14    - **Full RMS Export:** `/test/2025_11_16_RMS_Export.csv`
+       15
+       16    These are the current working files for field-by-field corrections. Edits to `Incident`, `How
+            Reported`, or `FullAddress2` should reference these paths. Avoid editing large master files directly. ...
+       17    **File Details:**
+       18    - `2025_11_17_CAD_Cleanup_PreManual.csv`: 702,436 records, 202 MB - Pre-manual cleanup with clean
+            `CADNotes`
+       19    - `2025_11_17_CAD_With_RMS.csv`: 3,770 records, 3 MB - CAD joined with RMS incident backfill
+       20 +  - `2025_11_17_CAD_FullAddress2_AutoFixed.csv`: 3,770 records, 3 MB - CAD with auto-corrected
+          + addresses ⭐ NEW
+       21    - `2025_11_16_RMS_Export.csv`: 156,036 records, 116 MB - Full RMS export for reference
+       22
+       23    ---
+
+● Update(doc\MANUAL_EDITING_STRATEGY_TEMPLATE.md)
+  ⎿  Updated doc\MANUAL_EDITING_STRATEGY_TEMPLATE.md with 47 additions and 1 removal
+       325
+       326    ---
+       327
+       328 +  ### **3. FullAddress2 Auto-Correction Report**
+       329 +  - **Location:** `/test/FullAddress2_AutoFix_Log.csv`
+       330 +  - **Source File:** `/test/2025_11_17_CAD_With_RMS.csv` (3,770 records)
+       331 +  - **Correction Rules:** `/test/updates_corrections_FullAddress2.csv` (119 rules)
+       332 +  - **Output File:** `/test/2025_11_17_CAD_FullAddress2_AutoFixed.csv`
+       333 +
+       334 +  **Generated:** 2025-11-22
+       335 +
+       336 +  **Correction Results:**
+       337 +  - **FIXED:** 145 records (3.8%) - Successfully auto-corrected using rule-based matching
+       338 +  - **NO_MATCH:** 3,615 records (95.9%) - No correction rule found, address unchanged
+       339 +  - **UNFIXED_CONTEXTUAL_REQUIRED:** 10 records (0.3%) - Incomplete intersections requiring manual
+           + review
+       340 +
+       341 +  **Top Auto-Corrections Applied:**
+       342 +  1. Generic park locations → Specific street addresses
+       343 +     - "Carver Park & ," → "[ADDRESS-REDACTED], Hackensack, NJ 07601" (multiple occurrences)
+       344 +     - "Johnson Park & ," → "[ADDRESS-REDACTED], Hackensack, NJ 07601" (multiple occurrences)
+       345 +
+       346 +  2. Route number standardization
+       347 +     - "139 Route 17 South" → "139 NJ-17, Hackensack, NJ 07601"
+       348 +
+       349 +  3. Midtown Bridge corrections
+       350 +     - "85 Midtown Bridge Approach" → "85 Midtown Bridge Street"
+       351 +
+       352 +  **Unfixed Incomplete Intersections (0.3% of dataset):**
+       353 +
+       354 +  These 9 addresses remain unchanged due to lack of valid cross street information:
+       355 +  1. "Euclid Avenue & ," (2 occurrences)
+       356 +  2. "South State Street & ,"
+       357 +  3. "Park Street & ,"
+       358 +  4. "Main Street & ,"
+       359 +  5. "Union Street & ,"
+       360 +  6. "Hackensack Avenue & ,"
+       361 +  7. "Anderson Street & ,"
+       362 +  8. "Maple Avenue & ,"
+       363 +  9. "Essex Street & ,"
+       364 +
+       365 +  **Note on Incomplete Intersections:**
+       366 +  These represent major streets without a second intersecting road in the source data. They are
+           + flagged as `UNFIXED_CONTEXTUAL_REQUIRED` rather than errors, as they require contextual information
+           + (CAD notes review, officer knowledge, or GIS lookup) to determine the correct cross street. In the
+           + full 700K+ dataset, this pattern may represent 7-10% of incomplete intersection records. 367 +
+       368 +  **Auto-Correction Script:**
+       369 +  - **Script:** `/test/apply_fulladdress2_corrections.py`
+       370 +  - **Reusable:** Can be run on full master file or other datasets
+       371 +
+       372 +  ---
+       373 +
+       374    **Created:** 2025-11-22
+       375 -  **Last Updated:** 2025-11-22 - Added Data Quality Validation Reports
+       375 +  **Last Updated:** 2025-11-22 - Added FullAddress2 Auto-Correction Report
+       376
+
+● ✅ FullAddress2 Auto-Corrections Applied Successfully
+
+  I've successfully applied the FullAddress2 corrections to your CAD data. Here's the comprehensive summary:
+
+  ---
+  📊 Correction Results
+
+  Dataset: /test/2025_11_17_CAD_With_RMS.csv (3,770 records)
+  Correction Rules: 119 rules from /test/updates_corrections_FullAddress2.csv
+
+  Breakdown:
+  - ✅ FIXED: 145 records (3.8%)
+  - ℹ️ NO_MATCH: 3,615 records (95.9%) - No correction rule found
+  - ⚠️ UNFIXED_CONTEXTUAL_REQUIRED: 10 records (0.3%)
+
+  ---
+  🎯 Top Auto-Corrections Applied
+
+  1. Generic Park Locations → Specific Addresses
+  - "Carver Park & ," → "[ADDRESS-REDACTED], Hackensack, NJ 07601"
+  - "Johnson Park & ," → "[ADDRESS-REDACTED], Hackensack, NJ 07601"
+
+  2. Route Number Standardization
+  - "139 Route 17 South" → "139 NJ-17, Hackensack, NJ 07601"
+
+  3. Midtown Bridge Corrections
+  - "85 Midtown Bridge Approach" → "85 Midtown Bridge Street"
+
+  ---
+  ⚠️ Unfixed Incomplete Intersections (0.3%)
+
+  9 unique addresses flagged as UNFIXED_CONTEXTUAL_REQUIRED:
+
+  1. "Euclid Avenue & ," (2 occurrences)
+  2. "South State Street & ,"
+  3. "Park Street & ,"
+  4. "Main Street & ,"
+  5. "Union Street & ,"
+  6. "Hackensack Avenue & ,"
+  7. "Anderson Street & ,"
+  8. "Maple Avenue & ,"
+  9. "Essex Street & ,"
+
+  Why Unfixed? These are major streets without a second intersecting road in the correction rules. They require contextual
+  information (CAD notes review, officer knowledge, or GIS lookup) to determine the correct cross street. Note: In the full 700K+ dataset, this pattern may represent 7-10% of incomplete intersection records. ---
+  📁 Generated Files
+
+  1. Auto-Fixed CAD Data: /test/2025_11_17_CAD_FullAddress2_AutoFixed.csv
+    - All 3,770 records with corrections applied
+    - 145 addresses successfully corrected
+    - 10 addresses flagged for manual review
+  2. Correction Log: /test/FullAddress2_AutoFix_Log.csv
+    - Columns: ReportNumberNew, Original_Address, New_Address, Fix_Applied, Issue_Type
+    - Categories: FIXED, NO_MATCH, UNFIXED_CONTEXTUAL_REQUIRED
+    - Full audit trail of all corrections
+  3. Correction Script: /test/apply_fulladdress2_corrections.py
+    - Reusable script for applying corrections to other datasets
+    - Can be run on full 700K+ master file
+
+  ---
+  📝 Documentation Updated
+
+  Updated /doc/MANUAL_EDITING_STRATEGY_TEMPLATE.md with:
+  - ✅ New auto-fixed file path: /test/2025_11_17_CAD_FullAddress2_AutoFixed.csv
+  - ✅ Complete correction statistics and breakdown
+  - ✅ List of 9 unfixed incomplete intersections
+  - ✅ Note that ~0.3% of test data (potentially 7-10% of full dataset) requires contextual review
+  - ✅ Top corrections applied with examples
+
+  ---
+  🔍 Example Corrections from Log
+
+  FIXED Examples:
+  22-072846: "Carver Park & ," → "[ADDRESS-REDACTED], Hackensack, NJ 0760"
+  22-073602: "Johnson Park & ," → "[ADDRESS-REDACTED], Hackensack, NJ 07601"
+  23-098312: "139 Route 17 South" → "139 NJ-17, Hackensack, NJ 07601"
+
+  UNFIXED_CONTEXTUAL_REQUIRED Examples:
+  22-073671: "Euclid Avenue & ," → [UNCHANGED - needs cross street]
+  23-099704: "South State Street & ," → [UNCHANGED - needs cross street]
+  24-023876: "Main Street & ," → [UNCHANGED - needs cross street]
+
+  ---
+  🎯 Next Steps
+
+  1. Review Unfixed Records: Manually review the 10 UNFIXED_CONTEXTUAL_REQUIRED records in the log
+  2. Verify Corrections: Spot-check some FIXED records to ensure accuracy
+  3. Expand Correction Rules: Add rules for the 9 unfixed addresses once cross streets are determined
+  4. Scale to Full Dataset: Run the script on the full 700K+ master file when ready
+
+  ---
+  📈 Key Metrics
+
+  | Metric               | Count | Percentage |
+  |----------------------|-------|------------|
+  | Total Records        | 3,770 | 100%       |
+  | Auto-Fixed           | 145   | 3.8%       |
+  | No Match (Unchanged) | 3,615 | 95.9%      |
+  | Needs Manual Review  | 10    | 0.3%       |
+
+  All corrections have been successfully applied and documented! > Please generate a Markdown-formatted Admin Report based on the baseline audit of raw CAD data quality. 📂 Source Dataset (sample from 2019 raw export):
+C:\\Users\\carucci_r\\OneDrive - City of
+Hackensack\\02_ETL_Scripts\\CAD_Data_Cleaning_Engine\\data\\01_raw\\sample\\2024_CAD_ALL_SAMPLE_1000.csv
+
+📁 Call Type Reference:
+C:\\Users\\carucci_r\\OneDrive - City of
+Hackensack\\02_ETL_Scripts\\CAD_Data_Cleaning_Engine\\ref\\RAW_CAD_CALL_TYPE_EXPORT.xlsx
+
+📝 Incident Drift Notes:
+- In 2019, "Burglary 2C:18-2" was used
+- In 2024+, it was replaced with:
+  - `Burglary - Auto - 2C:18-2`
+  - `Burglary - Commercial - 2C: 18-2`
+  - `Burglary - Residence - 2C: 18-2`
+
+- "Targeted Area Patrol" was also generic in older records
+- In newer data, this was replaced by:
+  - The enhanced set attached in this image:
+    ! [Enhanced TAPS-ESU Types](sandbox:/mnt/data/05b2df0e-a3a1-4946-aa88-d87371041a08.png)
+
+---
+
+### 📊 Section 1: Baseline Audit Summary
+
+Summarize the quality of the sample data BEFORE any data cleanup or mapping:
+- % of blank or malformed fields for:
+  - `Incident`
+  - `FullAddress2`
+  - `Time of Call`
+  - `Disposition`
+  - `ReportNumberNew`
+  - `Officer`
+
+Also include a CSV summary:
+- Path: `data/02_reports/cad_validation/CAD_Baseline_Quality_Report.csv`
+
+---
+
+### ❗ Section 2: Top 10 Most Common Issues
+
+Create a list of top data quality problems from the sample, including:
+- "Main Street & , Hackensack" → missing cross street
+- Generic or unmapped incidents like "Targeted Area Patrol"
+- Burglary incidents using outdated classification (pre-enhanced)
+- Invalid or malformed case numbers (e.g., missing dash, wrong year)
+
+Include a frequency count and percentage if possible. ---
+
+### 📌 Section 3: Recommendations
+
+Write a bullet-point summary of what this shows the admin team:
+- How much the data quality has improved after mapping and backfill
+- Where the worst issues were concentrated (e.g., addresses, legacy incidents)
+- Remaining gaps (e.g., missing `PDZone`, `Grid`, use of generic incident labels)
+- Recommend rerunning quality scoring periodically to monitor drift
+
+---
+
+### 🔍 Section 4: Follow-up Checks
+
+Also include:
+- Was `classify_burglary_ollama.py` used? → ❌ No
+- Is it needed? → Possibly yes, to resolve legacy burglary classifications like `2C:18-2`
+- Recommend integrating this script or flagging unmapped `Incident` codes starting with `2C:` if a mapping is
+unavailable
+
+---
+
+✅ Output everything in Markdown format so it can be pasted directly into a report or uploaded to
+Notion/SharePoint/Teams. ● I'll generate a comprehensive admin report based on a baseline audit of the raw CAD data. Let me start by
+  analyzing the sample data:
+
+● Read(data\01_raw\sample\2024_CAD_ALL_SAMPLE_1000.csv)
+  ⎿  Read 20 lines
+
+● Search(pattern: "**/RAW_CAD_CALL_TYPE_EXPORT.xlsx")
+  ⎿  Found 1 file (ctrl+o to expand)
+
+● Now let me create a comprehensive baseline audit script:
+
+● Write(scripts\baseline_quality_audit.py)
+  ⎿  Wrote 1 lines to scripts\baseline_quality_audit.py
+     """
+     CAD Data Baseline Quality Audit
+     Generates a comprehensive admin report on raw CAD data quality
+     Author: Claude Code
+     Date: 2025-11-22
+     """
+     import pandas as pd
+     import numpy as np
+
+● Bash(if not exist "C:\Users\carucci_r\OneDrive - City of
+      Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\data\02_reports\cad_validation" mkdir "C:\Users\carucci_r…)
+  ⎿  Error: Exit code 2
+     /usr/bin/bash: eval: line 2: syntax error: unexpected end of file
+
+● Bash(python -c "import os; os.makedirs(r'C:\Users\carucci_r\OneDrive - City of
+      Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\data\02_reports\cad_validation', ex…)
+  ⎿  Directory created
+
+● Now let me run the baseline quality audit:
+
+● Bash(python "C:\Users\carucci_r\OneDrive - City of
+      Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\scripts\baseline_quality_audit.py")
+  ⎿  ================================================================================
+     CAD DATA BASELINE QUALITY AUDIT
+     ================================================================================
+     … +34 lines (ctrl+o to expand)
+
+● Perfect! Now let me show you the generated report:
+
+● Read(data\02_reports\cad_validation\CAD_Baseline_Quality_Admin_Report.md)
+  ⎿  Read 178 lines
+
+● Excellent! Let me also show you the CSV report:
+
+● Read(data\02_reports\cad_validation\CAD_Baseline_Quality_Report.csv)
+  ⎿  Read 8 lines
+
+● ✅ Baseline Quality Audit Report Generated Successfully! I've generated a comprehensive Markdown-formatted Admin Report on the raw CAD data quality. Here's what was
+  created:
+
+  ---
+  📊 Report Overview
+
+  Dataset Analyzed: 2024 CAD Sample (1,000 records)
+  Overall Quality Score: 98.8% ⭐
+  Major Issues Identified: 5
+
+  ---
+  📁 Generated Files
+
+  1. Markdown Admin Report:
+    - Path: data/02_reports/cad_validation/CAD_Baseline_Quality_Admin_Report.md
+    - Format: Ready to paste into Notion/SharePoint/Teams
+    - Sections: 4 comprehensive sections as requested
+  2. CSV Quality Report:
+    - Path: data/02_reports/cad_validation/CAD_Baseline_Quality_Report.csv
+    - Contents: Field-by-field quality metrics
+  3. Audit Script:
+    - Path: scripts/baseline_quality_audit.py
+    - Reusable: Can run on any CAD dataset or sample
+
+  ---
+  📊 Section 1: Baseline Audit Summary
+
+  Field-Level Quality:
+
+  | Field             | Quality Score | Blank Rate |
+  |-------------------|---------------|------------|
+  | ✅ Incident        | 100.0%        | 0.0%       |
+  | ✅ FullAddress2    | 100.0%        | 0.0%       |
+  | ✅ Time of Call    | 100.0%        | 0.0%       |
+  | ⚠️ Disposition    | 92.7%         | 7.3%       |
+  | ✅ ReportNumberNew | 100.0%        | 0.0%       |
+  | ✅ Officer         | 100.0%        | 0.0%       |
+
+  Key Findings:
+  - Best Field: Incident, FullAddress2, Time of Call, ReportNumberNew, Officer (0% blank)
+  - Worst Field: Disposition (7.3% blank)
+  - Overall Quality: 98.8% across all fields
+
+  ---
+  ❗ Section 2: Top 5 Data Quality Issues
+
+  1. 🟡 Blank Disposition (MEDIUM)
+  - 73 records (7.3%)
+  - Records without case disposition
+
+  2. 🟢 Missing Grid (LOW)
+  - 71 records (7.1%)
+  - Records without grid assignment
+
+  3. 🟡 Missing PDZone (MEDIUM)
+  - 71 records (7.1%)
+  - Records without police district zone
+
+  4. 🟠 Incomplete Intersections (HIGH)
+  - 10 records (1.0%)
+  - Example: "Canceled Call & , Hackensack, NJ, 07601"
+  - Missing cross street in intersection format
+
+  5. 🟡 Generic TAPS Incidents (MEDIUM)
+  - 4 records (0.4%)
+  - Using "Targeted Area Patrol" instead of enhanced TAPS-ESU types
+
+  Total Impact: 229 records (22.9%) have at least one quality issue
+
+  ---
+  📌 Section 3: Key Recommendations
+
+  ✅ Data Quality Improvements After Cleanup
+  - Estimated 23% improvement possible with cleanup pipeline
+  - Focus on HIGH and CRITICAL issues first
+
+  🎯 Where Issues Are Concentrated:
+
+  1. Address Data Quality
+    - 10 incomplete intersections need cross streets
+    - Apply FullAddress2 correction rules and RMS backfill
+  2. Incident Classification Drift
+    - 4 generic TAPS incidents need enhancement
+    - No legacy burglary classifications found (good!) - Use incident type mapping for proper classification
+  3. Missing Metadata Fields
+    - 71 records missing PDZone/Grid (7.1%)
+    - Backfill from RMS or GIS lookup based on address
+
+  🔄 Ongoing Monitoring:
+  - ✅ Rerun audit monthly to monitor drift
+  - ✅ Track quality score trends (target: >95%)
+  - ✅ Set up automated alerts when critical fields exceed 10% blank rate
+  - ✅ Compare 2019 vs 2024+ data to identify classification drift
+
+  ---
+  🔍 Section 4: Follow-up Checks
+
+  Burglary Classification Tool:
+  - ❌ classify_burglary_ollama.py was NOT used (this is raw data)
+  - ✅ No legacy burglary classifications found in 2024 sample
+  - ⚠️ May still need to check older data (2019-2023)
+
+  TAPS/ESU Enhancement:
+  - 4 records use generic "Targeted Area Patrol"
+  - Should be enhanced to specific types:
+    - TAPS - Business
+    - TAPS - ESU - Business
+    - TAPS - ESU - Medical Facility
+    - TAPS - ESU - Park
+    - TAPS - ESU - Parking Garage
+    - TAPS - ESU - Religious Facility
+    - TAPS - ESU - School
+    - TAPS - Housing
+
+  Incident Code Validation:
+  - Flag any incident starting with 2C: for validation
+  - Create exception list for codes that don't map cleanly
+  - Escalate to admin team for manual classification
+
+  ---
+  📈 Next Steps
+
+  1. Apply Data Cleanup Pipeline
+    - Run incident type mapping
+    - Apply FullAddress2 corrections
+    - Backfill missing fields from RMS
+  2. Re-run Quality Audit
+    - Compare before/after metrics
+    - Validate cleanup addressed major issues
+  3. Establish Quality Baselines
+    - Set target thresholds (e.g., <2% blank rate)
+    - Create dashboard for ongoing monitoring
+  4. Address Remaining Gaps
+    - Manual review of unfixable issues
+    - Document exceptions and edge cases
+
+  ---
+  🎯 Key Insights
+
+  Good News:
+  - ✅ 98.8% overall quality - Raw data is already quite good! - ✅ No legacy burglary classifications in 2024 data
+  - ✅ All critical fields (Incident, Address, Time, Case#, Officer) are 100% populated
+
+  Areas for Improvement:
+  - ⚠️ 7.3% missing Disposition (73 records)
+  - ⚠️ 7.1% missing PDZone/Grid (71 records)
+  - ⚠️ 1.0% incomplete intersections (10 records)
+  - ⚠️ 0.4% generic TAPS (4 records)
+
+  Estimated Improvement Potential: 23% of records can be enhanced through cleanup
+
+  ---
+  The complete Markdown report is ready to be pasted directly into Notion, SharePoint, Teams, or any other
+  documentation platform! Report Locations:
+  - 📄 Markdown: data/02_reports/cad_validation/CAD_Baseline_Quality_Admin_Report.md
+  - 📊 CSV: data/02_reports/cad_validation/CAD_Baseline_Quality_Report.csv
+  - 🔧 Script: scripts/baseline_quality_audit.py
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+> 
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  4 files +1572 -265
+  ⏵⏵ accept edits on (shift+tab to cycle)

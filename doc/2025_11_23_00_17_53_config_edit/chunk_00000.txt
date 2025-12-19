@@ -1,0 +1,156 @@
+Got it. Your control lists live in `config\config_enhanced.json`. The loader reads that file, validates it, merges any missing keys from defaults, and falls back to defaults only when the JSON is missing or invalid. ### What is wired now
+
+* `_load_config` loads `config_enhanced.json`, merges defaults if a key is missing, or uses defaults if the file is missing or invalid. * `validation_lists.how_reported` drives the “How Reported” validator, after normalization to `9-1-1`, WALK-IN, PHONE, etc. * Dispositions, zones, and incident buckets read from the same JSON and feed validation. * ESRI export pulls its 21 fields in a stable schema. Your cleaning step already fixes mojibake and normalizes “How Reported.” 
+
+### Where you edit
+
+* Edit `config\config_enhanced.json` to update spellings, zones, buckets, or dispositions. The script will use those values on load. * Incident normalization and Response Type backfill come from `CallType_Categories.csv` in your mapping loader. Keep the JSON for control lists, and the CSV for Incident mappings. ### JSON examples
+
+Add or tweak lists in `config\config_enhanced.json`:
+
+```json
+{
+  "address_abbreviations": {
+    " ST ": " STREET ",
+    " AVE ": " AVENUE ",
+    " BLVD ": " BOULEVARD ",
+    " PL ": " PLACE ",
+    " CT ": " COURT "
+  },
+  "validation_lists": {
+    "valid_dispositions": [
+      "COMPLETE","ADVISED","ARREST","UNFOUNDED","CANCELLED","GOA","UTL","SEE REPORT","REFERRED"
+    ],
+    "valid_zones": ["5","6","7","8","9"],
+    "emergency_incidents": ["ROBBERY","ASSAULT","BURGLARY","SHOOTING","STABBING"],
+    "non_emergency_incidents": ["NOISE COMPLAINT","PARKING VIOLATION","CIVIL DISPUTE"],
+    "how_reported": [
+      "9-1-1","WALK-IN","PHONE","SELF-INITIATED","RADIO","TELETYPE","FAX",
+      "OTHER - SEE NOTES","EMAIL","MAIL","VIRTUAL PATROL","CANCELED CALL"
+    ]
+  }
+}
+```
+
+
+
+### Cursor patch prompt
+
+Use this in Cursor to keep config the source of truth and reload without restarting. **Title:** Respect `config_enhanced.json` lists. Add hot reload. Keep mapping from CSV. **Tasks**
+
+* Confirm `_load_config` merges defaults and fails safe. No changes if behavior matches. * Keep “How Reported” validation bound to `validation_lists.how_reported`. Do not hardcode values in code. * Ensure ESRI export stays at 21 columns. No schema drift. * Keep Incident and Response Type mapping from `CallType_Categories.csv`. Do not move that into JSON. * Add a method to reload the JSON at runtime. * Add a smoke test that flips one disposition and proves the validator picks it up after reload. **Code changes**
+
+1. Add hot reload to `CADDataValidator`:
+
+```python
+def reload_config(self, config_path: str | None = None):
+    path = config_path or 'config_enhanced.json'
+    self.config = self._load_config(path)
+    # Rebuild any lookups that depend on config
+    self.validation_rules = self._initialize_validation_rules()
+    return self.config
+```
+
+2. Minimal test to prove reload:
+
+```python
+def test_config_reload(tmp_path):
+    cfg = {
+        "address_abbreviations": {" ST ": " STREET "},
+        "validation_lists": {
+            "valid_dispositions": ["COMPLETE","ADVISED"],
+            "valid_zones": ["5","6","7","8","9"],
+            "emergency_incidents": ["ROBBERY"],
+            "non_emergency_incidents": ["NOISE COMPLAINT"],
+            "how_reported": ["9-1-1","PHONE"]
+        }
+    }
+    p = tmp_path / "config_enhanced.json"
+    p.write_text(json.dumps(cfg))
+    v = CADDataValidator(config_path=str(p))
+    # change allowed disposition and reload
+    cfg["validation_lists"]["valid_dispositions"].append("REFERRED")
+    p.write_text(json.dumps(cfg))
+    v.reload_config(str(p))
+    assert "REFERRED" in v.config["validation_lists"]["valid_dispositions"]
+```
+
+**Run**
+
+* Update `config\config_enhanced.json`. * Run `pytest scripts/01_validate_and_clean.py -q`. * Process one CAD file to regenerate the sample and report. Confirm “How Reported” uses your list, dispositions validate against the JSON, and incident mapping still comes from the CSV. If you want, I will add a short CLI flag `--reload-config` that calls `reload_config` before validation. Here you go. Adds a `--reload-config` flag. Optional `--config` to point at a specific JSON. ### What the flag does
+
+* Loads `config\config_enhanced.json` on startup. * If `--reload-config` is passed, reloads the JSON once more right before validation. Useful after you edit the file between runs. ### Patch
+
+Apply this diff to `scripts/01_validate_and_clean.py`. ```diff
+@@
+ import json
+ import logging
++import argparse
+ from typing import Any, Dict
+@@
+ class CADDataValidator:
+@@
+     def _load_config(self, config_path: str) -> Dict[str, Any]:
+         """Load and validate configuration from a JSON file with a fallback default.""" ...
+         return default_config
++
++    # ---- NEW: runtime reload ----
++    def reload_config(self, config_path: str | None = None) -> Dict[str, Any]:
++        """Reload configuration JSON and rebuild lookups.""" +        path = config_path or self.config_path
++        self.config = self._load_config(path)
++        # Rebuild any lookups or cached sets that depend on config
++        if hasattr(self, "_initialize_validation_rules"):
++            self.validation_rules = self._initialize_validation_rules()
++        return self.config
+@@
+-def main():
+-    # existing entry point
+-    validator = CADDataValidator(config_path='config\\config_enhanced.json')
+-    validator.run()
++def main():
++    parser = argparse.ArgumentParser(description="Validate and clean CAD exports")
++    parser.add_argument("--config", default="config\\config_enhanced.json",
++                        help="Path to config JSON. Default: config\\config_enhanced.json")
++    parser.add_argument("--reload-config", action="store_true",
++                        help="Reload config right before validation starts")
++    # keep any existing args you already support, e.g. --input, --sample, etc. +    args = parser.parse_args()
++
++    validator = CADDataValidator(config_path=args.config)
++
++    # Optional hot reload before processing
++    if args.reload_config:
++        logging.info("Reloading configuration at startup...")
++        validator.reload_config(args.config)
++
++    validator.run()
+@@
+ if __name__ == "__main__":
+     pd.options.mode.copy_on_write = True
+     main()
+```
+
+If `CADDataValidator.__init__` does not store the path, add this small tweak inside `__init__`:
+
+```python
+self.config_path = config_path
+```
+
+### Usage
+
+```bash
+# default config, normal run
+python scripts/01_validate_and_clean.py
+
+# explicit config path
+python scripts/01_validate_and_clean.py --config C:\path\to\config_enhanced.json
+
+# hot reload before validation
+python scripts/01_validate_and_clean.py --reload-config
+
+# both together
+python scripts/01_validate_and_clean.py --config C:\path\to\config_enhanced.json --reload-config
+```
+
+### Quick test
+
+* Change a value in `config\config_enhanced.json` such as adding a disposition. * Run with `--reload-config`. * Confirm the validator recognizes the new value without further edits.

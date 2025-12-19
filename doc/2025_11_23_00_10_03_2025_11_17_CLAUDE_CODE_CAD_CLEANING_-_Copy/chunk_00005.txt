@@ -1,0 +1,620 @@
+619 -      print("\n" + "=" * 60)
+       620 -      print("ADDING DATA QUALITY FLAGS")
+       621 -      print("=" * 60)
+       622 -
+       623 -      cad_df['data_quality_flag'] = 0
+       624 -
+       625 -      flags_set = 0
+       626 -
+       627 -      for idx, row in cad_df.iterrows():
+       628 -          needs_review = False
+       629 -
+       630 -          # Check for missing Response_Type
+       631 -          if pd.isna(row.get('Response_Type')) or str(row.get('Response_Type', '')).strip() == '':
+       632 -              needs_review = True
+       633 -
+       634 -          # Check for missing/invalid address
+       635 -          if pd.isna(row.get('FullAddress2')) or str(row.get('FullAddress2', '')).strip() == '':
+       636 -              needs_review = True
+       637 -
+       638 -          # Check for missing Disposition
+       639 -          if pd.isna(row.get('Disposition')) or str(row.get('Disposition', '')).strip() == '':
+       640 -              needs_review = True
+       641 -
+       642 -          if needs_review:
+       643 -              cad_df.at[idx, 'data_quality_flag'] = 1
+       644 -              flags_set += 1
+       645 -
+       646 -      print(f"  Flagged {flags_set:,} records for review")
+       647 -
+       648 -      return cad_df
+       649 -
+       650 -
+       651 -  def generate_esri_export(cad_df):
+       652 -      """Generate the final ESRI export file.""" 653 -      print("\n" + "=" * 60)
+       654 -      print("GENERATING ESRI EXPORT")
+       655 -      print("=" * 60)
+       656 -
+       657 -      # Define output columns per ESRI schema
+       658 -      esri_columns = [
+       659 -          'TimeOfCall', 'cYear', 'cMonth', 'Hour', 'DayofWeek',
+       660 -          'Incident', 'Response_Type', 'How Reported',
+       661 -          'FullAddress2', 'Grid', 'PDZone',
+       662 -          'Officer', 'Disposition', 'ReportNumberNew',
+       663 -          'Latitude', 'Longitude', 'data_quality_flag'
+       664 -      ]
+       665 -
+       666 -      # Ensure all columns exist
+       667 -      for col in esri_columns:
+       668 -          if col not in cad_df.columns:
+       669 -              cad_df[col] = np.nan
+       670 -
+       671 -      # Select and order columns
+       672 -      export_df = cad_df[esri_columns].copy()
+       673 -
+       674 -      # Generate output filename
+       675 -      timestamp = datetime.now().strftime('%Y%m%d')
+       676 -      output_file = OUTPUT_DIR / f"CAD_ESRI_Final_{timestamp}.xlsx"
+       677 -
+       678 -      # Save to Excel
+       679 -      export_df.to_excel(output_file, index=False)
+       680 -
+       681 -      print(f"  Exported {len(export_df):,} records")
+       682 -      print(f"  Output file: {output_file}")
+       683 -
+       684 -      metrics['total_records'] = len(export_df)
+       685 -
+       686 -      return output_file, export_df
+       687 -
+       688 -
+       689 -  def generate_validation_report(cad_df, output_file):
+       690 -      """Generate comprehensive validation report.""" 691 -      print("\n" + "=" * 60)
+       692 -      print("GENERATING VALIDATION REPORT")
+       693 -      print("=" * 60)
+       694 -
+       695 -      # Calculate final statistics
+       696 -      total = len(cad_df)
+       697 -
+       698 -      # Response_Type coverage
+       699 -      with_response = cad_df['Response_Type'].notna() & (cad_df['Response_Type'] != '')
+       700 -      response_coverage = (with_response.sum() / total) * 100
+       701 -
+       702 -      # Quality score
+       703 -      quality_issues = cad_df['data_quality_flag'].sum()
+       704 -      quality_score = ((total - quality_issues) / total) * 100
+       705 -
+       706 -      # Generate report
+       707 -      report_content = f"""# ESRI Production Deployment - Validation Report
+       708 -
+       709 -  **Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+       710 -  **Output File:** {output_file}
+       711 -
+       712 -  ## Summary Statistics
+       713 -
+       714 -  | Metric | Value |
+       715 -  |--------|-------|
+       716 -  | Total Records | {total:,} |
+       717 -  | Response_Type Coverage | {response_coverage:.2f}% |
+       718 -  | Data Quality Score | {quality_score:.2f}% |
+       719 -  | Records Needing Review | {quality_issues:,} |
+       720 -
+       721 -  ## Processing Results
+       722 -
+       723 -  ### Response_Type Mapping
+       724 -  - Records mapped: {metrics['response_type_mapped']:,}
+       725 -  - Unmapped incident types: {metrics['response_type_unmapped']}
+       726 -
+       727 -  ### TAPS Variant Resolution (Blocker #8)
+       728 -  - Records resolved: {metrics['taps_resolved']:,}
+       729 -
+       730 -  ### Domestic Dispute Classification (Blocker #9)
+       731 -  - Reclassified to Domestic Violence: {metrics['domestic_to_dv']:,}
+       732 -  - Reclassified to Dispute: {metrics['domestic_to_dispute']:,}
+       733 -
+       734 -  ### TRO/FRO Splitting (Blocker #10)
+       735 -  - Records split: {metrics['tro_fro_split']:,}
+       736 -  - Records for manual review: {metrics['tro_fro_manual_review']:,}
+       737 -
+       738 -  ### Disposition Normalization
+       739 -  - Records normalized: {metrics['disposition_normalized']:,}
+       740 -
+       741 -  ### Address Backfill from RMS
+       742 -  - Records improved: {metrics['address_backfilled']:,}
+       743 -
+       744 -  ## Data Quality Breakdown
+       745 -
+       746 -  """
+       747 -
+       748 -      # Add Response_Type distribution
+       749 -      report_content += "### Response_Type Distribution\n\n"
+       750 -      response_dist = cad_df['Response_Type'].value_counts()
+       751 -      report_content += "| Response Type | Count | Percentage |\n"
+       752 -      report_content += "|--------------|-------|------------|\n"
+       753 -      for resp_type, count in response_dist.items():
+       754 -          pct = (count / total) * 100
+       755 -          report_content += f"| {resp_type} | {count:,} | {pct:.2f}% |\n"
+       756 -
+       757 -      # Add Disposition distribution
+       758 -      report_content += "\n### Disposition Distribution\n\n"
+       759 -      disp_dist = cad_df['Disposition'].value_counts().head(15)
+       760 -      report_content += "| Disposition | Count |\n"
+       761 -      report_content += "|------------|-------|\n"
+       762 -      for disp, count in disp_dist.items():
+       763 -          report_content += f"| {disp} | {count:,} |\n"
+       764 -
+       765 -      # Quality assessment
+       766 -      report_content += f"""
+       767 -  ## Quality Assessment
+       768 -
+       769 -  ### Pass/Fail Criteria
+       770 -
+       771 -  | Criteria | Status | Notes |
+       772 -  |----------|--------|-------|
+       773 -  | Response_Type Coverage >= 99% | {'✅ PASS' if response_coverage >= 99 else '❌ FAIL'} |
+           - {response_coverage:.2f}% |
+       774 -  | Data Quality Score >= 95% | {'✅ PASS' if quality_score >= 95 else '⚠️ WARNING' if quality_score
+           - >= 90 else '❌ FAIL'} | {quality_score:.2f}% |
+       775 -  | Disposition Standardized | ✅ PASS | {metrics['disposition_normalized']:,} normalized |
+       776 -  | Address Backfill Complete | ✅ PASS | {metrics['address_backfilled']:,} improved |
+       777 -
+       778 -  ### Overall Status
+       779 -
+       780 -  **{'✅ PRODUCTION READY' if response_coverage >= 99 and quality_score >= 95 else '⚠️ NEEDS REVIEW'
+           - if response_coverage >= 95 else '❌ NOT READY'}**
+       781 -
+       782 -  ## Next Steps
+       783 -
+       784 -  """
+       785 -
+       786 -      if response_coverage < 99:
+       787 -          report_content += "1. Review unmapped incident types and add mappings\n"
+       788 -      if metrics['tro_fro_manual_review'] > 0:
+       789 -          report_content += f"2. Review {metrics['tro_fro_manual_review']} TRO/FRO records in
+           - tro_fro_manual_review.csv\n"
+       790 -      if quality_score < 95:
+       791 -          report_content += "3. Address records with data_quality_flag = 1\n"
+       792 -
+       793 -      report_content += "\n---\n*Report generated by ESRI Production Deployment Script*\n"
+       794 -
+       795 -      # Save report
+       796 -      report_file = REPORTS_DIR / "esri_deployment_report.md"
+       797 -      with open(report_file, 'w', encoding='utf-8') as f:
+       798 -          f.write(report_content)
+       799 -
+       800 -      print(f"  Validation report saved to: {report_file}")
+       801 -
+       802 -      # Save change log
+       803 -      if metrics['changes']:
+       804 -          change_df = pd.DataFrame(metrics['changes'])
+       805 -          change_file = REPORTS_DIR / "change_log.csv"
+       806 -          change_df.to_csv(change_file, index=False)
+       807 -          print(f"  Change log saved to: {change_file}")
+       808 -
+       809 -      return report_file
+       810 -
+       811 -
+       812 -  def main():
+       813 -      """Main execution function.""" 814 -      print("\n" + "=" * 60)
+       815 -      print("ESRI PRODUCTION DEPLOYMENT - DATA CLEANING")
+       816 -      print("=" * 60)
+       817 -      print(f"Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+       818 -
+       819 -      try:
+       820 -          # Load all data
+       821 -          cad_df, dv_df, rms_df, mappings_df, raw_calltypes_df = load_data()
+       822 -
+       823 -          # Build Response_Type mapping
+       824 -          response_map = build_response_type_mapping(mappings_df, raw_calltypes_df)
+       825 -
+       826 -          # Apply Response_Type mappings
+       827 -          cad_df = apply_response_type_mapping(cad_df, response_map)
+       828 -
+       829 -          # Resolve TAPS variants
+       830 -          cad_df = resolve_taps_variants(cad_df)
+       831 -
+       832 -          # Classify Domestic Disputes
+       833 -          cad_df = classify_domestic_disputes(cad_df, dv_df)
+       834 -
+       835 -          # Split TRO/FRO violations
+       836 -          cad_df = split_tro_fro(cad_df, rms_df)
+       837 -
+       838 -          # Normalize Disposition
+       839 -          cad_df = normalize_disposition(cad_df)
+       840 -
+       841 -          # Backfill addresses from RMS
+       842 -          cad_df = backfill_address_from_rms(cad_df, rms_df)
+       843 -
+       844 -          # Add data quality flags
+       845 -          cad_df = add_data_quality_flags(cad_df)
+       846 -
+       847 -          # Generate ESRI export
+       848 -          output_file, export_df = generate_esri_export(cad_df)
+       849 -
+       850 -          # Generate validation report
+       851 -          report_file = generate_validation_report(export_df, output_file)
+       852 -
+       853 -          print("\n" + "=" * 60)
+       854 -          print("DEPLOYMENT COMPLETE")
+       855 -          print("=" * 60)
+       856 -          print(f"Output: {output_file}")
+       857 -          print(f"Report: {report_file}")
+       858 -          print(f"Finished: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+       859 -
+       860 -      except Exception as e:
+       861 -          print(f"\nERROR: {str(e)}")
+       862 -          import traceback
+       863 -          traceback.print_exc()
+       864 -          raise
+       865 -
+       866 -
+       867 -  if __name__ == "__main__":
+       868 -      main()
+         1 +  #!/usr/bin/env python3
+         2 +  """
+         3 +  ESRI Production Deployment - Final Data Cleaning Script (Optimized)
+         4 +  ====================================================================
+         5 +  Uses vectorized pandas operations for speed with 700K+ records. 6 +  """
+         7 +
+         8 +  import pandas as pd
+         9 +  import numpy as np
+        10 +  import re
+        11 +  import os
+        12 +  from datetime import datetime
+        13 +  from pathlib import Path
+        14 +
+        15 +  # Configuration
+        16 +  BASE_DIR = Path(r"C:\Users\carucci_r\OneDrive - City of
+           + Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine")
+        17 +  OUTPUT_DIR = BASE_DIR / "data" / "ESRI_CADExport"
+        18 +  REPORTS_DIR = BASE_DIR / "data" / "02_reports"
+        19 +
+        20 +  # Input files
+        21 +  CAD_FILE = BASE_DIR / "ref" / "2019_2025_11_17_Updated_CAD_Export.xlsx"
+        22 +  DV_FILE = BASE_DIR / "ref" / "2025_11_17_DV_Offense_Report_Updated.xlsx"
+        23 +  RMS_FILE = BASE_DIR / "data" / "rms" / "2019_2025_11_16_16_57_00_ALL_RMS_Export.xlsx"
+        24 +  UNMAPPED_FILE = BASE_DIR / "ref" / "Unmapped_Response_Type.csv"
+        25 +  RAW_CALLTYPES_FILE = BASE_DIR / "ref" / "RAW_CAD_CALL_TYPE_EXPORT.xlsx"
+        26 +
+        27 +  # Create output directories
+        28 +  OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+        29 +  REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+        30 +
+        31 +  # Tracking metrics
+        32 +  metrics = {
+        33 +      'total_records': 0,
+        34 +      'response_type_mapped': 0,
+        35 +      'taps_resolved': 0,
+        36 +      'domestic_to_dv': 0,
+        37 +      'domestic_to_dispute': 0,
+        38 +      'tro_fro_split': 0,
+        39 +      'tro_fro_manual_review': 0,
+        40 +      'disposition_normalized': 0,
+        41 +      'address_backfilled': 0,
+        42 +  }
+        43 +
+        44 +
+        45 +  def fix_mojibake(text):
+        46 +      """Fix mojibake characters in text.""" 47 +      if pd.isna(text):
+        48 +          return text
+        49 +      text = str(text)
+        50 +      text = text.replace('–', '-')
+        51 +      text = text.replace('—', '-')
+        52 +      text = text.replace('\x96', '-')
+        53 +      return text
+        54 +
+        55 +
+        56 +  def load_data():
+        57 +      """Load all input data files.""" 58 +      print("=" * 60)
+        59 +      print("LOADING DATA FILES")
+        60 +      print("=" * 60)
+        61 +
+        62 +      # Load CAD data
+        63 +      print(f"\nLoading CAD data...")
+        64 +      cad_df = pd.read_excel(CAD_FILE)
+        65 +      print(f"  Loaded {len(cad_df):,} CAD records")
+        66 +
+        67 +      # Normalize column names
+        68 +      column_renames = {
+        69 +          'Time of Call': 'TimeOfCall',
+        70 +          'Response Type': 'Response_Type',
+        71 +          'HourMinuetsCalc': 'Hour'
+        72 +      }
+        73 +      cad_df = cad_df.rename(columns=column_renames)
+        74 +
+        75 +      # Load DV report
+        76 +      print(f"\nLoading DV report...")
+        77 +      dv_df = pd.read_excel(DV_FILE)
+        78 +      print(f"  Loaded {len(dv_df):,} DV records")
+        79 +
+        80 +      # Load RMS data
+        81 +      print(f"\nLoading RMS data...")
+        82 +      rms_df = pd.read_excel(RMS_FILE)
+        83 +      print(f"  Loaded {len(rms_df):,} RMS records")
+        84 +
+        85 +      # Load manual mappings
+        86 +      print(f"\nLoading manual mappings...")
+        87 +      mappings_df = pd.read_csv(UNMAPPED_FILE, encoding='latin-1')
+        88 +      print(f"  Loaded {len(mappings_df):,} mapping entries")
+        89 +
+        90 +      # Load RAW call types
+        91 +      print(f"\nLoading RAW call types...")
+        92 +      raw_calltypes_df = pd.read_excel(RAW_CALLTYPES_FILE)
+        93 +      print(f"  Loaded {len(raw_calltypes_df):,} raw call type entries")
+        94 +
+        95 +      return cad_df, dv_df, rms_df, mappings_df, raw_calltypes_df
+        96 +
+        97 +
+        98 +  def build_response_type_mapping(mappings_df, raw_calltypes_df):
+        99 +      """Build comprehensive Response_Type mapping dictionary.""" 100 +      print("\n" + "=" * 60)
+       101 +      print("BUILDING RESPONSE_TYPE MAPPING")
+       102 +      print("=" * 60)
+       103 +
+       104 +      response_map = {}
+       105 +
+       106 +      # Build from RAW call types
+       107 +      if 'Call Type' in raw_calltypes_df.columns and 'Response' in raw_calltypes_df.columns:
+       108 +          for _, row in raw_calltypes_df.iterrows():
+       109 +              call_type = fix_mojibake(str(row['Call Type']).strip())
+       110 +              response = row['Response']
+       111 +              if pd.notna(response) and str(response).strip():
+       112 +                  response_map[call_type] = str(response).strip()
+       113 +                  # Also add lowercase version for case-insensitive matching
+       114 +                  response_map[call_type.lower()] = str(response).strip()
+       115 +
+       116 +      print(f"  Loaded {len(response_map)} mappings from RAW call types")
+       117 +
+       118 +      # Add manual mappings
+       119 +      for _, row in mappings_df.iterrows():
+       120 +          unmapped = fix_mojibake(str(row.get('Unmapped_Call_Type', '')).strip())
+       121 +          raw_type = fix_mojibake(str(row.get('Raw_Call_Type', '')).strip())
+       122 +          response = str(row.get('Response', '')).strip()
+       123 +
+       124 +          if unmapped and response:
+       125 +              response_map[unmapped] = response
+       126 +              response_map[unmapped.lower()] = response
+       127 +          if raw_type and response:
+       128 +              response_map[raw_type] = response
+       129 +              response_map[raw_type.lower()] = response
+       130 +
+       131 +      print(f"  Total mapping entries: {len(response_map)}")
+       132 +      return response_map
+       133 +
+       134 +
+       135 +  def apply_response_type_mapping(cad_df, response_map):
+       136 +      """Apply Response_Type mappings using vectorized operations.""" 137 +      print("\n" + "=" * 60)
+       138 +      print("APPLYING RESPONSE_TYPE MAPPINGS")
+       139 +      print("=" * 60)
+       140 +
+       141 +      # Fix mojibake in Incident column
+       142 +      cad_df['Incident'] = cad_df['Incident'].apply(fix_mojibake)
+       143 +
+       144 +      # Backup original
+       145 +      cad_df['Response_Type_Original'] = cad_df['Response_Type'].copy()
+       146 +
+       147 +      # Create lowercase incident for case-insensitive matching
+       148 +      cad_df['_incident_lower'] = cad_df['Incident'].str.strip().str.lower()
+       149 +
+       150 +      # Find records needing mapping (empty Response_Type)
+       151 +      needs_mapping = cad_df['Response_Type'].isna() |
+           + (cad_df['Response_Type'].astype(str).str.strip() == '')
+       152 +
+       153 +      # Apply mapping using map function
+       154 +      mapped_values = cad_df.loc[needs_mapping, '_incident_lower'].map(response_map)
+       155 +
+       156 +      # Update Response_Type where mapping found
+       157 +      cad_df.loc[needs_mapping & mapped_values.notna(), 'Response_Type'] =
+           + mapped_values[mapped_values.notna()]
+       158 +
+       159 +      # Count results
+       160 +      metrics['response_type_mapped'] = mapped_values.notna().sum()
+       161 +
+       162 +      # Calculate coverage
+       163 +      total = len(cad_df)
+       164 +      with_response = cad_df['Response_Type'].notna() &
+           + (cad_df['Response_Type'].astype(str).str.strip() != '')
+       165 +      coverage = (with_response.sum() / total) * 100
+       166 +
+       167 +      # Find unmapped
+       168 +      still_unmapped = needs_mapping & cad_df['Response_Type'].isna()
+       169 +      unmapped_types = cad_df.loc[still_unmapped, 'Incident'].unique()
+       170 +
+       171 +      print(f"  Mapped {metrics['response_type_mapped']:,} records")
+       172 +      print(f"  Current Response_Type coverage: {coverage:.2f}%")
+       173 +      print(f"  Unmapped incident types: {len(unmapped_types)}")
+       174 +
+       175 +      if len(unmapped_types) > 0:
+       176 +          print(f"\n  Sample unmapped incidents:")
+       177 +          for inc in list(unmapped_types)[:10]:
+       178 +              print(f"    - {inc}")
+       179 +
+       180 +      # Clean up temp column
+       181 +      cad_df = cad_df.drop(columns=['_incident_lower'])
+       182 +
+       183 +      return cad_df
+       184 +
+       185 +
+       186 +  def resolve_taps_variants(cad_df):
+       187 +      """Resolve TAPS variant mappings using vectorized operations.""" 188 +      print("\n" + "=" * 60)
+       189 +      print("RESOLVING TAPS VARIANTS (Blocker #8)")
+       190 +      print("=" * 60)
+       191 +
+       192 +      # TAPS base mappings
+       193 +      taps_mask = cad_df['Incident'] == 'Targeted Area Patrol'
+       194 +      esu_mask = cad_df['Incident'] == 'ESU - Targeted Patrol'
+       195 +
+       196 +      # Also check lowercase variations
+       197 +      taps_mask = taps_mask | (cad_df['Incident'].str.lower() == 'targeted area patrol')
+       198 +      esu_mask = esu_mask | (cad_df['Incident'].str.lower() == 'esu - targeted patrol')
+       199 +
+       200 +      address_lower = cad_df['FullAddress2'].fillna('').str.lower()
+       201 +
+       202 +      # Default mappings
+       203 +      cad_df.loc[taps_mask, 'Incident'] = 'TAPS - Other'
+       204 +      cad_df.loc[esu_mask, 'Incident'] = 'TAPS - ESU - Other'
+       205 +
+       206 +      # Specific TAPS mappings based on address keywords
+       207 +      taps_keywords = {
+       208 +          'business': 'TAPS - Business',
+       209 +          'housing': 'TAPS - Housing',
+       210 +          'medical': 'TAPS - Medical Facility',
+       211 +          'hospital': 'TAPS - Medical Facility',
+       212 +          'park': 'TAPS - Park',
+       213 +          'garage': 'TAPS - Parking Garage',
+       214 +          'church': 'TAPS - Religious Facility',
+       215 +          'mosque': 'TAPS - Religious Facility',
+       216 +          'synagogue': 'TAPS - Religious Facility',
+       217 +          'school': 'TAPS - School'
+       218 +      }
+       219 +
+       220 +      esu_keywords = {
+       221 +          'business': 'TAPS - ESU - Business',
+       222 +          'medical': 'TAPS - ESU - Medical Facility',
+       223 +          'hospital': 'TAPS - ESU - Medical Facility',
+       224 +          'park': 'TAPS - ESU - Park',
+       225 +          'garage': 'TAPS - ESU - Parking Garage',
+       226 +          'church': 'TAPS - ESU - Religious Facility',
+       227 +          'mosque': 'TAPS - ESU - Religious Facility',
+       228 +          'synagogue': 'TAPS - ESU - Religious Facility',
+       229 +          'school': 'TAPS - ESU - School'
+       230 +      }
+       231 +
+       232 +      for keyword, incident_type in taps_keywords.items():
+       233 +          keyword_mask = address_lower.str.contains(keyword, na=False)
+       234 +          cad_df.loc[taps_mask & keyword_mask, 'Incident'] = incident_type
+       235 +
+       236 +      for keyword, incident_type in esu_keywords.items():
+       237 +          keyword_mask = address_lower.str.contains(keyword, na=False)
+       238 +          cad_df.loc[esu_mask & keyword_mask, 'Incident'] = incident_type
+       239 +
+       240 +      # Set Response_Type to Routine for all TAPS
+       241 +      all_taps = taps_mask | esu_mask
+       242 +      cad_df.loc[all_taps, 'Response_Type'] = 'Routine'
+       243 +
+       244 +      metrics['taps_resolved'] = all_taps.sum()
+       245 +      print(f"  Resolved {metrics['taps_resolved']:,} TAPS variant records")
+       246 +
+       247 +      return cad_df
+       248 +
+       249 +
+       250 +  def classify_domestic_disputes(cad_df, dv_df):
+       251 +      """Classify Domestic Disputes using vectorized operations.""" 252 +      print("\n" + "=" * 60)
+       253 +      print("CLASSIFYING DOMESTIC DISPUTES (Blocker #9)")
+       254 +      print("=" * 60)
+       255 +
+       256 +      # Get DV case numbers
+       257 +      dv_cases = set()
+       258 +      if 'Case_Number' in dv_df.columns:
+       259 +          dv_cases = set(dv_df['Case_Number'].dropna().astype(str).str.strip())
+       260 +      elif 'Case #' in dv_df.columns:
+       261 +          dv_cases = set(dv_df['Case #'].dropna().astype(str).str.strip())
+       262 +
+       263 +      print(f"  DV report contains {len(dv_cases):,} case numbers")
+       264 +
+       265 +      # Find Domestic Dispute records
+       266 +      dispute_mask = cad_df['Incident'] == 'Domestic Dispute'
+       267 +
+       268 +      # Check if report number is in DV cases
+       269 +      has_dv_report = cad_df['ReportNumberNew'].astype(str).str.strip().isin(dv_cases)
+       270 +
+       271 +      # Classify
+       272 +      dv_mask = dispute_mask & has_dv_report
+       273 +      no_dv_mask = dispute_mask & ~has_dv_report
+       274 +
+       275 +      cad_df.loc[dv_mask, 'Incident'] = 'Domestic Violence - 2C:25-21'
+       276 +      cad_df.loc[dv_mask, 'Response_Type'] = 'Emergency'
+       277 +
+       278 +      cad_df.loc[no_dv_mask, 'Incident'] = 'Dispute'
+       279 +      cad_df.loc[no_dv_mask, 'Response_Type'] = 'Urgent'
+       280 +
+       281 +      metrics['domestic_to_dv'] = dv_mask.sum()
+       282 +      metrics['domestic_to_dispute'] = no_dv_mask.sum()
+       283 +
+       284 +      print(f"  Reclassified to Domestic Violence: {metrics['domestic_to_dv']:,}")
+       285 +      print(f"  Reclassified to Dispute: {metrics['domestic_to_dispute']:,}")
+       286 +
+       287 +      return cad_df
+       288 +
+       289 +
+       290 +  def split_tro_fro(cad_df, rms_df):
+       291 +      """Split TRO/FRO violations using vectorized operations.""" 292 +      print("\n" + "=" * 60)
+       293 +      print("SPLITTING TRO/FRO VIOLATIONS (Blocker #10)")
+       294 +      print("=" * 60)
+       295 +
+       296 +      # Build RMS narrative lookup
+       297 +      rms_df['_case_key'] = rms_df['Case Number'].astype(str).str.strip()
+       298 +      rms_df['_narrative_lower'] = rms_df['Narrative'].fillna('').str.lower()
+       299 +
+       300 +      # Create lookup dataframe
+       301 +      rms_lookup = rms_df[['_case_key', '_narrative_lower']].drop_duplicates(subset=['_case_key'])
+       302 +      rms_lookup = rms_lookup.set_index('_case_key')
+       303 +
+       304 +      print(f"  Built RMS lookup with {len(rms_lookup):,} entries")
+       305 +
+       306 +      # Find TRO/FRO records
+       307 +      tro_fro_patterns = [
+       308 +          'Violation: TRO/ FRO  2C:25-31',
+       309 +          'Violation: TRO/FRO 2C:25-31',
+       310 +          'Violation TRO/FRO - 2C:25-31'
+       311 +      ]
+       312 +
+       313 +      tro_fro_mask = cad_df['Incident'].isin(tro_fro_patterns)
+       314 +      tro_fro_mask = tro_fro_mask | (cad_df['Incident'].str.contains('TRO', na=False) &
+       315 +                                     cad_df['Incident'].str.contains('FRO', na=False) &
+       316 +                                     cad_df['Incident'].str.contains('Violation', na=False))
+       317 +
+       318 +      if tro_fro_mask.sum() == 0:
+       319 +          print("  No TRO/FRO records found")
+       320 +          return cad_df
+       321 +
+       322 +      # Get narratives for TRO/FRO records
+       323 +      cad_df['_report_key'] = cad_df['ReportNumberNew'].astype(str).str.strip()
+       324 +      cad_df = cad_df.merge(
+       325 +          rms_lookup[['_narrative_lower']],
+       326 +          left_on='_report_key',
+       327 +          right_index=True,
+       328 +          how='left'
+       329 +      )
+       330 +
+       331 +      # Classify based on narrative
+       332 +      fro_indicators = cad_df['_narrative_lower'].str.contains('fro|final', na=False, regex=True)
+       333 +      tro_indicators = cad_df['_narrative_lower'].str.contains('tro|temporary', na=False, regex=True)
+       334 +
+       335 +      fro_mask = tro_fro_mask & fro_indicators
+       336 +      tro_mask = tro_fro_mask & tro_indicators & ~fro_indicators
+       337 +      manual_review_mask = tro_fro_mask & ~fro_indicators & ~tro_indicators
+       338 +
+       339 +      cad_df.loc[fro_mask, 'Incident'] = 'Violation FRO - 2C:29-9b'
+       340 +      cad_df.loc[tro_mask, 'Incident'] = 'Violation TRO - 2C:29-9b'
+       341 +      cad_df.loc[fro_mask | tro_mask, 'Response_Type'] = 'Routine'
+       342 +
+       343 +      metrics['tro_fro_split'] = (fro_mask | tro_mask).sum()
+       344 +      metrics['tro_fro_manual_review'] = manual_review_mask.sum()
+       345 +
+       346 +      print(f"  Split {metrics['tro_fro_split']:,} TRO/FRO records")
+       347 +      print(f"  Records for manual review: {metrics['tro_fro_manual_review']:,}")
+       348 +
+       349 +      # Save manual review list
+       350 +      if manual_review_mask.sum() > 0:
+       351 +          review_df = cad_df.loc[manual_review_mask, ['ReportNumberNew', 'Incident']].copy()
+       352 +          review_file = REPORTS_DIR / "tro_fro_manual_review.csv"
+       353 +          review_df.to_csv(review_file, index=False)
+       354 +          print(f"  Manual review list saved to: {review_file}")
+       355 +
+       356 +      # Clean up temp columns
+       357 +      cad_df = cad_df.drop(columns=['_report_key', '_narrative_lower'], errors='ignore')
+       358 +
+       359 +      return cad_df
+       360 +
+       361 +
+       362 +  def normalize_disposition(cad_df):
+       363 +      """Normalize Disposition values using vectorized operations.""" 364 +      print("\n" + "=" * 60)
+       365 +      print("NORMALIZING DISPOSITION VALUES")
+       366 +      print("=" * 60)
+       367 +
+       368 +      # Disposition mappings
+       369 +      disposition_map = {
+       370 +          'ASSISTED': 'Assisted',
+       371 +          'CANCELED': 'Cancelled',
+       372 +          'CANCELLED': 'Cancelled',
+       373 +          'CHECKED OK': 'Checked OK',
+       374 +          'CHECKED O.K.

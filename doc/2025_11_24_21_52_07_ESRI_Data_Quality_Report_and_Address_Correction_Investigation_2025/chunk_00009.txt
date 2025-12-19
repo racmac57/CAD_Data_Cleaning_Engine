@@ -1,0 +1,867 @@
+- Open `scripts/01_validate_and_clean.py`:
+  - Use the file search (`t` hotkey, or browser find) for `_load_fulladdress2_corrections` and `_apply_fulladdress2_corrections` and verify both functions are present. ```powershell
+# Append ignore rules to .gitignore
+@"
+data/
+*_validation_report_*.json
+*.zip
+desktop.ini
+_ul/
+1.24.0/
+1.3.0/
+2.0.0/
+3.1.0/
+5.9.0/
+5.14.0/
+7.4.0/
+"@ | Out-File -FilePath .gitignore -Append -Encoding utf8
+```
+
+```powershell
+git add .gitignore
+git commit -m "Ignore data and local output artifacts"
+git push origin main
+```
+
+```powershell
+git status
+```
+
+---
+
+**User**
+
+does this look ok? PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine>
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> # Append ignore rules to .gitignore
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> @"
+
+>> data/
+
+>> *_validation_report_*.json
+
+>> *.zip
+
+>> desktop.ini
+
+>> _ul/
+
+>> 1.24.0/
+
+>> 1.3.0/
+
+>> 2.0.0/
+
+>> 3.1.0/
+
+>> 5.9.0/
+
+>> 5.14.0/
+
+>> 7.4.0/
+
+>> "@ | Out-File -FilePath .gitignore -Append -Encoding utf8
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> git add .gitignore
+
+warning: in the working copy of '.gitignore', LF will be replaced by CRLF the next time Git touches it
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> git commit -m "Ignore data and local output artifacts"
+
+[main 2b88c2e] Ignore data and local output artifacts
+
+ 1 file changed, 12 insertions(+)
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> git push origin main
+
+Enumerating objects: 5, done. Counting objects: 100% (5/5), done. Delta compression using up to 32 threads
+
+Compressing objects: 100% (3/3), done. Writing objects: 100% (3/3), 393 bytes | 393.00 KiB/s, done. Total 3 (delta 2), reused 0 (delta 0), pack-reused 0 (from 0)
+
+remote: Resolving deltas: 100% (2/2), completed with 2 local objects. To https://github.com/racmac57/CAD_Data_Cleaning_Engine.git
+
+   658f4ae..2b88c2e  main -> main
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> git status
+
+On branch main
+
+Changes not staged for commit:
+
+  (use "git add/rm <file>..." to update what will be committed)
+
+  (use "git restore <file>..." to discard changes in working directory)
+
+        deleted:    ref/2019_2025_10_Call_Types_Incidents.csv.txt
+
+        deleted:    ref/CallType_Categories_changes.csv
+
+        deleted:    ref/CallType_Categories_clean.csv
+
+        deleted:    ref/CallType_Master_Mapping.csv
+
+        deleted:    ref/clean_calltypes.py
+
+        deleted:    ref/duplicates_review.csv
+
+        deleted:    ref/mapping_changes.csv
+
+        deleted:    ref/suggested_clean_edits.csv
+
+        deleted:    ref/unmapped_incidents.csv
+
+
+
+Untracked files:
+
+  (use "git add <file>..." to include in what will be committed)
+
+        1.24.0
+
+        1.3.0
+
+        2.0.0
+
+        2023.5.0
+
+        2025_11_13_CLAUDE_CODE_Call_Type_Master.md
+
+        3.1.0
+
+        5.14.0
+
+        5.9.0
+
+        7.4.0
+
+        PREPRODUCTION_CHECKLIST_RESULTS.md
+
+        TEST_2019_VALIDATION_REPORT.md
+
+        _ul
+
+        ce8447de-121e-4977-be34-f386cbcec5f8_ExportBlock-bc992ba2-3ef5-4013-a83b-a3303cc341fd/
+
+        doc/2025_11_16_CLAUDE_CODE_Priority_Fixes.md
+
+        doc/2025_11_16_CLAUDE_CODE_directory_review_summary.md
+
+        doc/2025_11_17_CLAUDE_CODE_CAD_CLEANING.MD
+
+        doc/CLAUDE_CODE_Call_Type_Mapping.md
+
+        requirements.txt
+
+
+
+no changes added to commit (use "git add" and/or "git commit -a")
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine>
+
+were changes ok? lets run the new updated script and then provide the @data/02_reports/unmapped_final_report.md  
+
+---
+
+**Cursor**
+
+Yes, everything you’ve done so far looks good. The next step is just to run the final-cleanup script so it regenerates `data/02_reports/unmapped_final_report.md`. ### 1. Run the updated final-cleanup script
+
+From your repo root:
+
+```powershell
+cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+# (Optional, if not already done in this environment)
+# python -m venv .venv
+# .\.venv\Scripts\Activate.ps1
+# pip install -r requirements.txt
+
+python scripts/final_cleanup_tro_fuzzy_rms.py
+```
+
+Let it finish; it will:
+
+- Read `data/ESRI_CADExport/CAD_ESRI_Final_20251117.xlsx`, RMS, TRO/FRO, call-type mapping. - Write a new `data/ESRI_CADExport/CAD_ESRI_Final_20251117_v2.xlsx`. - Regenerate `data/02_reports/unmapped_final_report.md` and `data/02_reports/fuzzy_review.csv`. ### 2. Share the updated report
+
+After it completes, open:
+
+`data/02_reports/unmapped_final_report.md`
+
+and paste its contents here (or just the top summary sections) so I can verify the final metrics and that they reflect your latest pipeline changes. ```powershell
+cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+# (Optional, if not already done in this environment)
+# python -m venv .venv
+# .\.venv\Scripts\Activate.ps1
+# pip install -r requirements.txt
+
+python scripts/final_cleanup_tro_fuzzy_rms.py
+```
+
+---
+
+**User**
+
+C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine>python scripts/final_cleanup_tro_fuzzy_rms.py
+
+Traceback (most recent call last):
+
+  File "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\scripts\final_cleanup_tro_fuzzy_rms.py", line 18, in <module>
+
+    from thefuzz import fuzz
+
+ModuleNotFoundError: No module named 'thefuzz'
+
+
+
+C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine>
+
+---
+
+**Cursor**
+
+You just need to install the missing dependency, then rerun the script. ### 1. Install `thefuzz` (ideally in your project’s venv)
+
+From the project root:
+
+```powershell
+cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+# Optional: activate your venv first if you use one
+# .\.venv\Scripts\Activate.ps1
+
+pip install "thefuzz[speedup]"
+```
+
+If you want it captured for future installs, also add it to `requirements.txt` (if it’s not already there) and later run:
+
+```powershell
+pip install -r requirements.txt
+```
+
+### 2. Rerun the cleanup script
+
+```powershell
+python scripts/final_cleanup_tro_fuzzy_rms.py
+```
+
+When it finishes, `data/02_reports/unmapped_final_report.md` and `data/02_reports/fuzzy_review.csv` will be regenerated; then you can open/paste the updated report. ```powershell
+cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+# Optional: activate your venv first if you use one
+# .\.venv\Scripts\Activate.ps1
+
+pip install "thefuzz[speedup]"
+```
+
+```powershell
+pip install -r requirements.txt
+```
+
+```powershell
+python scripts/final_cleanup_tro_fuzzy_rms.py
+```
+
+---
+
+**User**
+
+@doc/2025_11_21_unmapped_incident.csv @data/02_reports/unmapped_final_report.md @data/02_reports/fuzzy_review.csv review the attached files attachment 1 has a column to backfill the unmapped incidents. Please run the script again so we can see the progress. I also want to see the address backfill results after providing the @doc/updates_corrections_FullAddress2.csvprovide a report like @data/02_reports/address_backfill_from_rms_report.md 
+
+---
+
+**Cursor**
+
+I'll add a small helper script to apply the unmapped-incident backfill using your CSV, then outline the exact commands to run it, the final cleanup, and the RMS address backfill so you can regenerate both reports. ```python
+#!/usr/bin/env python
+"""
+Apply Unmapped Incident Backfill
+================================
+
+Uses `doc/2025_11_21_unmapped_incident.csv` to normalize / backfill
+unmapped Incident values in the ESRI CAD export before running the
+final cleanup (TRO/FRO + fuzzy + RMS) script. Inputs
+------
+- data/ESRI_CADExport/CAD_ESRI_Final_20251117.xlsx
+- doc/2025_11_21_unmapped_incident.csv
+
+Output
+------
+- Overwrites data/ESRI_CADExport/CAD_ESRI_Final_20251117.xlsx in place
+  with updated `Incident` values based on the "Change to" column.
+""" from pathlib import Path
+from datetime import datetime
+
+import pandas as pd
+
+
+BASE_DIR = Path(__file__).resolve().parents[1]
+DOC_DIR = BASE_DIR / "doc"
+DATA_DIR = BASE_DIR / "data"
+ESRI_DIR = DATA_DIR / "ESRI_CADExport"
+
+CAD_FILE = ESRI_DIR / "CAD_ESRI_Final_20251117.xlsx"
+UNMAPPED_FILE = DOC_DIR / "2025_11_21_unmapped_incident.csv"
+
+
+def main():
+    print("=" * 60)
+    print("APPLY UNMAPPED INCIDENT BACKFILL")
+    print("=" * 60)
+    print(f"Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
+    if not CAD_FILE.exists():
+        raise FileNotFoundError(f"CAD ESRI export not found: {CAD_FILE}")
+    if not UNMAPPED_FILE.exists():
+        raise FileNotFoundError(f"Unmapped incident mapping file not found: {UNMAPPED_FILE}")
+
+    # Load CAD ESRI export
+    cad_df = pd.read_excel(CAD_FILE, engine="openpyxl")
+    if "Incident" not in cad_df.columns:
+        raise RuntimeError("CAD export is missing required 'Incident' column")
+
+    print(f"Loaded CAD file: {CAD_FILE.name} ({len(cad_df):,} records)")
+
+    # Load unmapped incident mapping (Rank,Incident,Count,Sample Report#,Change to)
+    mapping_df = pd.read_csv(UNMAPPED_FILE, dtype=str).fillna("")
+    expected_cols = {"Incident", "Change to "}
+    missing = expected_cols.difference(mapping_df.columns)
+    if missing:
+        raise RuntimeError(
+            f"Unmapped incident CSV is missing expected columns: {', '.join(sorted(missing))}"
+        )
+
+    # Build mapping dict: original Incident -> new Incident
+    mapping = (
+        mapping_df[["Incident", "Change to "]]
+        .rename(columns={"Change to ": "ChangeTo"})
+        .query("Incident != '' and ChangeTo != ''")
+    )
+    incident_map = dict(
+        zip(mapping["Incident"].astype(str).str.strip(), mapping["ChangeTo"].astype(str).str.strip())
+    )
+
+    print(f"Loaded {len(incident_map):,} unmapped incident backfill rules")
+
+    # Apply mapping
+    before_unique = cad_df["Incident"].nunique(dropna=False)
+    changed_rows = 0
+
+    def _apply_change(incident: object) -> object:
+        nonlocal changed_rows
+        if pd.isna(incident):
+            return incident
+        s = str(incident).strip()
+        if s in incident_map:
+            changed_rows += 1
+            return incident_map[s]
+        return incident
+
+    cad_df["Incident"] = cad_df["Incident"].apply(_apply_change)
+
+    after_unique = cad_df["Incident"].nunique(dropna=False)
+
+    print(f"Rows updated: {changed_rows:,}")
+    print(f"Unique Incident values before: {before_unique:,}")
+    print(f"Unique Incident values after:  {after_unique:,}")
+
+    # Save back to the same CAD file (in place)
+    cad_df.to_excel(CAD_FILE, index=False)
+    print(f"Updated CAD file saved: {CAD_FILE}")
+
+    print(f"Completed: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
+
+if __name__ == "__main__":
+    main()
+
+
+```
+
+Yes, everything is set up to use your new mapping and generate both reports. Here’s the exact sequence to run now. ### 1) Apply the unmapped-incident backfill
+
+From the repo root:
+
+```powershell
+cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+python scripts/apply_unmapped_incident_backfill.py
+```
+
+This uses `doc/2025_11_21_unmapped_incident.csv` to rewrite `Incident` values in `data/ESRI_CADExport/CAD_ESRI_Final_20251117.xlsx` based on the **“Change to ”** column. ### 2) Re-run the final cleanup (TRO/FRO + fuzzy + RMS)
+
+```powershell
+python scripts/final_cleanup_tro_fuzzy_rms.py
+```
+
+This will:
+
+- Produce an updated `CAD_ESRI_Final_20251117_v2.xlsx`. - Regenerate:
+  - `data/02_reports/unmapped_final_report.md`
+  - `data/02_reports/fuzzy_review.csv`
+
+Open the new `data/02_reports/unmapped_final_report.md` and `fuzzy_review.csv` to see the improved coverage and any remaining edge cases. ### 3) Run the RMS address backfill + address report
+
+```powershell
+python scripts/backfill_address_from_rms.py
+```
+
+This will:
+
+- Create `CAD_ESRI_Final_20251117_v3.xlsx` with RMS-backed addresses. - Generate:
+  - `data/02_reports/address_backfill_from_rms_log.csv`
+  - `data/02_reports/address_backfill_from_rms_report.md`
+
+After all three steps, please:
+
+- Paste the **top part** of the new `unmapped_final_report.md` and `address_backfill_from_rms_report.md` here, and we can review the new metrics and any remaining issues. ```powershell
+cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+python scripts/apply_unmapped_incident_backfill.py
+```
+
+```powershell
+python scripts/final_cleanup_tro_fuzzy_rms.py
+```
+
+```powershell
+python scripts/backfill_address_from_rms.py
+```
+
+---
+
+**User**
+
+@data/02_reports/fuzzy_review.csv added column with correct data to use
+
+is there a .csv outut that has ## Unmapped Breakdown
+
+| Category | Count | Description |
+
+|----------|-------|-------------|
+
+| Null/Blank Incident | 146 | Records with no Incident value |
+
+| No Fuzzy Match (<70%) | 146 | No suitable match found |
+
+| Other | 125 | Other unmapped reasons |
+
+
+
+better yet provide a combined summary .csv that has the ReportNumberNew or Case Number and all availabe CAD Data for Null/Blank Incident, No Fuzzy Match, and Other, provide a column that I can manually backfill the correct data>
+
+
+
+on 2025-11-18 00:27:50, # Address Quality Report for ESRI Geocoding
+
+
+
+## Executive Summary
+
+| Metric | Count | Percentage |
+
+|--------|-------|------------|
+
+| **Total Records** | 701,115 | 100.00% |
+
+| **Valid Addresses** | 597,480 | 85.22% |
+
+| **Invalid Addresses** | 103,635 | 14.78% |
+
+
+
+have the modifications we did today changed the Invalid Addesses? review the results and output reports below
+
+c:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine>cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine>
+
+C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine>python scripts/apply_unmapped_incident_backfill.py
+
+============================================================
+
+APPLY UNMAPPED INCIDENT BACKFILL
+
+============================================================
+
+Started: 2025-11-21 13:55:39
+
+Loaded CAD file: CAD_ESRI_Final_20251117.xlsx (701,115 records)
+
+Loaded 11 unmapped incident backfill rules
+
+Rows updated: 547
+
+Unique Incident values before: 812
+
+Unique Incident values after:  801
+
+Updated CAD file saved: C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\data\ESRI_CADExport\CAD_ESRI_Final_20251117.xlsx
+
+Completed: 2025-11-21 13:58:08
+
+C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine>python scripts/final_cleanup_tro_fuzzy_rms.py
+
+============================================================
+
+CAD DATA FINAL CLEANUP
+
+TRO/FRO + Fuzzy Match + RMS Backfill
+
+============================================================
+
+Started: 2025-11-21 14:03:11
+
+Loading input files...
+
+  CAD ESRI: 701,115 records
+
+  TRO/FRO corrections: 96 records
+
+  RAW call types: 526 records
+
+  Master mapping: 808 records
+
+  RMS export: 156,036 records
+
+Initial state:
+
+  Total records: 701,115
+
+  Unmapped Response_Type: 3,155
+
+  Null Incidents: 271
+
+============================================================
+
+STEP 1: RMS BACKFILL
+
+============================================================
+
+Before: 271 null Incidents, 3,155 unmapped Response_Type
+
+After: 174 null Incidents, 3,155 unmapped Response_Type
+
+Backfilled: 97 Incidents from RMS
+
+============================================================
+
+STEP 2: TRO/FRO CORRECTIONS
+
+============================================================
+
+Before: 3,155 unmapped Response_Type
+
+After: 3,155 unmapped Response_Type
+
+Applied: 166 TRO/FRO corrections
+
+============================================================
+
+STEP 3: FUZZY MATCHING
+
+============================================================
+
+Before: 3,155 unmapped Response_Type
+
+Processing 3,155 unmapped records... Processed 500/3,155 records... Processed 1,000/3,155 records... Processed 1,500/3,155 records... Processed 2,000/3,155 records... Processed 2,500/3,155 records... Processed 3,000/3,155 records...
+
+After: 273 unmapped Response_Type
+
+Auto-applied (>=75%): 3,007
+
+Needs review (70-75%): 2
+
+No match (<70%): 146
+
+Saved fuzzy review file: C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\data\02_reports\fuzzy_review.csv
+
+============================================================
+
+STEP 4: FUZZY MATCH RMS-BACKFILLED RECORDS
+
+============================================================
+
+Matched 2 of 97 RMS-backfilled records
+
+============================================================
+
+GENERATING FINAL REPORT
+
+============================================================
+
+Report saved to: C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\data\02_reports\unmapped_final_report.md
+
+============================================================
+
+SAVING OUTPUT
+
+============================================================
+
+Saved: C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\data\ESRI_CADExport\CAD_ESRI_Final_20251117_v2.xlsx
+
+============================================================
+
+FINAL SUMMARY
+
+============================================================
+
+Total records: 701,115
+
+Initial unmapped: 3,155
+
+Final unmapped: 273
+
+Improvement: 2,882 records
+
+Final coverage: 99.96%
+
+Completed: 2025-11-21 14:05:44
+
+C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine>python scripts/backfill_address_from_rms.py
+
+============================================================
+
+ADDRESS BACKFILL FROM RMS
+
+============================================================
+
+Loaded CAD: 701,115 records from CAD_ESRI_Final_20251117_v2.xlsx
+
+Loaded RMS: 156,036 records from 2019_2025_11_16_16_57_00_ALL_RMS_Export.xlsx
+
+Valid before: 597,480 of 701,115
+
+RMS lookup addresses: 112,195 keys
+
+Targets for backfill (bad categories): 103,635
+
+Backfilled from RMS: 639 addresses
+
+Valid after: 598,119 of 701,115
+
+Backfill log written: C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\data\02_reports\address_backfill_from_rms_log.csv
+
+Updated CAD with backfilled addresses: C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\data\ESRI_CADExport\CAD_ESRI_Final_20251117_v3.xlsx
+
+Report written: C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\data\02_reports\address_backfill_from_rms_report.md
+
+C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine>
+
+
+
+---
+
+**Cursor**
+
+```python
+#!/usr/bin/env python
+"""
+Final Cleanup Script - TRO/FRO + Fuzzy Match + RMS Backfill
+============================================================
+Performs comprehensive data cleaning for CAD ESRI export:
+1. RMS Backfill - Fill null Incidents from RMS data
+2. TRO/FRO Corrections - Apply manual review corrections
+3. Fuzzy Match - Match unmapped Incidents to call types
+
+Author: Claude Code
+Date: 2025-11-17
+"""
+
+import pandas as pd
+import numpy as np
+from pathlib import Path
+from datetime import datetime
+from thefuzz import fuzz
+import warnings
+warnings.filterwarnings('ignore')
+
+# Configuration
+BASE_DIR = Path(r"C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine")
+DATA_DIR = BASE_DIR / "data"
+REF_DIR = BASE_DIR / "ref"
+REPORTS_DIR = DATA_DIR / "02_reports"
+
+# Input files
+CAD_FILE = DATA_DIR / "ESRI_CADExport" / "CAD_ESRI_Final_20251117.xlsx"
+TRO_FRO_FILE = REPORTS_DIR / "tro_fro_manual_review.csv"
+RAW_CALLTYPE_FILE = REF_DIR / "RAW_CAD_CALL_TYPE_EXPORT.xlsx"
+MASTER_MAPPING_FILE = REF_DIR / "call_types" / "CallType_Master_Mapping.csv"
+RMS_FILE = DATA_DIR / "rms" / "2019_2025_11_16_16_57_00_ALL_RMS_Export.xlsx"
+
+# Output files
+OUTPUT_CAD_FILE = DATA_DIR / "ESRI_CADExport" / "CAD_ESRI_Final_20251117_v2.xlsx"
+FUZZY_REVIEW_FILE = REPORTS_DIR / "fuzzy_review.csv"
+FINAL_REPORT_FILE = REPORTS_DIR / "unmapped_final_report.md"
+
+# Fuzzy match thresholds
+AUTO_APPLY_THRESHOLD = 75
+REVIEW_THRESHOLD = 70
+
+
+class CleanupStats:
+    """Track statistics for each cleanup step"""
+    def __init__(self, total_records):
+        self.total_records = total_records
+        self.initial_unmapped = 0
+        self.initial_null_incident = 0
+        self.steps = []
+
+    def add_step(self, name, before_unmapped, after_unmapped, details=None):
+        improvement = before_unmapped - after_unmapped
+        self.steps.append({
+            'name': name,
+            'before': before_unmapped,
+            'after': after_unmapped,
+            'improvement': improvement,
+            'details': details or {}
+        })
+
+    def get_summary(self):
+        return self.steps
+
+
+def load_data():
+    """Load all input files"""
+    print("Loading input files...")
+
+    # Load CAD data
+    cad_df = pd.read_excel(CAD_FILE)
+    print(f"  CAD ESRI: {len(cad_df):,} records")
+
+    # Load TRO/FRO corrections
+    tro_fro_df = pd.read_csv(TRO_FRO_FILE)
+    print(f"  TRO/FRO corrections: {len(tro_fro_df):,} records")
+
+    # Load RAW call types
+    raw_calltype_df = pd.read_excel(RAW_CALLTYPE_FILE)
+    print(f"  RAW call types: {len(raw_calltype_df):,} records")
+
+    # Load master mapping
+    master_mapping_df = pd.read_csv(MASTER_MAPPING_FILE)
+    print(f"  Master mapping: {len(master_mapping_df):,} records")
+
+    # Load RMS data
+    rms_df = pd.read_excel(RMS_FILE)
+    print(f"  RMS export: {len(rms_df):,} records")
+
+    return cad_df, tro_fro_df, raw_calltype_df, master_mapping_df, rms_df
+
+
+def count_unmapped(df):
+    """Count records with blank/null Response_Type"""
+    return df['Response_Type'].isna().sum() + (df['Response_Type'] == '').sum()
+
+
+def count_null_incident(df):
+    """Count records with blank/null Incident"""
+    return df['Incident'].isna().sum() + (df['Incident'] == '').sum()
+
+
+def step1_rms_backfill(cad_df, rms_df, stats):
+    """
+    Step 1: RMS Backfill - Fill null Incidents from RMS data
+    Join CAD.ReportNumberNew = RMS. 'Case Number'
+    Fill from RMS. 'Incident Type_1'
+    """
+    print("\n" + "="*60)
+    print("STEP 1: RMS BACKFILL")
+    print("="*60)
+
+    before_null = count_null_incident(cad_df)
+    before_unmapped = count_unmapped(cad_df)
+
+    print(f"Before: {before_null:,} null Incidents, {before_unmapped:,} unmapped Response_Type")
+
+    # Find records with null Incident
+    null_incident_mask = cad_df['Incident'].isna() | (cad_df['Incident'] == '')
+    null_incident_records = cad_df[null_incident_mask]['ReportNumberNew'].tolist()
+
+    # Create RMS lookup dictionary
+    rms_lookup = dict(zip(rms_df['Case Number'].astype(str), rms_df['Incident Type_1']))
+
+    # Track backfills
+    backfilled = 0
+    backfill_details = []
+
+    for idx in cad_df[null_incident_mask].index:
+        report_num = str(cad_df.loc[idx, 'ReportNumberNew'])
+        if report_num in rms_lookup:
+            rms_incident = rms_lookup[report_num]
+            if pd.notna(rms_incident) and str(rms_incident).strip():
+                cad_df.loc[idx, 'Incident'] = rms_incident
+                backfilled += 1
+                backfill_details.append({
+                    'ReportNumberNew': report_num,
+                    'RMS_Incident': rms_incident
+                })
+
+    after_null = count_null_incident(cad_df)
+    after_unmapped = count_unmapped(cad_df)
+
+    print(f"After: {after_null:,} null Incidents, {after_unmapped:,} unmapped Response_Type")
+    print(f"Backfilled: {backfilled:,} Incidents from RMS")
+
+    stats.add_step('RMS Backfill', before_unmapped, after_unmapped, {
+        'null_before': before_null,
+        'null_after': after_null,
+        'backfilled': backfilled
+    })
+
+    return cad_df, backfill_details
+
+
+def step2_tro_fro_corrections(cad_df, tro_fro_df, stats):
+    """
+    Step 2: Apply TRO/FRO Corrections
+    Join on ReportNumberNew
+    Update Incident with Corrected Incident values
+    """
+    print("\n" + "="*60)
+    print("STEP 2: TRO/FRO CORRECTIONS")
+    print("="*60)
+
+    before_unmapped = count_unmapped(cad_df)
+
+    # Create correction lookup
+    correction_lookup = dict(zip(
+        tro_fro_df['ReportNumberNew'].astype(str),
+        tro_fro_df['Corrected Incident']
+    ))
+
+    # Apply corrections
+    corrected = 0
+    correction_details = []
+
+    for report_num, corrected_incident in correction_lookup.items():
+        mask = cad_df['ReportNumberNew'].astype(str) == report_num
+        if mask.any():
+            old_incident = cad_df.loc[mask, 'Incident'].values[0]
+            cad_df.loc[mask, 'Incident'] = corrected_incident
+            corrected += mask.sum()
+            correction_details.append({
+                'ReportNumberNew': report_num,
+                'Old_Incident': old_incident,
+                'New_Incident': corrected_incident
+            })
+
+    after_unmapped = count_unmapped(cad_df)
+
+    print(f"Before: {before_unmapped:,} unmapped Response_Type")
+    print(f"After: {after_unmapped:,} unmapped Response_Type")
+    print(f"Applied: {corrected:,} TRO/FRO corrections")
+
+    stats.add_step('TRO/FRO Corrections', before_unmapped, after_unmapped, {
+        'corrections_applied': corrected,
+        'total_corrections': len(tro_fro_df)
+    })
+
+    return cad_df, correction_details
+
+
+def step3_fuzzy_match(cad_df, raw_calltype_df, master_mapping_df, stats):
+    """
+    Step 3: Fuzzy Match Unmapped Incidents
+    For blank Response_Type:
+    - First: fuzzy match Incident to RAW_CAD_CALL_TYPE_EXPORT.

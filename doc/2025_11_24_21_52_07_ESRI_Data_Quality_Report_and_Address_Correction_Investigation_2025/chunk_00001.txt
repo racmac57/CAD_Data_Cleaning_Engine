@@ -1,0 +1,543 @@
+if df.empty or 'Incident' not in df.columns:
+            if 'Incident_Norm' not in df.columns:
+                df['Incident_Norm'] = df.get('Incident', pd.Series([], dtype=object))
+            return df
+
+        df = df.copy()
+        df['Incident_key'] = df['Incident'].apply(normalize_incident_key)
+
+        if self.incident_mapping.empty:
+            df['Incident_Norm'] = df['Incident']
+            df.drop(columns=['Incident_key'], inplace=True, errors='ignore')
+            return df
+
+        mapping = self.incident_mapping[['Incident_key', 'Incident_Norm', 'Response_Type']].rename(
+            columns={
+                'Incident_Norm': '__Incident_Norm_map',
+                'Response_Type': '__Response_Type_map'
+            }
+        )
+
+        df = df.merge(mapping, on='Incident_key', how='left')
+
+        mapped_incident = df['__Incident_Norm_map']
+        original_incident = df['Incident']
+        unmapped_mask = mapped_incident.isna() & original_incident.notna()
+        if unmapped_mask.any():
+            self.unmapped_incidents.update(original_incident.loc[unmapped_mask].dropna().unique().tolist())
+
+        df.loc[~mapped_incident.isna(), 'Incident'] = mapped_incident.dropna()
+        df['Incident_Norm'] = df['Incident']
+
+        if 'Response Type' not in df.columns:
+            df['Response Type'] = pd.NA
+
+        if '__Response_Type_map' in df.columns:
+            mask = df['Response Type'].isna() | (df['Response Type'].astype(str).str.strip() == '')
+            df.loc[mask, 'Response Type'] = df.loc[mask, '__Response_Type_map']
+
+        df.drop(columns=['Incident_key', '__Incident_Norm_map', '__Response_Type_map'], inplace=True, errors='ignore')
+        return df
+
+    def validate_cad_dataset(self, df: pd.DataFrame, sampling_method: str = 'stratified') -> dict:
+        """Validate CAD dataset with cleaning and sampling. Args:
+            df (pd.DataFrame): Input DataFrame to validate. sampling_method (str): Sampling method ('stratified', 'systematic', 'random'). Defaults to 'stratified'. Returns:
+            dict: Validation results including quality score and recommendations.
+        """ # Track original column order for downstream exports
+        self.original_columns = list(df.columns)
+
+        self.unmapped_incidents = set()
+        self.address_issue_summary = Counter()
+        cleaned_df = self.clean_data(df)
+        logger.info(f"Starting CAD dataset validation with {sampling_method} sampling...")
+        self.validation_results['total_records'] = len(cleaned_df)
+        if self.current_dataset_label:
+            self.validation_results['source_dataset'] = self.current_dataset_label
+
+        sample_df = self._create_sample(cleaned_df, sampling_method)
+
+        # Store sampling metadata from sample_df attrs
+        if hasattr(sample_df, 'attrs'):
+            self.validation_results['stratum_distribution'] = sample_df.attrs.get('stratum_distribution', {})
+            self.validation_results['stratification_method'] = sample_df.attrs.get('stratification_method', sampling_method)
+
+        self._export_sample(sample_df)
+
+        sample_results = self._validate_sample(sample_df)
+        full_results = self._extrapolate_results(sample_results, cleaned_df)
+        recommendations = self._generate_validation_recommendations(full_results)
+
+        self.validation_results.update(full_results)
+        self.validation_results['unmapped_incidents'] = sorted(self.unmapped_incidents)
+        self.validation_results['address_issue_summary'] = dict(self.address_issue_summary)
+        self.validation_results['recommended_actions'] = recommendations
+        return self.validation_results
+
+    def _create_sample(self, df: pd.DataFrame, method: str) -> pd.DataFrame:
+        """Create a sample from the DataFrame using the specified method. Args:
+            df (pd.DataFrame): Input DataFrame to sample. method (str): Sampling method ('stratified', 'systematic', 'random'). Returns:
+            pd.DataFrame: Sampled DataFrame. Raises:
+            ValueError: If an unknown sampling method is provided.
+        """ if method == 'stratified':
+            return self._stratified_sampling(df)
+        elif method == 'systematic':
+            return self._systematic_sampling(df)
+        elif method == 'random':
+            return self._random_sampling(df)
+        else:
+            raise ValueError(f"Unknown sampling method: {method}")
+
+    def _stratified_sampling(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Create a stratified sample using incident-based strata only.""" logger.info("Creating stratified sample...")
+        df_with_strata = df.copy()
+
+        if 'Incident' in df.columns:
+            incident_counts = df['Incident'].value_counts()
+            top_incidents = incident_counts[incident_counts > 50].index
+            df_with_strata['incident_stratum'] = df_with_strata['Incident'].apply(
+                lambda x: x if x in top_incidents else 'Other')
+            unique_strata = df_with_strata['incident_stratum'].nunique()
+            logger.info("Using %d incident strata (min size > 50). ", unique_strata)
+        else:
+            logger.warning("Incident column missing; assigning all records to 'Unknown' stratum.") df_with_strata['incident_stratum'] = 'Unknown'
+
+        sample_size = min(self.sampling_config['stratified_sample_size'], len(df))
+
+        try:
+            sample_df, _ = train_test_split(
+                df_with_strata, test_size=1 - (sample_size / len(df)),
+                stratify=df_with_strata[['incident_stratum']],
+                random_state=42
+            )
+            logger.info("Created stratified sample (incident_stratum): %s records", f"{len(sample_df):,}")
+
+            stratum_dist = df_with_strata['incident_stratum'].value_counts().to_dict()
+            logger.info("Stratum distribution: %s", stratum_dist)
+            sample_df.attrs['stratum_distribution'] = stratum_dist
+            sample_df.attrs['stratification_method'] = 'incident_stratum'
+
+        except Exception as e:
+            logger.warning(f"Stratified sampling failed: {e}. Falling back to random.") sample_df = df.sample(n=sample_size, random_state=42)
+            sample_df.attrs['stratification_method'] = 'random'
+            sample_df.attrs['stratum_distribution'] = {'random_sample': len(sample_df)}
+
+        logger.info("Final sample size: %s records", f"{len(sample_df):,}")
+        return sample_df
+
+    def _build_esri_export(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Project a DataFrame into the ESRI-export schema.""" esri_columns = [
+            'ReportNumberNew', 'Incident', 'How Reported', 'FullAddress2', 'PDZone', 'Grid',
+            'Time of Call', 'cYear', 'cMonth', 'Hour_Calc', 'DayofWeek', 'Time Dispatched',
+            'Time Out', 'Time In', 'Time Spent', 'Time Response', 'Officer', 'Disposition',
+            'latitude', 'longitude', 'Response Type'
+        ]
+        esri_df = pd.DataFrame(index=df.index)
+        def get_series(column, default=None):
+            if column in df.columns:
+                return df[column]
+            if default is not None:
+                return pd.Series(default, index=df.index)
+            return pd.Series([pd.NA] * len(df), index=df.index)
+
+        esri_df['ReportNumberNew'] = get_series('ReportNumberNew')
+        esri_df['Incident'] = get_series('Incident')
+        esri_df['How Reported'] = get_series('How Reported').apply(normalize_how_reported_value).apply(smart_title)
+        esri_df['FullAddress2'] = get_series('FullAddress2').apply(smart_title)
+        esri_df['PDZone'] = pd.to_numeric(get_series('PDZone'), errors='coerce')
+        esri_df['Grid'] = get_series('Grid')
+
+        time_of_call = pd.to_datetime(get_series('Time of Call'), errors='coerce')
+        esri_df['Time of Call'] = time_of_call
+        esri_df['cYear'] = pd.to_numeric(get_series('cYear'), errors='coerce')
+        esri_df['cMonth'] = get_series('cMonth')
+        if len(time_of_call) > 0:
+            esri_df['Hour_Calc'] = time_of_call.dt.hour.astype('float64')
+        else:
+            esri_df['Hour_Calc'] = pd.Series(dtype='float64')
+        esri_df['DayofWeek'] = get_series('DayofWeek')
+        esri_df['Time Dispatched'] = pd.to_datetime(get_series('Time Dispatched'), errors='coerce')
+        esri_df['Time Out'] = pd.to_datetime(get_series('Time Out'), errors='coerce')
+        esri_df['Time In'] = pd.to_datetime(get_series('Time In'), errors='coerce')
+
+        time_spent = get_series('Time Spent')
+        esri_df['Time Spent'] = time_spent.apply(lambda x: None if pd.isna(x) else str(x))
+        time_response = get_series('Time Response')
+        esri_df['Time Response'] = time_response.apply(lambda x: None if pd.isna(x) else str(x))
+
+        esri_df['Officer'] = get_series('Officer')
+        esri_df['Disposition'] = get_series('Disposition').apply(smart_title)
+        esri_df['latitude'] = np.nan
+        esri_df['longitude'] = np.nan
+        esri_df['Response Type'] = get_series('Response Type').apply(smart_title)
+        esri_df = esri_df[esri_columns]
+
+        if 'How Reported' in esri_df.columns:
+            esri_df['How Reported'] = esri_df['How Reported'].apply(guard_excel_text)
+
+        return esri_df
+
+    def _export_sample(self, sample_df: pd.DataFrame) -> None:
+        """Persist the sampled records for downstream testing.""" if sample_df is None or sample_df.empty:
+            logger.warning("Sample DataFrame empty; skipping sample export.") return
+
+        project_root = Path(__file__).resolve().parent.parent
+        sample_dir = project_root / "data" / "01_raw" / "sample"
+        sample_dir.mkdir(parents=True, exist_ok=True)
+
+        dataset_label = self.current_dataset_label or "cad_dataset"
+        sample_size = len(sample_df)
+        sample_name = f"{Path(dataset_label).stem}_SAMPLE_{sample_size}.csv"
+        sample_path = sample_dir / sample_name
+
+        export_df = self._build_esri_export(sample_df.copy())
+        if 'How Reported' in export_df.columns:
+            export_df['How Reported'] = export_df['How Reported'].apply(guard_excel_text)
+        export_df.to_csv(sample_path, index=False, encoding='utf-8-sig')
+        logger.info("Sample exported to %s", sample_path)
+        self.validation_results['sample_output_path'] = str(sample_path)
+
+    def _systematic_sampling(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Create systematic sample with fixed interval. Args:
+            df (pd.DataFrame): Input DataFrame to sample. Returns:
+            pd.DataFrame: Systematic sample DataFrame.
+        """ logger.info("Creating systematic sample...")
+        interval = self.sampling_config['systematic_interval']
+        start_idx = np.random.randint(0, interval)
+        sample_indices = list(range(start_idx, len(df), interval))
+        sample_df = df.iloc[sample_indices].copy()
+        logger.info(f"Created systematic sample: {len(sample_df):,} records (interval: {interval})")
+        return sample_df
+
+    def _random_sampling(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Create random sample. Args:
+            df (pd.DataFrame): Input DataFrame to sample. Returns:
+            pd.DataFrame: Random sample DataFrame.
+        """ logger.info("Creating random sample...")
+        sample_size = min(self.sampling_config['stratified_sample_size'], len(df))
+        sample_df = df.sample(n=sample_size, random_state=42)
+        logger.info(f"Created random sample: {len(sample_df):,} records")
+        return sample_df
+
+    def _categorize_how_reported(self, value):
+        """Categorize 'How Reported' values into standard groups. Args:
+            value: Value to categorize. Returns:
+            str: Categorized value ('Emergency', 'Phone', 'Walk-in', 'Self-Initiated', 'Other', or 'Unknown').
+        """ if pd.isna(value):
+            return 'Unknown'
+        value_str = str(value).upper()
+        if any(term in value_str for term in ['9-1-1', '911', 'EMERGENCY']):
+            return 'Emergency'
+        elif any(term in value_str for term in ['PHONE', 'CALL']):
+            return 'Phone'
+        elif any(term in value_str for term in ['WALK', 'PERSON']):
+            return 'Walk-in'
+        elif any(term in value_str for term in ['SELF', 'INITIATED']):
+            return 'Self-Initiated'
+        else:
+            return 'Other'
+
+    def _categorize_time_period(self, hour):
+        """Categorize hour into time periods. Args:
+            hour: Hour value to categorize. Returns:
+            str: Time period ('Morning', 'Afternoon', 'Evening', 'Night', or 'Unknown').
+        """ if pd.isna(hour):
+            return 'Unknown'
+        try:
+            hour = int(hour)
+            if 6 <= hour < 12:
+                return 'Morning'
+            elif 12 <= hour < 18:
+                return 'Afternoon'
+            elif 18 <= hour < 22:
+                return 'Evening'
+            else:
+                return 'Night'
+        except:
+            return 'Unknown'
+
+    def _validate_sample(self, sample_df: pd.DataFrame) -> dict:
+        """Run validation rules on sample. Args:
+            sample_df (pd.DataFrame): Sample DataFrame to validate. Returns:
+            dict: Validation results for each rule category.
+        """ logger.info("Running validation rules on sample...")
+        results = {
+            'critical_rules': {},
+            'important_rules': {},
+            'optional_rules': {},
+            'sample_size': len(sample_df)
+        }
+
+        for category, rules in self.validation_rules.items():
+            for rule_id, rule in rules.items():
+                result = self._apply_validation_rule(sample_df, rule)
+                result.update({
+                    'rule_id': rule_id,
+                    'description': rule['description'],
+                    'severity': rule['severity'],
+                    'fix_suggestion': rule.get('fix_suggestion', '')
+                })
+                results[category][rule_id] = result
+
+        return results
+
+    def _apply_validation_rule(self, df: pd.DataFrame, rule: dict) -> dict:
+        """Apply a single validation rule to a DataFrame partition. Args:
+            df (pd.DataFrame): DataFrame partition to validate. rule (dict): Validation rule configuration. Returns:
+            dict: Validation result for the rule.
+        """ rule_id = rule['rule_id']
+        field = rule.get('field')
+        fields = rule.get('fields', [field] if field else [])
+        result = {
+            'rule_id': rule_id, 'description': rule['description'], 'severity': rule['severity'],
+            'passed': 0, 'failed': 0, 'pass_rate': 0.0, 'failed_records': [],
+            'fix_suggestion': rule.get('fix_suggestion', ''), 'sample_size': len(df)
+        }
+        missing_fields = [f for f in fields if f not in df.columns]
+        if missing_fields:
+            result.update({'error': f"Missing fields: {missing_fields}", 'failed': len(df)})
+            return result
+
+        if rule_id == 'CRIT_001': result = self._validate_case_number_format(df, result)
+        elif rule_id == 'CRIT_002': result = self._validate_case_number_uniqueness(df, result)
+        elif rule_id == 'CRIT_003': result = self._validate_call_datetime(df, result)
+        elif rule_id == 'CRIT_004': result = self._validate_incident_type_presence(df, result)
+        elif rule_id == 'IMP_001': result = self._validate_address_completeness(df, result)
+        elif rule_id == 'IMP_002': result = self._validate_officer_assignment(df, result)
+        elif rule_id == 'IMP_003': result = self._validate_disposition_consistency(df, result)
+        elif rule_id == 'IMP_004': result = self._validate_time_sequence(df, result)
+        elif rule_id == 'IMP_005': result = self._validate_datetime_duration(df, result)
+        elif rule_id == 'IMP_006': result = self._validate_time_spent(df, result)
+        elif rule_id == 'OPT_001': result = self._validate_how_reported(df, result)
+        elif rule_id == 'OPT_002': result = self._validate_zone_validity(df, result)
+        elif rule_id == 'OPT_003': result = self._validate_response_type_consistency(df, result)
+        
+        result['pass_rate'] = result['passed'] / result['sample_size'] if result['sample_size'] > 0 else 0.0
+        return result
+
+    def _validate_case_number_format(self, df: pd.DataFrame, result: dict) -> dict:
+        """Validate case number format (YY-XXXXXX or YY-XXXXXX[A-Z] for supplements). Args:
+            df (pd.DataFrame): DataFrame partition to validate. result (dict): Initial result dictionary. Returns:
+            dict: Updated result with pass/fail counts and failed records.
+        """ field, pattern = 'ReportNumberNew', r'^\d{2,4}-\d{6}[A-Z]?$'
+        valid = df[field].astype(str).str.match(pattern, na=False)
+        result.update({'passed': valid.sum(), 'failed': (~valid).sum()})
+        result['failed_records'] = df[~valid][field].value_counts().head(10).to_dict()
+        return result
+
+    def _validate_case_number_uniqueness(self, df: pd.DataFrame, result: dict) -> dict:
+        """Validate uniqueness of case numbers. Args:
+            df (pd.DataFrame): DataFrame partition to validate. result (dict): Initial result dictionary. Returns:
+            dict: Updated result with pass/fail counts and duplicate records.
+        """ field = 'ReportNumberNew'
+        unique_count = df[field].nunique()
+        result.update({'passed': unique_count, 'failed': len(df) - unique_count})
+        duplicates = df[field].value_counts()
+        result['failed_records'] = duplicates[duplicates > 1].head(10).to_dict()
+        return result
+
+    def _validate_call_datetime(self, df: pd.DataFrame, result: dict) -> dict:
+        """Validate 'Time of Call' datetime within reasonable range. Args:
+            df (pd.DataFrame): DataFrame partition to validate. result (dict): Initial result dictionary. Returns:
+            dict: Updated result with pass/fail counts and failed records.
+        """ field = 'Time of Call'
+        parsed = pd.to_datetime(df[field], errors='coerce')
+        valid = parsed.notna() & (parsed >= '2020-01-01') & (parsed <= '2030-12-31')
+        result.update({'passed': valid.sum(), 'failed': (~valid).sum()})
+        result['failed_records'] = df[~valid][field].value_counts().head(10).to_dict()
+        return result
+
+    def _validate_incident_type_presence(self, df: pd.DataFrame, result: dict) -> dict:
+        """Validate presence of non-empty incident type. Args:
+            df (pd.DataFrame): DataFrame partition to validate. result (dict): Initial result dictionary. Returns:
+            dict: Updated result with pass/fail counts and failed records.
+        """ field = 'Incident'
+        valid = df[field].notna() & (df[field].astype(str).str.strip() != '')
+        result.update({'passed': valid.sum(), 'failed': (~valid).sum()})
+        result['failed_records'] = df[~valid][field].value_counts().head(10).to_dict()
+        return result
+
+    def _validate_address_completeness(self, df: pd.DataFrame, result: dict) -> dict:
+        """Validate presence and non-generic addresses. Args:
+            df (pd.DataFrame): DataFrame partition to validate. result (dict): Initial result dictionary. Returns:
+            dict: Updated result with pass/fail counts and failed records.
+        """ field = 'FullAddress2'
+        generic = {'UNKNOWN', 'NOT PROVIDED', 'N/A', 'NONE', '', 'TBD', 'TO BE DETERMINED'}
+        suffix_pattern = re.compile(r'( STREET| AVENUE| ROAD| PLACE| DRIVE| COURT| BOULEVARD| LANE| WAY| HWY| HIGHWAY| ROUTE| AVE| ST| RD| BLVD| DR| CT| PL)')
+
+        def evaluate_address(value):
+            if pd.isna(value):
+                return False, ['missing_address']
+            text = str(value).upper().strip()
+            text = re.sub(r'\s+', ' ', text)
+            if text in generic:
+                return False, ['generic_placeholder']
+            issues = []
+            has_city_zip = text.endswith(', HACKENSACK, NJ, 07601')
+            if not has_city_zip:
+                issues.append('missing_city_state_zip')
+            is_intersection = ' & ' in text
+            if not is_intersection and not re.match(r'^\d+ ', text):
+                issues.append('missing_house_number')
+            if not suffix_pattern.search(text):
+                issues.append('missing_street_suffix')
+            if is_intersection and '&' not in text:
+                issues.append('invalid_intersection_format')
+            if issues:
+                return False, issues
+            return True, []
+
+        passes = []
+        issue_counter = Counter()
+        for addr in df[field]:
+            is_valid, issues = evaluate_address(addr)
+            passes.append(is_valid)
+            if not is_valid:
+                if not issues:
+                    issue_counter['unknown_format'] += 1
+                else:
+                    issue_counter.update(issues)
+
+        valid_series = pd.Series(passes, index=df.index)
+        result.update({'passed': valid_series.sum(), 'failed': (~valid_series).sum()})
+        result['failed_records'] = dict(issue_counter.most_common(10))
+        self.address_issue_summary.update(issue_counter)
+        return result
+
+    def _validate_officer_assignment(self, df: pd.DataFrame, result: dict) -> dict:
+        """Validate officer assignment for dispatched calls. Args:
+            df (pd.DataFrame): DataFrame partition to validate. result (dict): Initial result dictionary. Returns:
+            dict: Updated result with pass/fail counts and failed records.
+        """ dispatched = df['Time Dispatched'].notna() if 'Time Dispatched' in df.columns else pd.Series([True] * len(df))
+        has_officer = df['Officer'].notna() & (df['Officer'].astype(str).str.strip() != '')
+        valid = ~(dispatched & ~has_officer)
+        result.update({'passed': valid.sum(), 'failed': (~valid).sum()})
+        result['failed_records'] = df[~valid]['Officer'].value_counts().head(10).to_dict()
+        return result
+
+    def _validate_disposition_consistency(self, df: pd.DataFrame, result: dict) -> dict:
+        """Validate disposition against approved list. Args:
+            df (pd.DataFrame): DataFrame partition to validate. result (dict): Initial result dictionary. Returns:
+            dict: Updated result with pass/fail counts and failed records.
+        """ field = 'Disposition'
+        valid_list = self.config['validation_lists']['valid_dispositions']
+        valid = df[field].astype(str).str.strip().isin(valid_list)
+        result.update({'passed': valid.sum(), 'failed': (~valid).sum()})
+        result['failed_records'] = df[~valid][field].value_counts().head(10).to_dict()
+        return result
+
+    def _validate_time_sequence(self, df: pd.DataFrame, result: dict) -> dict:
+        """Validate logical time sequence (Call -> Dispatch -> Out -> In). Args:
+            df (pd.DataFrame): DataFrame partition to validate. result (dict): Initial result dictionary. Returns:
+            dict: Updated result with pass/fail counts and failed records.
+        """ fields = ['Time of Call', 'Time Dispatched', 'Time Out', 'Time In']
+        times = {f: pd.to_datetime(df.get(f), errors='coerce') for f in fields}
+        valid_sequence = pd.Series([True] * len(df), index=df.index)
+        if 'Time of Call' in df and 'Time Dispatched' in df:
+            valid_sequence &= (times['Time of Call'] <= times['Time Dispatched']) | times['Time of Call'].isna() | times['Time Dispatched'].isna()
+        if 'Time Dispatched' in df and 'Time Out' in df:
+            valid_sequence &= (times['Time Dispatched'] <= times['Time Out']) | times['Time Dispatched'].isna() | times['Time Out'].isna()
+        if 'Time Out' in df and 'Time In' in df:
+            valid_sequence &= (times['Time Out'] <= times['Time In']) | times['Time Out'].isna() | times['Time In'].isna()
+        result.update({'passed': valid_sequence.sum(), 'failed': (~valid_sequence).sum()})
+        if (~valid_sequence).any():
+            failed_df = df[~valid_sequence][fields].head(10)
+            result['failed_records'] = failed_df[fields].to_dict(orient='records')
+        return result
+
+    def _validate_datetime_duration(self, df: pd.DataFrame, result: dict) -> dict:
+        """Validate duration between datetime fields. Args:
+            df (pd.DataFrame): DataFrame partition to validate. result (dict): Initial result dictionary. Returns:
+            dict: Updated result with pass/fail counts and failed records.
+        """ fields = ['Time of Call', 'Time Dispatched', 'Time Out', 'Time In']
+        
+        # Parse datetime fields first
+        parsed_times = {}
+        for field in fields:
+            if field in df.columns:
+                parsed_times[field] = pd.to_datetime(df[field], errors='coerce')
+            else:
+                parsed_times[field] = pd.Series([pd.NaT] * len(df), index=df.index)
+        
+        # Calculate durations only if we have valid datetime columns
+        valid = pd.Series([True] * len(df), index=df.index)
+        
+        if 'Time of Call' in df.columns and 'Time Dispatched' in df.columns:
+            response_duration = parsed_times['Time Dispatched'] - parsed_times['Time of Call']
+            valid &= (response_duration >= pd.Timedelta(0)) | response_duration.isna()
+        
+        if 'Time Dispatched' in df.columns and 'Time Out' in df.columns:
+            out_duration = parsed_times['Time Out'] - parsed_times['Time Dispatched']
+            valid &= (out_duration >= pd.Timedelta(0)) | out_duration.isna()
+        
+        if 'Time Out' in df.columns and 'Time In' in df.columns:
+            in_duration = parsed_times['Time In'] - parsed_times['Time Out']
+            valid &= (in_duration >= pd.Timedelta(0)) | in_duration.isna()
+        
+        result.update({'passed': valid.sum(), 'failed': (~valid).sum()})
+        if (~valid).any():
+            failed_df = df[~valid][fields].head(10)
+            result['failed_records'] = failed_df[fields].to_dict(orient='records')
+        return result
+
+    def _validate_time_spent(self, df: pd.DataFrame, result: dict) -> dict:
+        """Validate Time Spent as a positive duration. Args:
+            df (pd.DataFrame): DataFrame partition to validate. result (dict): Initial result dictionary. Returns:
+            dict: Updated result with pass/fail counts and failed records.
+        """ field = 'Time Spent'
+        if field in df.columns:
+            durations = pd.to_timedelta(df[field], errors='coerce')
+            valid = durations.notna() & (durations >= pd.Timedelta(0)) & (durations <= pd.Timedelta(days=1))
+            result.update({'passed': valid.sum(), 'failed': (~valid).sum()})
+            result['failed_records'] = df[~valid][field].value_counts().head(10).to_dict()
+        else:
+            result.update({'passed': 0, 'failed': len(df), 'failed_records': {}})
+        return result
+
+    def _validate_how_reported(self, df: pd.DataFrame, result: dict) -> dict:
+        """Validate standardization of 'How Reported' field. Args:
+            df (pd.DataFrame): DataFrame partition to validate. result (dict): Initial result dictionary. Returns:
+            dict: Updated result with pass/fail counts and failed records.
+        """ field = 'How Reported'
+        valid_list = set(self.config['validation_lists']['how_reported'])
+        normalized = df[field].apply(normalize_how_reported_value)
+        is_valid = normalized.isin(valid_list)
+        result.update({'passed': is_valid.sum(), 'failed': (~is_valid).sum()})
+        if (~is_valid).any():
+            result['failed_records'] = normalized[~is_valid].value_counts().head(10).to_dict()
+        return result
+
+    def _validate_zone_validity(self, df: pd.DataFrame, result: dict) -> dict:
+        """Validate PD Zone against valid identifiers. Args:
+            df (pd.DataFrame): DataFrame partition to validate. result (dict): Initial result dictionary. Returns:
+            dict: Updated result with pass/fail counts and failed records.
+        """ field = 'PDZone'
+        valid_zones = self.config['validation_lists']['valid_zones']
+        valid = df[field].astype(str).str.strip().isin(valid_zones)
+        result.update({'passed': valid.sum(), 'failed': (~valid).sum()})
+        result['failed_records'] = df[~valid][field].value_counts().head(10).to_dict()
+        return result
+
+    def _validate_response_type_consistency(self, df: pd.DataFrame, result: dict) -> dict:
+        """Validate response type consistency with incident severity. Args:
+            df (pd.DataFrame): DataFrame partition to validate. result (dict): Initial result dictionary. Returns:
+            dict: Updated result with pass/fail counts and failed records.
+        """ emergency_incidents = self.config['validation_lists']['emergency_incidents']
+        non_emergency_incidents = self.config['validation_lists']['non_emergency_incidents']
+        incident = df['Incident'].astype(str).str.upper()
+        response = df['Response Type'].astype(str).str.upper()
+        is_emergency_incident = incident.isin(emergency_incidents)
+        is_emergency_response = response.isin(['EMERGENCY', 'PRIORITY'])
+        is_non_emergency_incident = incident.isin(non_emergency_incidents)
+        is_non_emergency_response = response.isin(['NON-EMERGENCY', 'ROUTINE'])
+        consistent = ((is_emergency_incident & is_emergency_response) |
+                      (is_non_emergency_incident & is_non_emergency_response) |
+                      (~is_emergency_incident & ~is_non_emergency_incident))
+        result.update({'passed': consistent.sum(), 'failed': (~consistent).sum()})
+        if (~consistent).any():
+            failed_df = df[~consistent][['Incident', 'Response Type']].head(10)
+            result['failed_records'] = failed_df.to_dict(orient='records')
+        return result
+
+    def _extrapolate_results(self, sample_results: dict, full_df: pd.DataFrame) -> dict:
+        """Extrapolate sample validation results to the full dataset. Args:
+            sample_results (dict): Validation results from sample. full_df (pd.DataFrame): Full DataFrame for size reference.

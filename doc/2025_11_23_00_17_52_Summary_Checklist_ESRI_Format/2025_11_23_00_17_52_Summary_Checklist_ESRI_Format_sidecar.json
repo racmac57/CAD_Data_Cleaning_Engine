@@ -1,0 +1,86 @@
+{
+  "source_file": "Summary_Checklist_ESRI_Format.md",
+  "source_path": "C:\\_chunker\\02_data\\Summary_Checklist_ESRI_Format.md",
+  "manifest_path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\KB_Shared\\04_output\\2025_11_23_00_17_52_Summary_Checklist_ESRI_Format\\2025_11_23_00_17_52_Summary_Checklist_ESRI_Format.origin.json",
+  "created_at": "2025_11_23_00_17_52",
+  "tags": [
+    "API",
+    "ai",
+    "code",
+    "config",
+    "data",
+    "docs",
+    "excel",
+    "function",
+    "input/output",
+    "json",
+    "legal",
+    "loop",
+    "markdown",
+    "police",
+    "python",
+    "regex",
+    "sql"
+  ],
+  "metadata": {
+    "project_name": "02_data",
+    "source_type": "documentation",
+    "language": "en",
+    "department": "admin",
+    "key_terms": [
+      "csv",
+      "mapping",
+      "rms",
+      "missing",
+      "columns",
+      "incidents"
+    ],
+    "enrichment_version": "1.0.0"
+  },
+  "summaries": {
+    "file_summary": "### Summary\n- ESRI’s reference extract has fixed headers (21 columns) and expects durations as strings, time fields as datetimes, and empty `latitude`/`longitude` (LawSoft doesn’t supply them). - The CAD batch script now emits ESRI-align...",
+    "first_line": "### Summary"
+  },
+  "chunks": [
+    {
+      "chunk_id": "2025-11-23T00:17:52+00:00_Summary_Checklist_ESRI_Format_chunk1",
+      "chunk_index": 1,
+      "file": "chunk_00000.txt",
+      "tags": [
+        "ai",
+        "api",
+        "code",
+        "columns",
+        "config",
+        "data",
+        "docs",
+        "excel",
+        "function",
+        "incidents",
+        "input/output",
+        "json",
+        "legal",
+        "loop",
+        "mapping",
+        "markdown",
+        "missing",
+        "police",
+        "python",
+        "regex",
+        "sql"
+      ],
+      "key_terms": [
+        "csv",
+        "mapping",
+        "rms",
+        "missing",
+        "columns",
+        "incidents"
+      ],
+      "summary": "### Summary\n- ESRI’s reference extract has fixed headers (21 columns) and expects durations as strings, time fields as datetimes, and empty `latitude`/`longitude` (LawSoft doesn’t supply them).",
+      "char_length": 7482,
+      "byte_length": 7547
+    }
+  ],
+  "enrichment_version": "1.0.0"
+}

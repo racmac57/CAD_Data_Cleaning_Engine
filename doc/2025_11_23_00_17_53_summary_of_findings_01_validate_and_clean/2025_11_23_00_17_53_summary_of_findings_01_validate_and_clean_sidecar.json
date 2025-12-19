@@ -1,0 +1,82 @@
+{
+  "source_file": "summary_of_findings_01_validate_and_clean.md",
+  "source_path": "C:\\_chunker\\02_data\\summary_of_findings_01_validate_and_clean.md",
+  "manifest_path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\KB_Shared\\04_output\\2025_11_23_00_17_53_summary_of_findings_01_validate_and_clean\\2025_11_23_00_17_53_summary_of_findings_01_validate_and_clean.origin.json",
+  "created_at": "2025_11_23_00_17_53",
+  "tags": [
+    "API",
+    "code",
+    "config",
+    "data",
+    "docs",
+    "error handling",
+    "excel",
+    "function",
+    "input/output",
+    "json",
+    "markdown",
+    "police",
+    "python",
+    "sql",
+    "variable"
+  ],
+  "metadata": {
+    "project_name": "02_data",
+    "source_type": "documentation",
+    "language": "en",
+    "department": "admin",
+    "key_terms": [
+      "config",
+      "self",
+      "str",
+      "config_path",
+      "validation",
+      "df_with_strata"
+    ],
+    "enrichment_version": "1.0.0"
+  },
+  "summaries": {
+    "file_summary": "✅ Summary of findings  \nThe `01_validate_and_clean.py` script is a well-structured enhancement of the previous `CADDataValidator` class, incorporating a cleaning step and external configuration. No syntax errors.",
+    "first_line": "✅ Summary of findings  "
+  },
+  "chunks": [
+    {
+      "chunk_id": "2025-11-23T00:17:53+00:00_summary_of_findings_01_validate_and_clean_chunk1",
+      "chunk_index": 1,
+      "file": "chunk_00000.txt",
+      "tags": [
+        "api",
+        "code",
+        "config",
+        "config_path",
+        "data",
+        "df_with_strata",
+        "docs",
+        "error handling",
+        "excel",
+        "function",
+        "input/output",
+        "json",
+        "markdown",
+        "police",
+        "python",
+        "self",
+        "sql",
+        "validation",
+        "variable"
+      ],
+      "key_terms": [
+        "config",
+        "self",
+        "str",
+        "config_path",
+        "validation",
+        "df_with_strata"
+      ],
+      "summary": "✅ Summary of findings  \nThe `01_validate_and_clean.py` script is a well-structured enhancement of the previous `CADDataValidator` class, incorporating a cleaning step and external configuration.",
+      "char_length": 6911,
+      "byte_length": 7020
+    }
+  ],
+  "enrichment_version": "1.0.0"
+}

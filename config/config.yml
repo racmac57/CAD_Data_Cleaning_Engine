@@ -1,0 +1,319 @@
+# =============================================================================
+# CAD Data Correction Framework Configuration
+# =============================================================================
+# This configuration file controls all aspects of the CAD data correction
+# pipeline for processing 700K+ emergency dispatch records.
+# =============================================================================
+
+# Project metadata
+project:
+  name: "CAD Data Correction Framework"
+  version: "1.0.0"
+  description: "Production-safe correction system for corrupted emergency CAD data"
+  maintainer: "Hackensack PD Data Analytics"
+
+# Input/Output paths
+paths:
+  # Input data
+  input_file: "data/ESRI_CADExport/CAD_ESRI_Final_20251117_v3.xlsx"
+  input_backup: "data/01_raw/backup"
+
+  # Output data
+  output_file: "data/output/CAD_CLEANED.xlsx"
+  output_dir: "data/output"
+
+  # Manual corrections (CSV files with corrections to apply)
+  corrections:
+    address: "data/manual_corrections/address_corrections.csv"
+    disposition: "data/manual_corrections/disposition_corrections.csv"
+    how_reported: "data/manual_corrections/how_reported_corrections.csv"
+    fulladdress2: "doc/updates_corrections_FullAddress2.csv"
+    street_names: "ref/hackensack_municipal_streets_from_lawsoft_25_11_24.xlsx"
+
+  # Reference data
+  reference:
+    call_type_master: "ref/CallType_Master_Mapping.csv"
+    call_type_categories: "ref/CallType_Categories_clean.csv"
+    rms_export: "data/rms/2019_2025_11_16_16_57_00_ALL_RMS_Export.xlsx"
+    zone_data: "ref/Zone_Data.csv"
+
+  # Audit and logging
+  log_file: "logs/cad_processing.log"
+  audit_file: "data/audit/audit_log.csv"
+  hash_manifest: "data/audit/hash_manifest.json"
+
+  # Manual review exports
+  manual_review_dir: "data/manual_review"
+  manual_review_file: "data/manual_review/flagged_records.xlsx"
+
+# Geocoding configuration
+geocoding:
+  enabled: false  # Set to true to enable geocoding
+  locator_path: ""  # Path to ArcGIS locator
+  batch_size: 1000  # Records to geocode in each batch
+  retry_failed: true
+  timeout_seconds: 30
+
+# Processing options
+processing:
+  # Memory management
+  chunk_size: 10000  # Process records in chunks
+  use_dask: true     # Use Dask for large datasets
+  n_workers: 4       # Number of parallel workers
+
+  # Data quality
+  min_quality_score: 50  # Minimum acceptable quality score (0-100)
+
+  # Correction options
+  apply_address_corrections: true
+  apply_disposition_corrections: true
+  apply_how_reported_corrections: true
+  apply_call_type_mapping: true
+
+  # Field extraction
+  extract_hour_field: true
+  normalize_addresses: true
+  parse_officer_info: true
+  clean_narratives: true
+
+  # Duplicate detection
+  detect_duplicates: true
+  flag_merge_artifacts: true
+
+  # Backfill options
+  backfill_addresses_from_rms: false  # Set to true to backfill addresses
+  backfill_incidents_from_rms: true
+  backfill_response_types: true
+
+# Validation settings
+validation:
+  # Schema validation
+  validate_schema: true
+  strict_schema: false  # If true, halt on schema errors
+
+  # Data validation
+  check_record_count: true
+  check_case_numbers: true
+  check_duplicate_cases: true
+
+  # Quality checks
+  require_quality_scores: true
+  require_audit_trail: true
+
+  # Output validation
+  check_utf8_bom: true
+  verify_corrections_applied: true
+  verify_hash_integrity: true
+
+# Quality scoring weights (total should be 100)
+quality_weights:
+  case_number_present: 20
+  address_present: 20
+  call_time_present: 10
+  dispatch_time_present: 10
+  officer_present: 20
+  disposition_present: 10
+  incident_type_present: 10
+
+# Duplicate detection rules
+duplicate_detection:
+  # Fields to use for duplicate detection
+  key_fields:
+    - "ReportNumberNew"
+    - "Time of Call"
+    - "FullAddress2"
+
+  # Merge artifact patterns (regex)
+  merge_artifact_patterns:
+    - ".*DUPLICATE.*"
+    - ".*MERGE.*"
+    - ".*ARTIFACT.*"
+
+  # Fuzzy matching thresholds
+  address_similarity_threshold: 0.85
+  time_difference_threshold_minutes: 5
+
+# Manual review criteria
+manual_review_criteria:
+  # Flag records for manual review if:
+  flag_unknown_addresses: true
+  flag_missing_case_numbers: true
+  flag_low_quality_scores: true
+  flag_suspicious_duplicates: true
+  flag_invalid_times: true
+
+  # Thresholds
+  low_quality_threshold: 30
+
+  # Patterns to flag
+  address_patterns_to_flag:
+    - "UNKNOWN"
+    - "UNK"
+    - "N/A"
+    - "NULL"
+    - "NONE"
+    - "?"
+
+# Field mappings and transformations
+field_mappings:
+  # How Reported standardization
+  how_reported:
+    patterns:
+      "9-1-1": ["911", "9-1-1", "9/1/1", "E911", "E-911", "1901", "September 1"]
+      "PHONE": ["PHONE", "TEL", "TELEPHONE"]
+      "WALK-IN": ["WALK-IN", "WALK IN", "IN PERSON"]
+      "SELF-INITIATED": ["SELF-INITIATED", "OFFICER INITIATED", "OI", "SI"]
+      "RADIO": ["RADIO"]
+      "EMAIL": ["EMAIL", "E-MAIL"]
+
+  # Disposition standardization
+  disposition:
+    patterns:
+      "See Report": ["sees Report", "sees report", "See report"]
+      "GOA": ["goa"]
+      "UTL": ["utl"]
+
+  # Time of day categories
+  time_of_day:
+    "Early Morning": [0, 3]   # 00:00 - 03:59
+    "Morning": [4, 7]          # 04:00 - 07:59
+    "Morning Peak": [8, 11]    # 08:00 - 11:59
+    "Afternoon": [12, 15]      # 12:00 - 15:59
+    "Evening Peak": [16, 19]   # 16:00 - 19:59
+    "Night": [20, 23]          # 20:00 - 23:59
+
+# Export options
+export:
+  # Output format
+  format: "xlsx"  # xlsx, csv, parquet
+
+  # Excel options
+  excel:
+    include_utf8_bom: true
+    engine: "openpyxl"
+    freeze_panes: "A2"  # Freeze header row
+
+  # CSV options
+  csv:
+    encoding: "utf-8-sig"
+    sep: ","
+    quoting: 1  # QUOTE_ALL
+
+  # Columns to include in output
+  output_columns:
+    - "ReportNumberNew"
+    - "Time of Call"
+    - "Incident"
+    - "FullAddress2"
+    - "Disposition"
+    - "How Reported"
+    - "Officer"
+    - "Response Type"
+    - "quality_score"
+    - "processing_flags"
+
+  # Export audit trail separately
+  export_audit_trail: true
+  export_flagged_records: true
+  export_quality_report: true
+
+# Logging configuration
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
+  date_format: "%Y-%m-%d %H:%M:%S"
+
+  # File rotation
+  max_log_size_mb: 10
+  backup_count: 5
+
+  # Console output
+  console_output: true
+
+  # Log specific events
+  log_corrections: true
+  log_validations: true
+  log_quality_scores: true
+
+# Performance tuning
+performance:
+  # Memory limits
+  max_memory_gb: 8
+  chunk_size_rows: 10000
+
+  # Parallelization
+  use_multiprocessing: true
+  max_workers: 4
+
+  # Optimization flags
+  optimize_dtypes: true
+  use_categorical: true
+  cache_intermediate_results: false
+
+# Error handling
+error_handling:
+  # How to handle errors
+  on_validation_error: "warn"  # halt, warn, ignore
+  on_processing_error: "warn"
+  on_export_error: "halt"
+
+  # Retry configuration
+  max_retries: 3
+  retry_delay_seconds: 5
+
+  # Backup before processing
+  create_backup: true
+  backup_suffix: "_backup"
+
+# Testing and development
+development:
+  # Test mode (process subset of data)
+  test_mode: false
+  test_sample_size: 1000
+  test_random_seed: 42
+
+  # Debug options
+  debug_mode: false
+  verbose_logging: false
+  save_intermediate_files: false
+
+  # Profiling
+  enable_profiling: false
+  profile_output: "logs/profile_stats.txt"
+
+# Notification settings (future enhancement)
+notifications:
+  enabled: false
+  email_on_completion: false
+  email_on_error: false
+  email_recipients: []
+
+# Custom rules (can be extended)
+custom_rules:
+  # Address normalization rules
+  address_abbreviations:
+    "ST": "STREET"
+    "AVE": "AVENUE"
+    "BLVD": "BOULEVARD"
+    "RD": "ROAD"
+    "DR": "DRIVE"
+    "CT": "COURT"
+    "PL": "PLACE"
+    "LN": "LANE"
+    "PKWY": "PARKWAY"
+    "TERR": "TERRACE"
+
+  # Block extraction pattern
+  block_pattern: "^(\\d+)\\s+(.+?)(?:\\s+(?:APT|UNIT|#).*)?$"
+
+  # Officer rank patterns
+  officer_ranks:
+    - "SGT"
+    - "LT"
+    - "CAPT"
+    - "DET"
+    - "PO"
+    - "OFFICER"
+    - "SERGEANT"
+    - "LIEUTENANT"
+    - "CAPTAIN"

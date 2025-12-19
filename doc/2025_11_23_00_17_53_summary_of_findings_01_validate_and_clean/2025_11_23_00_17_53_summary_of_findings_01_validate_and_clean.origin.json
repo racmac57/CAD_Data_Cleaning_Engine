@@ -1,0 +1,52 @@
+{
+  "original_full_path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\02_ETL_Scripts\\CAD_Data_Cleaning_Engine\\doc\\summary_of_findings_01_validate_and_clean.md",
+  "original_directory": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\02_ETL_Scripts\\CAD_Data_Cleaning_Engine\\doc",
+  "original_filename": "summary_of_findings_01_validate_and_clean.md",
+  "operation": "MOVE",
+  "sent_at": "2025-11-23T05:17:48.6538283Z",
+  "size_bytes": 7143,
+  "modified_time": "2025-10-17T21:10:16.0000000Z",
+  "integrity_sha256": "e845b17d554cf716618af375aa53e5fd853967b8bed82d9023d623ac474f353f",
+  "created_time": "2025-10-18T22:32:37.5373815Z",
+  "tags": [
+    "API",
+    "code",
+    "config",
+    "data",
+    "docs",
+    "error handling",
+    "excel",
+    "function",
+    "input/output",
+    "json",
+    "markdown",
+    "police",
+    "python",
+    "sql",
+    "variable"
+  ],
+  "metadata_enrichment": {
+    "metadata": {
+      "project_name": "02_data",
+      "source_type": "documentation",
+      "language": "en",
+      "department": "admin",
+      "key_terms": [
+        "config",
+        "self",
+        "str",
+        "config_path",
+        "validation",
+        "df_with_strata"
+      ],
+      "enrichment_version": "1.0.0"
+    },
+    "summaries": {
+      "file_summary": "✅ Summary of findings  \nThe `01_validate_and_clean.py` script is a well-structured enhancement of the previous `CADDataValidator` class, incorporating a cleaning step and external configuration. No syntax errors.",
+      "first_line": "✅ Summary of findings  "
+    },
+    "enrichment_version": "1.0.0"
+  },
+  "last_processed_at": "2025-11-23T00:17:52.837178",
+  "department": "admin"
+}

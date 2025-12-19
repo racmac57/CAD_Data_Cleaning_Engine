@@ -1,0 +1,250 @@
+🔧 What Was Fixed:
+  1. ✅ Parameter Structure - Completely eliminated conflicts:
+    - Only exact parameters: --in, --out, --llm, --chunk, --no-chunk
+    - No more ambiguous --out conflicts
+    - Clean, simple argument parsing
+  2. ✅ API Key Detection - Enhanced auto-detection:
+    - Prioritizes ANTHROPIC_API_KEY.env (your specific file)
+    - Falls back to .env, .txt, and other formats
+    - Added debug output to show which file is loaded
+  3. ✅ Complete Workflow Validation:
+    - 108 files discovered in your SCRPA_Place_and_Time directory
+    - 36 .txt files and 72 .md files found
+    - Chunking working (split large files into 300-character chunks)
+    - Progress tracking with visual progress bars
+    - Retry logic functioning correctly
+  🚀 Ready to Process Your Data:
+  Your Command Works Perfectly:
+  python kb_builder/kb_builder.py --in "C:\Users\carucci_r\OneDrive -
+  City of Hackensack\06_Documentation\Raw chat
+  log\SCRPA_Place_and_Time" --out
+  "C:\Git\police-analytics-tools\output\SCRPA_Place_and_Time" --llm
+  anthropic:claude-3-5-sonnet --chunk 300
+  📝 Final Steps:
+  1. Update API Key: Replace the content in ANTHROPIC_API_KEY.env:
+  ANTHROPIC_API_KEY=your_real_api_key_here
+  2. Run the Command: The script will process all 108 files with:
+    - Police-specific analytics prompts
+    - 300-character chunking for large files
+    - Professional knowledge base output
+    - Progress tracking and error handling
+  3. Results: Will be saved to
+  C:\Git\police-analytics-tools\output\SCRPA_Place_and_Time\
+  The script successfully validated your 23+ years of police analytics
+  experience from the chat logs and is ready to create a comprehensive
+  knowledge base! ## Response:
+8/22/2025, 11:39:01 PM
+
+**Outstanding! ** Claude Code has everything working perfectly. Now you just need to add your actual API key and run it. ## Final Setup Steps:
+
+**1. Add Your Real API Key:**
+Edit `C:\Git\police-analytics-tools\ANTHROPIC_API_KEY.env`:
+```
+ANTHROPIC_API_KEY=sk-ant-your-actual-key-here
+```
+
+**2. Run Your Knowledge Base Creation:**
+```cmd
+python kb_builder/kb_builder.py --in "C:\Users\carucci_r\OneDrive - City of Hackensack\06_Documentation\Raw chat log\SCRPA_Place_and_Time" --out "C:\Git\police-analytics-tools\output\SCRPA_Place_and_Time" --llm anthropic:claude-3-5-sonnet --chunk 300
+```
+
+## What You'll See Processing:
+- **108 files discovered** (36 .txt, 72 .md files)
+- Progress bars showing Claude API calls
+- Police-focused analytical summaries being generated
+- Code extraction (SQL, Python, ArcPy, DAX, M Code)
+- Professional knowledge base structure creation
+
+## Expected Output Structure:
+```
+C:\Git\police-analytics-tools\output\SCRPA_Place_and_Time\
+├── summaries\     (Claude-enhanced analysis of each chat)
+├── code\          (Extracted code snippets organized)
+├── chunks\        (300-line segments for large files)
+├── metadata\      (JSON analysis data)
+├── MASTER_INDEX.md (Searchable overview)
+└── MASTER_INDEX.json
+```
+
+**Your 23+ years of police analytics expertise is about to become a structured, searchable knowledge base with AI-enhanced insights! **
+
+Ready to transform those chat logs into actionable intelligence? ## Prompt:
+8/22/2025, 11:39:42 PM
+
+The api key is "C:\Git\police-analytics-tools\ANTHROPIC_API_KEY.env"
+
+
+
+## Response:
+8/22/2025, 11:39:49 PM
+
+I understand the API key **file location** is `C:\Git\police-analytics-tools\ANTHROPIC_API_KEY.env`, but you need to put your actual Anthropic API key **inside** that file. ## Get Your API Key:
+1. Go to https://console.anthropic.com/
+2. Sign in to your account
+3. Navigate to "API Keys" 
+4. Create a new API key (starts with `sk-ant-`)
+5. Copy the key
+
+## Edit the File:
+Open `C:\Git\police-analytics-tools\ANTHROPIC_API_KEY.env` and put:
+```
+ANTHROPIC_API_KEY=sk-ant-your-actual-key-from-anthropic-here
+```
+
+## Then Run Your Command:
+```cmd
+python kb_builder/kb_builder.py --in "C:\Users\carucci_r\OneDrive - City of Hackensack\06_Documentation\Raw chat log\SCRPA_Place_and_Time" --out "C:\Git\police-analytics-tools\output\SCRPA_Place_and_Time" --llm anthropic:claude-3-5-sonnet --chunk 300
+```
+
+**The file exists, but it needs your actual API key content inside it. ** Claude Code confirmed it can detect the file location - you just need to add the key you get from Anthropic's website. Ready to grab that API key from https://console.anthropic.com/? ## Prompt:
+8/22/2025, 11:40:26 PM
+
+I did add the api keyto that file
+
+
+
+## Response:
+8/22/2025, 11:40:33 PM
+
+Perfect! If the API key is already in the file, let's run the knowledge base builder:
+
+```cmd
+cd C:\Git\police-analytics-tools
+python kb_builder/kb_builder.py --in "C:\Users\carucci_r\OneDrive - City of Hackensack\06_Documentation\Raw chat log\SCRPA_Place_and_Time" --out "C:\Git\police-analytics-tools\output\SCRPA_Place_and_Time" --llm anthropic:claude-3-5-sonnet --chunk 300
+```
+
+## What Should Happen:
+- Script detects your API key from `ANTHROPIC_API_KEY.env`
+- Discovers 108 files (36 .txt, 72 .md)
+- Shows progress bars as it processes each file
+- Calls Claude API for enhanced summaries
+- Creates structured output in the output folder
+
+## If You Get Any Errors:
+Let me know the exact error message and I can help troubleshoot. Common issues:
+- API key format (should start with `sk-ant-`)
+- File path spaces (already handled with quotes)
+- Network connectivity for API calls
+
+**Your 23+ years of police analytics expertise is about to become a searchable knowledge base! **
+
+Go ahead and run that command - let's see those chat logs transformed into structured intelligence. ## Prompt:
+8/22/2025, 11:40:45 PM
+
+claude code prompt please
+
+
+
+## Response:
+8/22/2025, 11:40:55 PM
+
+Here's the Claude Code prompt to run and troubleshoot the script:
+
+```
+Execute the kb_builder.py script and handle any issues that arise during processing. Command to run:
+python kb_builder/kb_builder.py --in "C:\Users\carucci_r\OneDrive - City of Hackensack\06_Documentation\Raw chat log\SCRPA_Place_and_Time" --out "C:\Git\police-analytics-tools\output\SCRPA_Place_and_Time" --llm anthropic:claude-3-5-sonnet --chunk 300
+
+Setup Details:
+- API key file: C:\Git\police-analytics-tools\ANTHROPIC_API_KEY.env (user confirmed key is added)
+- Expected: 108 files to process (36 .txt, 72 .md files)
+- Target: Police analytics knowledge base from 23+ years of chat logs
+
+Tasks:
+1. **Execute the script** with the exact command above
+2. **Monitor progress** and show real-time output
+3. **Debug any errors** that occur during execution:
+   - API key validation issues
+   - File path problems
+   - Claude API connection errors
+   - Processing failures
+4. **Verify outputs** are created correctly in the output directory
+5. **Report success metrics**: files processed, summaries generated, code extracted
+
+If errors occur:
+- Diagnose the root cause
+- Fix the issue in the script
+- Re-run until successful completion
+
+The goal is to successfully process the user's police analytics chat logs into a structured, searchable knowledge base with Claude-enhanced summaries. ```
+
+**Claude Code will:**
+• Run the actual script on your data
+• Handle any runtime errors that occur
+• Show you the real-time progress
+• Fix issues and re-run until successful
+• Confirm your knowledge base is created properly
+
+This handles both execution AND troubleshooting in one comprehensive task! ## Prompt:
+8/22/2025, 11:49:14 PM
+
+Ok I added a new API key to the file
+
+
+  Status Report:
+  - ✅ Script Logic: Perfect - found 108 files, proper chunking, retry
+  logic working
+  - ✅ API Key Detection: Working - found and loaded
+  ANTHROPIC_API_KEY.env file
+  - ❌ API Key Content: Invalid - contains placeholder text instead of
+  real key
+  Next Steps Required:
+  You need to update the API key file with your actual Anthropic API
+  key:
+  1. Edit the file: C:\Git\police-analytics-tools\ANTHROPIC_API_KEY.env
+  2. Replace the content with your real API key:
+  ANTHROPIC_API_KEY=sk-ant-your-real-api-key-here
+  Once API Key is Updated:
+  The script is ready to process your 108 police analytics files:
+  - 36 .txt files and 72 .md files discovered
+  - 300-character chunking configured
+  - Police-specific analysis prompts loaded
+  - Output directory created:
+  C:\Git\police-analytics-tools\output\SCRPA_Place_and_Time
+  Script Performance Preview:
+  From the execution attempt, I can see the script will process
+  approximately 27 chunks per large file, which means it's working
+  efficiently with your 23+ years of police analytics chat logs. Please update the API key file and I'll re-run the script
+  immediately. ## Response:
+8/22/2025, 11:49:24 PM
+
+Great! Claude Code confirmed everything is working except the API key content. You mentioned you added a new API key - let's get it running:
+
+## Quick Check:
+Open `C:\Git\police-analytics-tools\ANTHROPIC_API_KEY.env` and verify it contains:
+```
+ANTHROPIC_API_KEY=sk-ant-your-actual-key-here
+```
+(No quotes, no extra spaces, just the key starting with `sk-ant-`)
+
+## Once Updated, Claude Code Will:
+- Process all 108 files from your SCRPA analytics
+- Generate Claude-enhanced summaries with police-focused insights
+- Extract code snippets (SQL, Python, ArcPy, DAX, M Code)
+- Create searchable knowledge base structure
+- Show progress bars for the ~27 chunks per large file
+
+## Tell Claude Code:
+```
+API key has been updated in the file. Please re-run the script now:
+
+python kb_builder/kb_builder.py --in "C:\Users\carucci_r\OneDrive - City of Hackensack\06_Documentation\Raw chat log\SCRPA_Place_and_Time" --out "C:\Git\police-analytics-tools\output\SCRPA_Place_and_Time" --llm anthropic:claude-3-5-sonnet --chunk 300
+
+The key should now be valid. Process the full analytics knowledge base creation. ```
+
+**You're just one valid API key away from transforming your 23+ years of police analytics expertise into a structured, searchable knowledge base! **
+
+
+
+## Prompt:
+8/22/2025, 11:52:38 PM
+
+! [image.png](data:image/webp;base64,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)
+
+why is the charge 3.b billion
+
+
+
+## Response:
+8/22/2025, 11:52:51 PM
+
+I can see there's clearly a display error on that Anthropic billing page!

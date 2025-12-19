@@ -1,0 +1,884 @@
+{
+  "version": "1.0",
+  "system": "RMS",
+  "source_file_default_name": "HPD_RMS_Export.xlsx",
+  "timezone": "America/New_York",
+  "generated_on": "2025-12-16",
+  "fields": [
+    {
+      "source_field_name": "Case Number",
+      "internal_field_name": "CaseNumber",
+      "esri_field_name": null,
+      "description": null,
+      "required": null,
+      "nullable": null,
+      "source_type": null,
+      "output_type": "string",
+      "accepted_formats": [
+        "text"
+      ],
+      "trim": null,
+      "normalize_whitespace": null,
+      "case_rule": null,
+      "domain_file": [
+        "config/config_enhanced.json (rms.join_key_rms)",
+        "scripts/backfill_incidents_from_rms.py"
+      ],
+      "derive_rule": null,
+      "coercions": [
+        "to_string_strip"
+      ],
+      "default_rule": {
+        "apply_when": "missing",
+        "default_value": null,
+        "behavior": "error"
+      },
+      "validation": {}
+    },
+    {
+      "source_field_name": "Incident Date",
+      "internal_field_name": "IncidentDate",
+      "esri_field_name": null,
+      "description": null,
+      "required": null,
+      "nullable": null,
+      "source_type": null,
+      "output_type": "date",
+      "accepted_formats": [
+        "excel_date",
+        "MM/dd/yyyy",
+        "M/d/yyyy",
+        "ISO8601_date"
+      ],
+      "trim": null,
+      "normalize_whitespace": null,
+      "case_rule": null,
+      "domain_file": null,
+      "derive_rule": null,
+      "coercions": [
+        "to_date_coerce"
+      ],
+      "default_rule": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "validation": {}
+    },
+    {
+      "source_field_name": "Incident Time",
+      "internal_field_name": "IncidentTime",
+      "esri_field_name": null,
+      "description": null,
+      "required": null,
+      "nullable": null,
+      "source_type": null,
+      "output_type": "time",
+      "accepted_formats": [
+        "excel_time",
+        "HH:mm",
+        "H:mm",
+        "HH:mm:ss"
+      ],
+      "trim": null,
+      "normalize_whitespace": null,
+      "case_rule": null,
+      "domain_file": null,
+      "derive_rule": null,
+      "coercions": [
+        "to_time_coerce"
+      ],
+      "default_rule": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "validation": {}
+    },
+    {
+      "source_field_name": "Incident Date_Between",
+      "internal_field_name": "IncidentDateBetween",
+      "esri_field_name": null,
+      "description": null,
+      "required": null,
+      "nullable": null,
+      "source_type": null,
+      "output_type": "date",
+      "accepted_formats": [
+        "excel_date",
+        "MM/dd/yyyy",
+        "M/d/yyyy",
+        "ISO8601_date"
+      ],
+      "trim": null,
+      "normalize_whitespace": null,
+      "case_rule": null,
+      "domain_file": null,
+      "derive_rule": null,
+      "coercions": [
+        "to_date_coerce"
+      ],
+      "default_rule": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "validation": {}
+    },
+    {
+      "source_field_name": "Incident Time_Between",
+      "internal_field_name": "IncidentTimeBetween",
+      "esri_field_name": null,
+      "description": null,
+      "required": null,
+      "nullable": null,
+      "source_type": null,
+      "output_type": "time",
+      "accepted_formats": [
+        "excel_time",
+        "HH:mm",
+        "H:mm",
+        "HH:mm:ss"
+      ],
+      "trim": null,
+      "normalize_whitespace": null,
+      "case_rule": null,
+      "domain_file": null,
+      "derive_rule": null,
+      "coercions": [
+        "to_time_coerce"
+      ],
+      "default_rule": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "validation": {}
+    },
+    {
+      "source_field_name": "Report Date",
+      "internal_field_name": "ReportDate",
+      "esri_field_name": null,
+      "description": null,
+      "required": null,
+      "nullable": null,
+      "source_type": null,
+      "output_type": "date",
+      "accepted_formats": [
+        "excel_date",
+        "MM/dd/yyyy",
+        "M/d/yyyy",
+        "ISO8601_date"
+      ],
+      "trim": null,
+      "normalize_whitespace": null,
+      "case_rule": null,
+      "domain_file": null,
+      "derive_rule": null,
+      "coercions": [
+        "to_date_coerce"
+      ],
+      "default_rule": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "validation": {}
+    },
+    {
+      "source_field_name": "Report Time",
+      "internal_field_name": "ReportTime",
+      "esri_field_name": null,
+      "description": null,
+      "required": null,
+      "nullable": null,
+      "source_type": null,
+      "output_type": "time",
+      "accepted_formats": [
+        "excel_time",
+        "HH:mm",
+        "H:mm",
+        "HH:mm:ss"
+      ],
+      "trim": null,
+      "normalize_whitespace": null,
+      "case_rule": null,
+      "domain_file": null,
+      "derive_rule": null,
+      "coercions": [
+        "to_time_coerce"
+      ],
+      "default_rule": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "validation": {}
+    },
+    {
+      "source_field_name": "Incident Type_1",
+      "internal_field_name": "IncidentType1",
+      "esri_field_name": null,
+      "description": null,
+      "required": null,
+      "nullable": null,
+      "source_type": null,
+      "output_type": "string",
+      "accepted_formats": [
+        "text"
+      ],
+      "trim": null,
+      "normalize_whitespace": null,
+      "case_rule": null,
+      "domain_file": [
+        "config/config_enhanced.json (rms.incident_field)",
+        "scripts/backfill_incidents_from_rms.py"
+      ],
+      "derive_rule": null,
+      "coercions": [
+        "to_string_strip"
+      ],
+      "default_rule": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "validation": {}
+    },
+    {
+      "source_field_name": "Incident Type_2",
+      "internal_field_name": "IncidentType2",
+      "esri_field_name": null,
+      "description": null,
+      "required": null,
+      "nullable": null,
+      "source_type": null,
+      "output_type": "string",
+      "accepted_formats": [
+        "text"
+      ],
+      "trim": null,
+      "normalize_whitespace": null,
+      "case_rule": null,
+      "domain_file": null,
+      "derive_rule": null,
+      "coercions": [
+        "to_string_strip"
+      ],
+      "default_rule": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "validation": {}
+    },
+    {
+      "source_field_name": "Incident Type_3",
+      "internal_field_name": "IncidentType3",
+      "esri_field_name": null,
+      "description": null,
+      "required": null,
+      "nullable": null,
+      "source_type": null,
+      "output_type": "string",
+      "accepted_formats": [
+        "text"
+      ],
+      "trim": null,
+      "normalize_whitespace": null,
+      "case_rule": null,
+      "domain_file": null,
+      "derive_rule": null,
+      "coercions": [
+        "to_string_strip"
+      ],
+      "default_rule": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "validation": {}
+    },
+    {
+      "source_field_name": "FullAddress",
+      "internal_field_name": "FullAddress",
+      "esri_field_name": null,
+      "description": null,
+      "required": null,
+      "nullable": null,
+      "source_type": null,
+      "output_type": "string",
+      "accepted_formats": [
+        "text"
+      ],
+      "trim": null,
+      "normalize_whitespace": null,
+      "case_rule": null,
+      "domain_file": [
+        "scripts/backfill_address_from_rms.py",
+        "scripts/esri_production_deploy.py"
+      ],
+      "derive_rule": null,
+      "coercions": [
+        "to_string_strip"
+      ],
+      "default_rule": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "validation": {}
+    },
+    {
+      "source_field_name": "Grid",
+      "internal_field_name": "Grid",
+      "esri_field_name": null,
+      "description": null,
+      "required": null,
+      "nullable": null,
+      "source_type": null,
+      "output_type": "string",
+      "accepted_formats": [
+        "text"
+      ],
+      "trim": null,
+      "normalize_whitespace": null,
+      "case_rule": null,
+      "domain_file": null,
+      "derive_rule": null,
+      "coercions": [
+        "to_string_strip"
+      ],
+      "default_rule": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "validation": {}
+    },
+    {
+      "source_field_name": "Zone",
+      "internal_field_name": "Zone",
+      "esri_field_name": null,
+      "description": null,
+      "required": null,
+      "nullable": null,
+      "source_type": null,
+      "output_type": "string",
+      "accepted_formats": [
+        "text",
+        "int"
+      ],
+      "trim": null,
+      "normalize_whitespace": null,
+      "case_rule": null,
+      "domain_file": null,
+      "derive_rule": null,
+      "coercions": [
+        "to_string_strip"
+      ],
+      "default_rule": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "validation": {}
+    },
+    {
+      "source_field_name": "Narrative",
+      "internal_field_name": "Narrative",
+      "esri_field_name": null,
+      "description": null,
+      "required": null,
+      "nullable": null,
+      "source_type": null,
+      "output_type": "string",
+      "accepted_formats": [
+        "text"
+      ],
+      "trim": null,
+      "normalize_whitespace": null,
+      "case_rule": null,
+      "domain_file": [
+        "scripts/merge_cad_rms_incidents.py (reads Narrative for merged QA export)"
+      ],
+      "derive_rule": null,
+      "coercions": [
+        "to_string_strip"
+      ],
+      "default_rule": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "validation": {}
+    },
+    {
+      "source_field_name": "Total Value Stolen",
+      "internal_field_name": "TotalValueStolen",
+      "esri_field_name": null,
+      "description": null,
+      "required": null,
+      "nullable": null,
+      "source_type": null,
+      "output_type": "number",
+      "accepted_formats": [
+        "number",
+        "currency_text"
+      ],
+      "trim": null,
+      "normalize_whitespace": null,
+      "case_rule": null,
+      "domain_file": null,
+      "derive_rule": null,
+      "coercions": [
+        "to_numeric_coerce"
+      ],
+      "default_rule": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "validation": {}
+    },
+    {
+      "source_field_name": "Total Value Recover",
+      "internal_field_name": "TotalValueRecover",
+      "esri_field_name": null,
+      "description": null,
+      "required": null,
+      "nullable": null,
+      "source_type": null,
+      "output_type": "number",
+      "accepted_formats": [
+        "number",
+        "currency_text"
+      ],
+      "trim": null,
+      "normalize_whitespace": null,
+      "case_rule": null,
+      "domain_file": null,
+      "derive_rule": null,
+      "coercions": [
+        "to_numeric_coerce"
+      ],
+      "default_rule": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "validation": {}
+    },
+    {
+      "source_field_name": "Registration 1",
+      "internal_field_name": "Registration1",
+      "esri_field_name": null,
+      "description": null,
+      "required": null,
+      "nullable": null,
+      "source_type": null,
+      "output_type": "string",
+      "accepted_formats": [
+        "text"
+      ],
+      "trim": null,
+      "normalize_whitespace": null,
+      "case_rule": null,
+      "domain_file": null,
+      "derive_rule": null,
+      "coercions": [
+        "to_string_strip"
+      ],
+      "default_rule": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "validation": {}
+    },
+    {
+      "source_field_name": "Make1",
+      "internal_field_name": "Make1",
+      "esri_field_name": null,
+      "description": null,
+      "required": null,
+      "nullable": null,
+      "source_type": null,
+      "output_type": "string",
+      "accepted_formats": [
+        "text"
+      ],
+      "trim": null,
+      "normalize_whitespace": null,
+      "case_rule": null,
+      "domain_file": null,
+      "derive_rule": null,
+      "coercions": [
+        "to_string_strip"
+      ],
+      "default_rule": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "validation": {}
+    },
+    {
+      "source_field_name": "Model1",
+      "internal_field_name": "Model1",
+      "esri_field_name": null,
+      "description": null,
+      "required": null,
+      "nullable": null,
+      "source_type": null,
+      "output_type": "string",
+      "accepted_formats": [
+        "text"
+      ],
+      "trim": null,
+      "normalize_whitespace": null,
+      "case_rule": null,
+      "domain_file": null,
+      "derive_rule": null,
+      "coercions": [
+        "to_string_strip"
+      ],
+      "default_rule": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "validation": {}
+    },
+    {
+      "source_field_name": "Reg State 1",
+      "internal_field_name": "RegState1",
+      "esri_field_name": null,
+      "description": null,
+      "required": null,
+      "nullable": null,
+      "source_type": null,
+      "output_type": "string",
+      "accepted_formats": [
+        "US_state_abbrev",
+        "text"
+      ],
+      "trim": null,
+      "normalize_whitespace": null,
+      "case_rule": null,
+      "domain_file": null,
+      "derive_rule": null,
+      "coercions": [
+        "to_string_strip"
+      ],
+      "default_rule": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "validation": {}
+    },
+    {
+      "source_field_name": "Registration 2",
+      "internal_field_name": "Registration2",
+      "esri_field_name": null,
+      "description": null,
+      "required": null,
+      "nullable": null,
+      "source_type": null,
+      "output_type": "string",
+      "accepted_formats": [
+        "text"
+      ],
+      "trim": null,
+      "normalize_whitespace": null,
+      "case_rule": null,
+      "domain_file": null,
+      "derive_rule": null,
+      "coercions": [
+        "to_string_strip"
+      ],
+      "default_rule": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "validation": {}
+    },
+    {
+      "source_field_name": "Reg State 2",
+      "internal_field_name": "RegState2",
+      "esri_field_name": null,
+      "description": null,
+      "required": null,
+      "nullable": null,
+      "source_type": null,
+      "output_type": "string",
+      "accepted_formats": [
+        "US_state_abbrev",
+        "text"
+      ],
+      "trim": null,
+      "normalize_whitespace": null,
+      "case_rule": null,
+      "domain_file": null,
+      "derive_rule": null,
+      "coercions": [
+        "to_string_strip"
+      ],
+      "default_rule": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "validation": {}
+    },
+    {
+      "source_field_name": "Make2",
+      "internal_field_name": "Make2",
+      "esri_field_name": null,
+      "description": null,
+      "required": null,
+      "nullable": null,
+      "source_type": null,
+      "output_type": "string",
+      "accepted_formats": [
+        "text"
+      ],
+      "trim": null,
+      "normalize_whitespace": null,
+      "case_rule": null,
+      "domain_file": null,
+      "derive_rule": null,
+      "coercions": [
+        "to_string_strip"
+      ],
+      "default_rule": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "validation": {}
+    },
+    {
+      "source_field_name": "Model2",
+      "internal_field_name": "Model2",
+      "esri_field_name": null,
+      "description": null,
+      "required": null,
+      "nullable": null,
+      "source_type": null,
+      "output_type": "string",
+      "accepted_formats": [
+        "text"
+      ],
+      "trim": null,
+      "normalize_whitespace": null,
+      "case_rule": null,
+      "domain_file": null,
+      "derive_rule": null,
+      "coercions": [
+        "to_string_strip"
+      ],
+      "default_rule": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "validation": {}
+    },
+    {
+      "source_field_name": "Reviewed By",
+      "internal_field_name": "ReviewedBy",
+      "esri_field_name": null,
+      "description": null,
+      "required": null,
+      "nullable": null,
+      "source_type": null,
+      "output_type": "string",
+      "accepted_formats": [
+        "text"
+      ],
+      "trim": null,
+      "normalize_whitespace": null,
+      "case_rule": null,
+      "domain_file": null,
+      "derive_rule": null,
+      "coercions": [
+        "to_string_strip"
+      ],
+      "default_rule": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "validation": {}
+    },
+    {
+      "source_field_name": "CompleteCalc",
+      "internal_field_name": "CompleteCalc",
+      "esri_field_name": null,
+      "description": null,
+      "required": null,
+      "nullable": null,
+      "source_type": null,
+      "output_type": "boolean",
+      "accepted_formats": [
+        "bool",
+        "0/1",
+        "Y/N",
+        "Yes/No",
+        "Complete/Incomplete"
+      ],
+      "trim": null,
+      "normalize_whitespace": null,
+      "case_rule": null,
+      "domain_file": null,
+      "derive_rule": null,
+      "coercions": [
+        "to_bool_coerce"
+      ],
+      "default_rule": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "validation": {}
+    },
+    {
+      "source_field_name": "Officer of Record",
+      "internal_field_name": "OfficerOfRecord",
+      "esri_field_name": null,
+      "description": null,
+      "required": null,
+      "nullable": null,
+      "source_type": null,
+      "output_type": "string",
+      "accepted_formats": [
+        "text"
+      ],
+      "trim": null,
+      "normalize_whitespace": null,
+      "case_rule": null,
+      "domain_file": null,
+      "derive_rule": null,
+      "coercions": [
+        "to_string_strip"
+      ],
+      "default_rule": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "validation": {}
+    },
+    {
+      "source_field_name": "Squad",
+      "internal_field_name": "Squad",
+      "esri_field_name": null,
+      "description": null,
+      "required": null,
+      "nullable": null,
+      "source_type": null,
+      "output_type": "string",
+      "accepted_formats": [
+        "text"
+      ],
+      "trim": null,
+      "normalize_whitespace": null,
+      "case_rule": null,
+      "domain_file": null,
+      "derive_rule": null,
+      "coercions": [
+        "to_string_strip"
+      ],
+      "default_rule": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "validation": {}
+    },
+    {
+      "source_field_name": "Det_Assigned",
+      "internal_field_name": "DetAssigned",
+      "esri_field_name": null,
+      "description": null,
+      "required": null,
+      "nullable": null,
+      "source_type": null,
+      "output_type": "string",
+      "accepted_formats": [
+        "text"
+      ],
+      "trim": null,
+      "normalize_whitespace": null,
+      "case_rule": null,
+      "domain_file": null,
+      "derive_rule": null,
+      "coercions": [
+        "to_string_strip"
+      ],
+      "default_rule": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "validation": {}
+    },
+    {
+      "source_field_name": "Case_Status",
+      "internal_field_name": "CaseStatus",
+      "esri_field_name": null,
+      "description": null,
+      "required": null,
+      "nullable": null,
+      "source_type": null,
+      "output_type": "string",
+      "accepted_formats": [
+        "text"
+      ],
+      "trim": null,
+      "normalize_whitespace": null,
+      "case_rule": null,
+      "domain_file": null,
+      "derive_rule": null,
+      "coercions": [
+        "to_string_strip"
+      ],
+      "default_rule": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "validation": {}
+    },
+    {
+      "source_field_name": "NIBRS Classification",
+      "internal_field_name": "NIBRSClassification",
+      "esri_field_name": null,
+      "description": null,
+      "required": null,
+      "nullable": null,
+      "source_type": null,
+      "output_type": "string",
+      "accepted_formats": [
+        "text"
+      ],
+      "trim": null,
+      "normalize_whitespace": null,
+      "case_rule": null,
+      "domain_file": null,
+      "derive_rule": null,
+      "coercions": [
+        "to_string_strip"
+      ],
+      "default_rule": {
+        "apply_when": "missing_or_invalid",
+        "default_value": null,
+        "behavior": "coerce_null"
+      },
+      "validation": {}
+    }
+  ]
+}

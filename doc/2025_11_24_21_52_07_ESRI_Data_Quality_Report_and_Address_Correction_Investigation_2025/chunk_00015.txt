@@ -1,0 +1,651 @@
+logger.info("Creating enhanced fields...")
+        
+        # Response time calculation
+        if 'Time of Call' in df.columns and 'Time Dispatched' in df.columns:
+            df['CAD_Response_Time_Minutes'] = (df['Time Dispatched'] - df['Time of Call']).dt.total_seconds() / 60
+            df['CAD_Response_Time_Minutes'] = df['CAD_Response_Time_Minutes'].fillna(0)
+        
+        # On-scene duration calculation
+        if 'Time Out' in df.columns and 'Time In' in df.columns:
+            df['CAD_On_Scene_Duration_Minutes'] = (df['Time In'] - df['Time Out']).dt.total_seconds() / 60
+            df['CAD_On_Scene_Duration_Minutes'] = df['CAD_On_Scene_Duration_Minutes'].fillna(0)
+        
+        # Day of week
+        if 'Time of Call' in df.columns:
+            df['CAD_Day_of_Week'] = df['Time of Call'].dt.day_name()
+            df['CAD_Is_Weekend'] = df['Time of Call'].dt.dayofweek.isin([5, 6])
+        
+        # Month and year for trend analysis
+        if 'Time of Call' in df.columns:
+            df['CAD_Year'] = df['Time of Call'].dt.year
+            df['CAD_Month'] = df['Time of Call'].dt.month
+            df['CAD_Quarter'] = df['Time of Call'].dt.quarter
+        
+        # Priority level (if available)
+        if 'Priority' in df.columns:
+            df['CAD_Priority'] = df['Priority'].astype(str).str.strip().str.upper()
+        elif 'Response Type' in df.columns:
+            # Infer priority from response type
+            df['CAD_Priority'] = df['Response Type'].apply(self.infer_priority)
+        
+        logger.info("  Enhanced fields created successfully")
+        return df
+    
+    def infer_priority(self, response_type):
+        """Infer priority level from response type.""" if pd.isna(response_type):
+            return "UNKNOWN"
+        
+        response_str = str(response_type).upper()
+        
+        if any(term in response_str for term in ['EMERGENCY', 'URGENT', 'PRIORITY']):
+            return "HIGH"
+        elif any(term in response_str for term in ['NON-EMERGENCY', 'ROUTINE']):
+            return "LOW"
+        else:
+            return "MEDIUM"
+    
+    def get_processing_stats(self) -> Dict:
+        """Get processing statistics.""" return self.processing_stats.copy()
+    
+    def create_cad_summary_report(self, df: pd.DataFrame) -> Dict:
+        """Create comprehensive CAD processing summary report.""" report = {
+            'processing_timestamp': datetime.now().isoformat(),
+            'total_records': len(df),
+            'processing_stats': self.get_processing_stats(),
+            'data_quality_metrics': {
+                'average_quality_score': float(df['Data_Quality_Score'].mean()) if 'Data_Quality_Score' in df.columns else 0,
+                'high_quality_records': int((df['Data_Quality_Score'] >= 80).sum()) if 'Data_Quality_Score' in df.columns else 0,
+                'records_with_case_numbers': int(df['Case_Number'].notna().sum()) if 'Case_Number' in df.columns else 0,
+                'records_with_addresses': int(df['FullAddress2'].notna().sum()) if 'FullAddress2' in df.columns else 0,
+                'records_with_call_times': int(df['Time of Call'].notna().sum()) if 'Time of Call' in df.columns else 0
+            },
+            'field_enhancements': {
+                'case_numbers_cleaned': 'CAD_Case_Number_Clean, Case_Number',
+                'addresses_enhanced': 'CAD_Address_Clean, CAD_Address_Normalized, CAD_Block',
+                'time_fields_enhanced': 'CAD_Time_Of_Day, CAD_Enhanced_Time_Of_Day, CAD_Response_Time_Minutes',
+                'officer_fields_parsed': 'CAD_Officer_Name, CAD_Officer_Badge, CAD_Officer_Rank',
+                'text_fields_cleaned': 'CADNotes_Cleaned, Narrative_Clean',
+                'quality_metrics_added': 'Data_Quality_Score, Processing_Timestamp'
+            }
+        }
+        
+        return report
+```
+
+## **Usage Example**
+
+```python
+# Example usage of the CAD data processor
+def process_cad_export(cad_file_path: str) -> Tuple[pd.DataFrame, Dict]:
+    """Process a CAD export file using the CAD processor.""" # Load CAD data
+    df = pd.read_excel(cad_file_path)
+    
+    # Initialize processor
+    processor = CADDataProcessor()
+    
+    # Process the data
+    enhanced_df = processor.process_cad_data(df)
+    
+    # Get processing statistics
+    stats = processor.get_processing_stats()
+    
+    # Create summary report
+    report = processor.create_cad_summary_report(enhanced_df)
+    
+    return enhanced_df, report
+
+# Usage
+if __name__ == "__main__":
+    cad_file = "path/to/cad_export.xlsx"
+    processed_data, processing_report = process_cad_export(cad_file)
+    
+    print(f"Processed {len(processed_data):,} CAD records")
+    print(f"Average quality score: {processing_report['data_quality_metrics']['average_quality_score']:.1f}/100")
+    print(f"Processing stats: {processing_report['processing_stats']}")
+```
+
+## **Key Features of This CAD Processing Code**
+
+1. **Comprehensive Field Cleaning**: Handles case numbers, addresses, time fields, officer names, and text fields
+2. **Critical 9-1-1 Fix**: Resolves Excel date conversion artifacts that turn "9-1-1" into dates
+3. **Time Enhancement**: Creates time-of-day categories and shift analysis
+4. **Geographic Processing**: Extracts blocks and normalizes addresses for mapping
+5. **Officer Parsing**: Separates names, badges, and ranks
+6. **Quality Scoring**: 100-point quality assessment system
+7. **Enhanced Fields**: Response times, on-scene duration, day-of-week analysis
+8. **Comprehensive Logging**: Detailed processing statistics and reporting
+
+This code can be directly integrated into existing scripts or used as a standalone CAD processing module. ```
+
+```markdown
+*** Begin Patch
+*** Update File: IMPLEMENTATION_SUMMARY.md
+@@
+-## Overview
+-Completed comprehensive refactoring and enhancement of the CAD Data Cleaning Engine to eliminate hardcoded paths, add new data processing capabilities, and improve maintainability. Most recently, the validator gained a rule-based `FullAddress2` correction layer driven by `doc/updates_corrections_FullAddress2.csv` to reduce invalid/missing addresses before zone/grid backfill. +## Overview
++Completed comprehensive refactoring and enhancement of the CAD Data Cleaning Engine to eliminate hardcoded paths, add new data processing capabilities, and improve maintainability. Most recently, the validator gained a rule-based `FullAddress2` correction layer driven by `doc/updates_corrections_FullAddress2.csv` to reduce invalid/missing addresses before zone/grid backfill, an optimized ESRI production deployment script, and a final cleanup and address-backfill pipeline that pushes Response_Type coverage to ~99.96% and improves valid address rates. @@
+ ## PRIORITY 6: Burglary Classification (Ollama) ✅
+@@
+ **Usage:**
+ ```bash
+ python scripts/classify_burglary_ollama.py --rms-file data/rms/burglary_records.xlsx
+ ```
++
++---
++
++## PRIORITY 7: ESRI Production Deployment & Final Cleanup ✅
++
++### 1. ESRI Production Deployment (`scripts/esri_production_deploy.py`)
++**Status:** ✅ Complete
++
++**Purpose:** Build a production-ready ESRI export from the cleaned CAD master with high Response_Type coverage and DV/TRO/FRO logic applied. +
++**Key Features:**
++- Vectorized Response_Type mapping using `ref/RAW_CAD_CALL_TYPE_EXPORT.xlsx` plus `ref/Unmapped_Response_Type.csv`. +- TAPS variant resolution, Domestic Violence vs Dispute classification, and TRO/FRO splitting using RMS narratives. +- Disposition normalization and RMS-based address backfill. +- Outputs `data/ESRI_CADExport/CAD_ESRI_Final_YYYYMMDD.xlsx` plus `data/02_reports/esri_deployment_report.md` and `data/02_reports/tro_fro_manual_review.csv`. +
++**Metrics (latest full run):**
++- Records processed: 701,115
++- Response_Type coverage: ~99.5–99.6%
++- DV/TRO/FRO corrections and address backfill applied before downstream cleanup. +
++### 2. Final Cleanup: TRO/FRO + Fuzzy + RMS (`scripts/final_cleanup_tro_fuzzy_rms.py`)
++**Status:** ✅ Complete
++
++**Purpose:** Starting from the ESRI export, perform:
++- RMS Incident backfill for null `Incident` values. +- TRO/FRO Incident corrections from `data/02_reports/tro_fro_manual_review.csv` (using `Corrected Incident`). +- Fuzzy matching for remaining unmapped `Response_Type` values, with auto-apply and manual-review bands. +
++**Outputs:**
++- Updated ESRI file: `data/ESRI_CADExport/CAD_ESRI_Final_20251117_v2.xlsx`
++- `data/02_reports/unmapped_final_report.md` – narrative summary of unmapped Response_Type. +- `data/02_reports/fuzzy_review.csv` – 70–75% confidence matches for manual review. +- `data/02_reports/unmapped_breakdown_summary.csv` – category counts (Null/Blank Incident, Low Confidence, No Fuzzy Match, Other). +- `data/02_reports/unmapped_cases_for_manual_backfill.csv` – all remaining unmapped records with helper columns for `Manual_Backfill_Incident`/`Manual_Backfill_Response_Type`. +
++**Metrics (latest run):**
++- Initial unmapped Response_Type: 3,155
++- Final unmapped Response_Type: 309
++- Improvement: 2,846 records
++- Final Response_Type coverage: 99.96%
++
++### 3. Address Backfill from RMS (`scripts/backfill_address_from_rms.py`)
++**Status:** ✅ Complete
++
++**Purpose:** Improve `FullAddress2` quality in the ESRI export using RMS addresses and strict quality rules. +
++**Inputs:**
++- `data/ESRI_CADExport/CAD_ESRI_Final_20251117_v2.xlsx`
++- `data/rms/2019_2025_11_16_16_57_00_ALL_RMS_Export.xlsx`
++
++**Outputs:**
++- Updated ESRI file: `data/ESRI_CADExport/CAD_ESRI_Final_20251117_v3.xlsx`
++- `data/02_reports/address_backfill_from_rms_log.csv` – per-record address changes. +- `data/02_reports/address_backfill_from_rms_report.md` – address-quality summary and top remaining problem patterns. +
++**Metrics (latest run):**
++- Total records: 701,115
++- Valid addresses before: 597,480 (85.22%)
++- Valid addresses after: 598,119 (85.31%)
++- Addresses backfilled from RMS: 639
++
+*** End Patch
+```
+
+```markdown
+# CAD Data Cleaning Engine - Implementation Summary
+**Date:** 2025-11-16
+**Author:** Claude Code
+**Project:** Hackensack PD CAD Data Cleaning Pipeline
+
+## Overview
+Completed comprehensive refactoring and enhancement of the CAD Data Cleaning Engine to eliminate hardcoded paths, add new data processing capabilities, and improve maintainability. Most recently, the validator gained a rule-based `FullAddress2` correction layer driven by `doc/updates_corrections_FullAddress2.csv` to reduce invalid/missing addresses before zone/grid backfill, an optimized ESRI production deployment script, and a final cleanup and address-backfill pipeline that pushes Response_Type coverage to ~99.96% and improves valid address rates. ---
+
+## PRIORITY 1: Fix Hardcoded Paths ✅
+
+### 1. Updated `config/config_enhanced.json`
+**Status:** ✅ Complete
+
+Added new `paths` and `rms` configuration sections:
+
+```json
+{
+  "paths": {
+    "onedrive_root": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack",
+    "calltype_categories": "{onedrive_root}\\09_Reference\\Classifications\\CallTypes\\CallType_Categories.csv",
+    "raw_data_dir": "{onedrive_root}\\02_ETL_Scripts\\CAD_Data_Pipeline\\data\\01_raw",
+    "zone_master": "C:\\TEMP\\zone_grid_master.xlsx",
+    "rms_dir": "data/rms",
+    "output_dir": "data/02_reports"
+  },
+  "rms": {
+    "join_key_cad": "ReportNumberNew",
+    "join_key_rms": "Case Number",
+    "incident_field": "Incident Type_1"
+  }
+}
+```
+
+**Key Features:**
+- Path template expansion with `{variable}` syntax
+- Centralized path management
+- RMS integration configuration
+
+### 2. Refactored `scripts/01_validate_and_clean.py`
+**Status:** ✅ Complete
+
+**Changes Made:**
+- Added `expand_config_paths()` function (lines 29-58)
+- Updated `_load_config()` to call path expansion (line 272)
+- Refactored `_load_incident_mapping()` to use config paths (lines 298-299)
+- Updated `main()` to use `config.paths.raw_data_dir` instead of hardcoded path (lines 1563-1568)
+- Made `--raw-dir` argument optional (overrides config if provided)
+
+**Removed Hardcoded Paths:**
+- Line 293 (old): `r"C:\Users\carucci_r\OneDrive - City of Hackensack\09_Reference\Classifications\CallTypes\CallType_Categories.csv"`
+- Line 1533 (old): `r"C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Pipeline\data\01_raw"`
+
+### 3. Refactored `scripts/cad_zone_merger.py`
+**Status:** ✅ Complete
+
+**Changes Made:**
+- Added `load_config()` function with path expansion
+- Converted to function-based architecture with `merge_zones()` function
+- Added `main()` with argparse for command-line usage
+- Uses `config.paths.zone_master` instead of hardcoded path
+
+**Removed Hardcoded Paths:**
+- Line 8 (old): `EXPORT_ROOT = r"C:\Users\carucci_r\OneDrive - City of Hackensack\05_EXPORTS\_CAD"`
+- Line 11 (old): `ZONE_MASTER = r"C:\TEMP\zone_grid_master.xlsx"`
+
+---
+
+## PRIORITY 2: Response Type Audit Script ✅
+
+### Created `scripts/audit_response_type_coverage.py`
+**Status:** ✅ Complete
+
+**Purpose:** Audit which CAD call type variants have Response_Type mappings defined. **Inputs:**
+- `ref/RAW_CAD_CALL_TYPE_EXPORT.xlsx` - Raw CAD call type variants
+- `ref/call_types/CallType_Categories.xlsx` - Master mapping
+
+**Outputs:**
+- `ref/response_type_gaps.csv` - Incident types missing Response_Type
+- Console summary: X/505 variants coverage statistics
+
+**Features:**
+- Compares raw export against master mapping
+- Identifies unmapped incidents
+- Frequency analysis (most common unmapped types first)
+- Audit timestamp tracking
+
+**Usage:**
+```bash
+python scripts/audit_response_type_coverage.py
+python scripts/audit_response_type_coverage.py --config config/config_enhanced.json
+```
+
+---
+
+## PRIORITY 3: Case Number Generator ✅
+
+### Created `scripts/generate_case_numbers.py`
+**Status:** ✅ Complete
+
+**Purpose:** Generate standardized ReportNumberNew values with year-based sequencing. **Format Specification:**
+- NEW reports: `YY-XXXXXX` (e.g., `25-000001`)
+- SUPPLEMENT reports: `YY-XXXXXXA` (e.g., `25-000001A`, `25-000001B`)
+- Sequences reset each calendar year
+- Supplement suffixes: A-Z (max 26 supplements per case)
+
+**Features:**
+- `CaseNumberGenerator` class with persistence
+- Sequence tracking in `ref/case_number_sequences.json`
+- Year rollover handling
+- Supplement letter sequencing (A-Z)
+- DataFrame batch processing
+
+**Unit Tests Included:**
+- ✅ Generate new case numbers
+- ✅ Generate supplement case numbers
+- ✅ Year rollover (sequence reset)
+- ✅ Supplement max suffix (Z limit)
+- ✅ DataFrame generation
+- ✅ Invalid report type handling
+- ✅ Supplement without parent error
+- ✅ Sequence persistence across instances
+
+**Usage:**
+```python
+from generate_case_numbers import generate_case_numbers
+df = generate_case_numbers(df, date_col='Time of Call', type_col='ReportType')
+```
+
+---
+
+## PRIORITY 4: RMS Incident Backfill ✅
+
+### Created `scripts/backfill_incidents_from_rms.py`
+**Status:** ✅ Complete
+
+**Purpose:** Backfill null CAD Incident values using RMS data. **Background:** 249 CAD records have null Incidents. Many have corresponding RMS records with incident types populated. **Process:**
+1. Load RMS files from `data/rms/*.xlsx`
+2. Join CAD (ReportNumberNew) to RMS (Case Number)
+3. Fill CAD.Incident where null using RMS.Incident Type_1
+4. Log results to `data/02_reports/incident_backfill_log.csv`
+
+**Outputs:**
+- DataFrame with Incident column backfilled
+- `incident_backfill_log.csv` with backfill audit trail
+- Console summary: matched, filled, still_null counts
+
+**Features:**
+- Consolidates multiple RMS files
+- Tracks backfill statistics
+- Preserves non-null incidents
+- Detailed logging
+
+**Usage:**
+```bash
+python scripts/backfill_incidents_from_rms.py --cad-file data/cad_export.xlsx --rms-dir data/rms
+```
+
+---
+
+## PRIORITY 5: Zone Merger Integration ✅
+
+### Integrated into `scripts/01_validate_and_clean.py`
+**Status:** ✅ Complete
+
+**Changes Made:**
+- Added `merge_zone_data()` function (lines 172-243)
+- Integrated zone backfill in `clean_data()` method (lines 476-483)
+- Executes after address cleaning step
+- Uses `config.paths.zone_master`
+
+**Features:**
+- Address normalization for matching (Street→St, Avenue→Ave, etc.) - Left join to preserve all CAD records
+- Backfills PDZone and Grid only where null
+- Graceful fallback if zone master not found
+
+**Benefit:** Consolidates zone backfill into main cleaning pipeline (deprecates standalone `cad_zone_merger.py`). ---
+
+## PRIORITY 6: Burglary Classification (Ollama) ✅
+
+### Created `scripts/classify_burglary_ollama.py`
+**Status:** ✅ Complete
+
+**Purpose:** Classify burglary incidents into Auto, Commercial, or Residence types using LLM. **Requirements:**
+- Ollama server: `http://localhost:11434`
+- Model: `llama3.2` (or compatible)
+
+**Process:**
+1. Load RMS data with Narrative column
+2. POST to Ollama API with classification prompt
+3. Parse JSON response for type + confidence
+4. Flag low confidence (<0.8) for manual review
+
+**Outputs:**
+- `data/02_reports/burglary_classification.csv`
+
+**Columns:**
+- `ReportNumberNew`: Case number
+- `Burglary_Type`: AUTO | COMMERCIAL | RESIDENCE
+- `Confidence`: 0.0-1.0 score
+- `Reasoning`: LLM explanation
+- `Manual_Review`: Boolean flag
+
+**Features:**
+- Connection health check
+- Progress bar (tqdm)
+- JSON parsing with fallback
+- Confidence thresholding
+- Summary statistics
+
+**Usage:**
+```bash
+# Install Ollama
+ollama pull llama3.2
+
+# Run classification
+python scripts/classify_burglary_ollama.py --rms-file data/rms/burglary_records.xlsx
+```
+
+---
+
+## PRIORITY 7: ESRI Production Deployment & Final Cleanup ✅
+
+### 1. ESRI Production Deployment (`scripts/esri_production_deploy.py`)
+**Status:** ✅ Complete
+
+**Purpose:** Build a production-ready ESRI export from the cleaned CAD master with high Response_Type coverage and DV/TRO/FRO logic applied. **Key Features:**
+- Vectorized Response_Type mapping using `ref/RAW_CAD_CALL_TYPE_EXPORT.xlsx` plus `ref/Unmapped_Response_Type.csv`. - TAPS variant resolution, Domestic Violence vs Dispute classification, and TRO/FRO splitting using RMS narratives. - Disposition normalization and RMS-based address backfill. - Outputs `data/ESRI_CADExport/CAD_ESRI_Final_YYYYMMDD.xlsx` plus `data/02_reports/esri_deployment_report.md` and `data/02_reports/tro_fro_manual_review.csv`. **Metrics (latest full run):**
+- Records processed: 701,115
+- Response_Type coverage: ~99.5–99.6%
+- DV/TRO/FRO corrections and address backfill applied before downstream cleanup. ### 2. Final Cleanup: TRO/FRO + Fuzzy + RMS (`scripts/final_cleanup_tro_fuzzy_rms.py`)
+**Status:** ✅ Complete
+
+**Purpose:** Starting from the ESRI export, perform:
+- RMS Incident backfill for null `Incident` values. - TRO/FRO Incident corrections from `data/02_reports/tro_fro_manual_review.csv` (using `Corrected Incident`). - Fuzzy matching for remaining unmapped `Response_Type` values, with auto-apply and manual-review bands. **Outputs:**
+- Updated ESRI file: `data/ESRI_CADExport/CAD_ESRI_Final_20251117_v2.xlsx`
+- `data/02_reports/unmapped_final_report.md` – narrative summary of unmapped Response_Type. - `data/02_reports/fuzzy_review.csv` – 70–75% confidence matches for manual review. - `data/02_reports/unmapped_breakdown_summary.csv` – category counts (Null/Blank Incident, Low Confidence, No Fuzzy Match, Other). - `data/02_reports/unmapped_cases_for_manual_backfill.csv` – all remaining unmapped records with helper columns for `Manual_Backfill_Incident`/`Manual_Backfill_Response_Type`. **Metrics (latest run):**
+- Initial unmapped Response_Type: 3,155
+- Final unmapped Response_Type: 309
+- Improvement: 2,846 records
+- Final Response_Type coverage: 99.96%
+
+### 3. Address Backfill from RMS (`scripts/backfill_address_from_rms.py`)
+**Status:** ✅ Complete
+
+**Purpose:** Improve `FullAddress2` quality in the ESRI export using RMS addresses and strict quality rules. **Inputs:**
+- `data/ESRI_CADExport/CAD_ESRI_Final_20251117_v2.xlsx`
+- `data/rms/2019_2025_11_16_16_57_00_ALL_RMS_Export.xlsx`
+
+**Outputs:**
+- Updated ESRI file: `data/ESRI_CADExport/CAD_ESRI_Final_20251117_v3.xlsx`
+- `data/02_reports/address_backfill_from_rms_log.csv` – per-record address changes. - `data/02_reports/address_backfill_from_rms_report.md` – address-quality summary and top remaining problem patterns. **Metrics (latest run):**
+- Total records: 701,115
+- Valid addresses before: 597,480 (85.22%)
+- Valid addresses after: 598,119 (85.31%)
+- Addresses backfilled from RMS: 639
+
+---
+
+## Testing Checklist
+
+### Manual Testing Required
+- [ ] Run `01_validate_and_clean.py` with config paths
+- [ ] Run `audit_response_type_coverage.py` (requires ref files)
+- [ ] Run `generate_case_numbers.py` unit tests: `pytest scripts/generate_case_numbers.py -v`
+- [ ] Run `backfill_incidents_from_rms.py` with sample data
+- [ ] Run `classify_burglary_ollama.py` (requires Ollama running)
+- [ ] Verify zone backfill in `01_validate_and_clean.py`
+
+### Validation
+- [ ] Confirm no hardcoded paths remain in production code
+- [ ] Verify config path expansion works correctly
+- [ ] Test on original machine before deployment
+- [ ] Check all output files generate correctly
+
+---
+
+## Dependencies
+
+### Python Packages Required
+```bash
+pip install pandas numpy openpyxl requests tqdm pytest
+```
+
+### External Dependencies
+- **Ollama** (for burglary classification): https://ollama.ai/download
+- **Zone Master File**: `C:\TEMP\zone_grid_master.xlsx`
+- **CallType Categories**: Via config path
+- **RMS Files**: `data/rms/*.xlsx`
+
+---
+
+## Configuration Guide
+
+### Path Variables
+All paths support `{variable}` expansion:
+```json
+{
+  "paths": {
+    "onedrive_root": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack",
+    "calltype_categories": "{onedrive_root}\\09_Reference\\Classifications\\CallTypes\\CallType_Categories.csv"
+  }
+}
+```
+
+### Command-Line Overrides
+All scripts support `--config` to specify alternate config file. Path arguments override config values when provided. ---
+
+## Next Steps
+
+### Recommended
+1. **Test Scripts:** Run each script with sample data to verify functionality
+2. **Update Documentation:** Add scripts to main README.md
+3. **Archive Old Scripts:** Move standalone `cad_zone_merger.py` to `/archive` folder
+4. **Sequence Initialization:** Initialize `ref/case_number_sequences.json` with current state
+5. **Ollama Setup:** Install and configure Ollama for burglary classification
+
+### Future Enhancements
+- [ ] Add Officer field parsing (deferred per requirements)
+- [ ] Integrate TRO/FRO detection logic
+- [ ] Add geocoding for latitude/longitude backfill
+- [ ] Create unified ETL orchestration script
+
+---
+
+## Known Limitations
+
+1. **Zone Master Dependency:** Requires external Excel file at `C:\TEMP\zone_grid_master.xlsx`
+2. **Ollama Requirement:** Burglary classification requires local Ollama installation
+3. **Supplement Limit:** Maximum 26 supplements (A-Z) per case number
+4. **RMS Format:** Expects specific column names (configurable via config)
+
+---
+
+## Support
+
+### Configuration Issues
+- Verify `config/config_enhanced.json` paths are correct for your environment
+- Check path expansion using `--config` argument
+- Review logs for "not found" errors
+
+### Script Errors
+- Check Python package dependencies
+- Verify input file formats (Excel vs CSV)
+- Review column name mappings in config
+
+### Performance
+- Zone backfill adds ~10-15 seconds per 10K records
+- Ollama classification: ~2-3 seconds per narrative (varies by model)
+- Consider batch processing for large datasets
+
+---
+
+## Summary
+
+All 6 priorities completed successfully:
+- ✅ Hardcoded paths eliminated
+- ✅ Configuration centralized
+- ✅ Response type audit capability added
+- ✅ Case number generation implemented
+- ✅ RMS incident backfill operational
+- ✅ Zone merger integrated
+- ✅ Burglary LLM classification ready
+
+**Total Lines of Code Added:** ~1,200
+**Scripts Created:** 4
+**Scripts Refactored:** 3
+**Configuration Enhanced:** 1
+**Unit Tests:** 8
+
+**Ready for deployment after testing on original machine. **
+
+```
+
+```markdown
+# CAD Data Pipeline - Changelog
+
+## [2025-11-21-b] - ESRI Rebuild, Final Cleanup, and Address Backfill
+
+### Summary
+- Rebuilt the ESRI-ready CAD export from the updated CAD master (`ref/2019_2025_11_17_Updated_CAD_Export.xlsx`) using `scripts/esri_production_deploy.py`, then layered on a final cleanup and RMS address backfill pipeline. - Achieved ~99.96% Response_Type coverage via RMS Incident backfill, TRO/FRO Incident corrections, and fuzzy matching, and improved valid address rates using RMS-derived addresses. - Added CSV artifacts to support manual review and backfill of remaining unmapped Response_Type values and weak addresses. ### Added / Updated Scripts
+- `scripts/esri_production_deploy.py`: Optimized ESRI production deploy (rebuilds `CAD_ESRI_Final_YYYYMMDD.xlsx` and `esri_deployment_report.md`). - `scripts/final_cleanup_tro_fuzzy_rms.py`: Final cleanup pipeline (RMS Incident backfill, TRO/FRO corrections from `tro_fro_manual_review.csv`, fuzzy matching, and summary reports). - `scripts/backfill_address_from_rms.py`: RMS-driven address backfill with quality gates and detailed reporting. - `scripts/apply_unmapped_incident_backfill.py`: Applies manual unmapped-incident mappings from `doc/2025_11_21_unmapped_incident.csv` to the ESRI export. - `scripts/check_null_incidents_vs_rms.py`: Utility to compare null-Incident CAD records against RMS `Incident Type_1`. - `scripts/search_violation_in_excels.py`: Utility to locate TRO/FRO violation strings across Excel sources. ### New / Updated Outputs
+- ESRI exports:
+  - `data/ESRI_CADExport/CAD_ESRI_Final_20251121.xlsx` (fresh deploy from updated CAD source). - `data/ESRI_CADExport/CAD_ESRI_Final_20251117_v2.xlsx` (after final Response_Type cleanup). - `data/ESRI_CADExport/CAD_ESRI_Final_20251117_v3.xlsx` (after RMS address backfill). - Response_Type cleanup reports:
+  - `data/02_reports/unmapped_final_report.md`
+  - `data/02_reports/unmapped_breakdown_summary.csv`
+  - `data/02_reports/unmapped_cases_for_manual_backfill.csv`
+  - `data/02_reports/fuzzy_review.csv`
+- TRO/FRO review:
+  - `data/02_reports/tro_fro_manual_review.csv` (now populated with `Corrected Incident` values from analyst review and consumed by the final cleanup script). - Address-quality outputs:
+  - `data/02_reports/address_backfill_from_rms_report.md`
+  - `data/02_reports/address_backfill_from_rms_log.csv`
+
+### Data Quality (Latest Run)
+- Records processed: 701,115
+- Response_Type:
+  - Initial unmapped: 3,155
+  - Final unmapped: 309
+  - Coverage: **99.96%**
+- Addresses:
+  - Valid before RMS backfill: 597,480 (85.22%)
+  - Valid after RMS backfill: 598,119 (85.31%)
+  - Addresses backfilled from RMS: 639
+
+---
+
+## [2025-11-21] - FullAddress2 Manual Corrections Integration
+
+### Summary
+- Integrated a rule-based `FullAddress2` correction layer into `CADDataValidator.clean_data()` driven by `doc/updates_corrections_FullAddress2.csv` (or `paths.fulladdress2_corrections` in `config_enhanced.json`). - Rules can optionally filter on `Incident` and are applied prior to generic address normalization and zone/grid backfill, improving address validity and PDZone/Grid coverage. ### Technical Details
+- Added `CADDataValidator._load_fulladdress2_corrections()` to load and normalize correction rules at initialization and config reload. - Added `CADDataValidator._apply_fulladdress2_corrections()` and wired it into the start of `clean_data()` to overwrite `FullAddress2` where rules match. - Exposed an optional `paths.fulladdress2_corrections` entry in `config_enhanced.json`; when unset, the validator falls back to `doc/updates_corrections_FullAddress2.csv` in the repo. ---
+
+## [2025-11-17-b] - ESRI Production Deployment Final
+
+### Summary
+Completed final ESRI production deployment with comprehensive data cleaning achieving 99.55% Response_Type coverage and 96.91% data quality score. Created optimized vectorized processing script for 701,115 records. Resolved all Notion blockers and standardized all Response_Type values to clean Routine/Urgent/Emergency. ### Added
+- **scripts/esri_production_deploy.py**: Optimized vectorized data cleaning script for production deployment
+  - Case-insensitive Response_Type mapping
+  - TAPS variant resolution based on address keywords
+  - Domestic Dispute/Violence classification via DV report join
+  - TRO/FRO splitting via RMS narrative parsing
+  - Disposition normalization with standard mappings
+  - Address backfill from RMS data
+  - Response_Type value cleanup (removes garbage entries)
+  - Data quality flagging system
+
+### Output Files
+- **data/ESRI_CADExport/CAD_ESRI_Final_20251117.xlsx**: Production-ready export (701,115 records)
+- **data/02_reports/esri_deployment_report.md**: Validation report with metrics
+- **data/02_reports/tro_fro_manual_review.csv**: 96 TRO/FRO records needing manual review
+
+### Processing Results
+| Task | Records Processed |
+|------|-------------------|
+| Response_Type Mapped | 160,022 |
+| TAPS Variants Resolved (Blocker #8) | 21,201 |
+| Domestic Violence Reclassified | 458 |
+| Disputes Reclassified | 1,327 |
+| TRO/FRO Split (Blocker #10) | 257 |
+| Disposition Normalized | 58,604 |
+| Address Backfilled from RMS | 2,362 |
+| Garbage Response_Type Cleared | 107 |
+
+### Data Quality
+- **Response_Type Coverage**: 99.55% (PASS)
+- **Data Quality Score**: 96.91% (PASS)
+- **Status**: PRODUCTION READY
+
+### Response_Type Distribution
+- Routine: 425,335 (60.67%)
+- Urgent: 239,170 (34.11%)
+- Emergency: 33,455 (4.77%)
+
+### Technical Improvements
+- Vectorized pandas operations for 700K+ record processing (5 min vs 30+ min)
+- Case-insensitive mapping with lowercase key normalization
+- Comprehensive garbage value cleanup for Response_Type field
+- Modular function design for maintainability
+
+### Remaining Items
+- 148 unmapped incident types (mostly trailing spaces/naming variations)
+- 21,681 records flagged for review (missing address/disposition/Response_Type)
+- 96 TRO/FRO records requiring manual narrative review
+
+---
+
+## [2025-11-17] - ESRI Production Deployment Prep
+
+### Summary
+Final data cleaning for ESRI Crime Dashboard deployment. Achieved 97.82% Response_Type coverage with manual top-20 mappings. Updated CAD and DV source files with manual corrections. Resolved Notion blockers 8-10 (TAPS, Domestic Violence, TRO/FRO).

@@ -1,0 +1,641 @@
+import pandas as pd
+from pathlib import Path
+
+BASE_DIR = Path(r"C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine")
+ESRI_FILE = BASE_DIR / "data" / "ESRI_CADExport" / "CAD_ESRI_Final_20251117_v2.xlsx"
+RMS_PATH = BASE_DIR / "data" / "rms" / "2019_2025_11_16_16_57_00_ALL_RMS_Export.xlsx"
+OUTPUT_CSV = BASE_DIR / "manual_corrections" / "disposition_corrections.csv"
+BACKUP_CSV = BASE_DIR / "manual_corrections" / "disposition_corrections_backup_243_records.csv"
+
+print("="*80)
+print("REGENERATING DISPOSITION CORRECTIONS FILE")
+print("="*80)
+print("\nThis will recreate the file with all null disposition records")
+print("and automatically backfill RMS matches and Assist Own Agency (Backup)\n")
+
+# Step 1: Get all records with null Disposition from ESRI file
+print("Step 1: Loading ESRI file and finding null Disposition records...")
+df = pd.read_excel(ESRI_FILE)
+print(f"  Total ESRI records: {len(df):,}")
+
+null_disp = df[df['Disposition'].isna()].copy()
+print(f"  Records with null Disposition: {len(null_disp):,}")
+
+# Create the corrections DataFrame
+disp_corrections = null_disp[['ReportNumberNew', 'TimeOfCall', 'Incident', 'How Reported', 'Disposition']].copy()
+disp_corrections['Corrected_Value'] = ''
+disp_corrections['Notes'] = ''
+
+print(f"\nStep 2: Created corrections file with {len(disp_corrections):,} records")
+
+# Step 3: Load RMS and backfill
+print("\nStep 3: Loading RMS export and backfilling matches...")
+rms_df = pd.read_excel(RMS_PATH, dtype=str)
+rms_case_numbers = set(rms_df['Case Number'].dropna().astype(str).str.strip())
+print(f"  RMS Case Numbers: {len(rms_case_numbers):,}")
+
+# Track updates
+rms_matches = 0
+assist_backup_updates = 0
+
+# Backfill Corrected_Value
+for idx, row in disp_corrections.iterrows():
+    report_num = str(row['ReportNumberNew']).strip()
+    incident = str(row['Incident']).strip() if pd.notna(row['Incident']) else ''
+    
+    # Rule 1: Check if ReportNumberNew maps to RMS Case Number
+    if report_num in rms_case_numbers:
+        disp_corrections.at[idx, 'Corrected_Value'] = 'See Report'
+        rms_matches += 1
+        continue
+    
+    # Rule 2: If Incident is "Assist Own Agency (Backup)" → "Assisted"
+    if incident == 'Assist Own Agency (Backup)':
+        disp_corrections.at[idx, 'Corrected_Value'] = 'Assisted'
+        assist_backup_updates += 1
+
+# Save
+print("\n" + "="*80)
+print("BACKFILL SUMMARY")
+print("="*80)
+print(f"Total records: {len(disp_corrections):,}")
+print(f"Set to 'See Report' (RMS match): {rms_matches:,}")
+print(f"Set to 'Assisted' (Assist Own Agency Backup): {assist_backup_updates:,}")
+print(f"Total auto-filled: {rms_matches + assist_backup_updates:,}")
+print(f"Remaining to fill manually: {(disp_corrections['Corrected_Value'] == '').sum():,}")
+
+# Backup current file if it exists
+if OUTPUT_CSV.exists():
+    try:
+        import shutil
+        shutil.copy(OUTPUT_CSV, BACKUP_CSV)
+        print(f"\nBacked up current file (243 records) to: {BACKUP_CSV.name}")
+    except Exception as e:
+        print(f"\n[WARNING] Could not backup current file: {e}")
+
+print(f"\nSaving to: {OUTPUT_CSV}")
+try:
+    disp_corrections.to_csv(OUTPUT_CSV, index=False)
+except PermissionError:
+    print("\n[ERROR] File is open in Excel or another program!") print("Please close the file and run this script again.") print(f"\nAlternatively, the data is ready - you can manually save it.") print(f"Total records to save: {len(disp_corrections):,}")
+    exit(1)
+
+print("\n" + "="*80)
+print("[SUCCESS] File regenerated!") print("="*80)
+print(f"\nThe file now has {len(disp_corrections):,} records (restored from {len(null_disp):,} null dispositions)")
+print(f"  - {rms_matches:,} records auto-filled with 'See Report' (RMS matches)")
+print(f"  - {assist_backup_updates:,} records auto-filled with 'Assisted' (Assist Own Agency Backup)")
+print(f"  - {(disp_corrections['Corrected_Value'] == '').sum():,} records still need manual correction")
+print("\nYou can now add your manual corrections to the remaining empty Corrected_Value fields.") ```
+
+
+## File regeneration ready
+
+The script found:
+- 16,896 records with null Disposition (restored from the ESRI file)
+- 6,928 auto-filled with "See Report" (RMS matches)
+- 9,092 auto-filled with "Assisted" (Assist Own Agency Backup)
+- 876 remaining for manual correction
+
+## To restore your file
+
+1. Close the `dis
+
+---
+
+**User**
+
+If you are makeing the file again can you add the CAD Notes to the columns initially in the csv? ---
+
+**Cursor**
+
+position_correc
+
+---
+
+**User**
+
+were you able to make a new copy for me with the CAD Notes assed? ---
+
+**Cursor**
+
+
+Updating the script to include CAD Notes, then regenerating the file:
+
+
+
+Checking available columns in the ESRI file, then updating the script to include CAD Notes:
+
+
+```python
+"""
+Regenerate disposition_corrections.csv with all records and RMS backfill. This recreates the file that was lost when saving Excel as CSV.
+""" import pandas as pd
+from pathlib import Path
+
+BASE_DIR = Path(r"C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine")
+ESRI_FILE = BASE_DIR / "data" / "ESRI_CADExport" / "CAD_ESRI_Final_20251117_v2.xlsx"
+RMS_PATH = BASE_DIR / "data" / "rms" / "2019_2025_11_16_16_57_00_ALL_RMS_Export.xlsx"
+OUTPUT_CSV = BASE_DIR / "manual_corrections" / "disposition_corrections.csv"
+BACKUP_CSV = BASE_DIR / "manual_corrections" / "disposition_corrections_backup_243_records.csv"
+
+print("="*80)
+print("REGENERATING DISPOSITION CORRECTIONS FILE")
+print("="*80)
+print("\nThis will recreate the file with all null disposition records")
+print("and automatically backfill RMS matches and Assist Own Agency (Backup)\n")
+
+# Step 1: Get all records with null Disposition from ESRI file
+print("Step 1: Loading ESRI file and finding null Disposition records...")
+df = pd.read_excel(ESRI_FILE)
+print(f"  Total ESRI records: {len(df):,}")
+
+null_disp = df[df['Disposition'].isna()].copy()
+print(f"  Records with null Disposition: {len(null_disp):,}")
+
+# Create the corrections DataFrame - include CAD Notes if available
+base_columns = ['ReportNumberNew', 'TimeOfCall', 'Incident', 'How Reported', 'Disposition']
+cad_notes_col = None
+
+# Check if CADNotes column exists
+if 'CADNotes' in null_disp.columns:
+    cad_notes_col = 'CADNotes'
+    base_columns.append('CADNotes')
+elif 'Notes' in null_disp.columns:
+    cad_notes_col = 'Notes'
+    base_notes_col = 'Notes'
+    base_columns.append('Notes')
+
+disp_corrections = null_disp[base_columns].copy()
+disp_corrections['Corrected_Value'] = ''
+disp_corrections['Notes'] = ''  # This is for manual notes, not CAD Notes
+
+print(f"\nStep 2: Created corrections file with {len(disp_corrections):,} records")
+
+# Step 3: Load RMS and backfill
+print("\nStep 3: Loading RMS export and backfilling matches...")
+rms_df = pd.read_excel(RMS_PATH, dtype=str)
+rms_case_numbers = set(rms_df['Case Number'].dropna().astype(str).str.strip())
+print(f"  RMS Case Numbers: {len(rms_case_numbers):,}")
+
+# Track updates
+rms_matches = 0
+assist_backup_updates = 0
+
+# Backfill Corrected_Value
+for idx, row in disp_corrections.iterrows():
+    report_num = str(row['ReportNumberNew']).strip()
+    incident = str(row['Incident']).strip() if pd.notna(row['Incident']) else ''
+    
+    # Rule 1: Check if ReportNumberNew maps to RMS Case Number
+    if report_num in rms_case_numbers:
+        disp_corrections.at[idx, 'Corrected_Value'] = 'See Report'
+        rms_matches += 1
+        continue
+    
+    # Rule 2: If Incident is "Assist Own Agency (Backup)" → "Assisted"
+    if incident == 'Assist Own Agency (Backup)':
+        disp_corrections.at[idx, 'Corrected_Value'] = 'Assisted'
+        assist_backup_updates += 1
+
+# Save
+print("\n" + "="*80)
+print("BACKFILL SUMMARY")
+print("="*80)
+print(f"Total records: {len(disp_corrections):,}")
+print(f"Set to 'See Report' (RMS match): {rms_matches:,}")
+print(f"Set to 'Assisted' (Assist Own Agency Backup): {assist_backup_updates:,}")
+print(f"Total auto-filled: {rms_matches + assist_backup_updates:,}")
+print(f"Remaining to fill manually: {(disp_corrections['Corrected_Value'] == '').sum():,}")
+
+# Backup current file if it exists
+if OUTPUT_CSV.exists():
+    try:
+        import shutil
+        shutil.copy(OUTPUT_CSV, BACKUP_CSV)
+        print(f"\nBacked up current file (243 records) to: {BACKUP_CSV.name}")
+    except Exception as e:
+        print(f"\n[WARNING] Could not backup current file: {e}")
+
+print(f"\nSaving to: {OUTPUT_CSV}")
+try:
+    disp_corrections.to_csv(OUTPUT_CSV, index=False)
+except PermissionError:
+    print("\n[ERROR] File is open in Excel or another program!") print("Please close the file and run this script again.") print(f"\nAlternatively, the data is ready - you can manually save it.") print(f"Total records to save: {len(disp_corrections):,}")
+    exit(1)
+
+print("\n" + "="*80)
+print("[SUCCESS] File regenerated!") print("="*80)
+print(f"\nThe file now has {len(disp_corrections):,} records (restored from {len(null_disp):,} null dispositions)")
+print(f"  - {rms_matches:,} records auto-filled with 'See Report' (RMS matches)")
+print(f"  - {assist_backup_updates:,} records auto-filled with 'Assisted' (Assist Own Agency Backup)")
+print(f"  - {(disp_corrections['Corrected_Value'] == '').sum():,} records still need manual correction")
+print("\nYou can now add your manual corrections to the remaining empty Corrected_Value fields.") ```
+
+
+The ESRI file doesn't include CAD Notes. Checking the original CAD export for CAD Notes and updating the script to include them:
+
+
+
+Updating the script to pull CAD Notes from the original CAD export file:
+
+
+```python
+"""
+Regenerate disposition_corrections.csv with all records and RMS backfill. This recreates the file that was lost when saving Excel as CSV.
+""" import pandas as pd
+from pathlib import Path
+
+BASE_DIR = Path(r"C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine")
+ESRI_FILE = BASE_DIR / "data" / "ESRI_CADExport" / "CAD_ESRI_Final_20251117_v2.xlsx"
+CAD_FILE = BASE_DIR / "ref" / "2019_2025_11_17_Updated_CAD_Export.xlsx"  # Original CAD file with CADNotes
+RMS_PATH = BASE_DIR / "data" / "rms" / "2019_2025_11_16_16_57_00_ALL_RMS_Export.xlsx"
+OUTPUT_CSV = BASE_DIR / "manual_corrections" / "disposition_corrections.csv"
+BACKUP_CSV = BASE_DIR / "manual_corrections" / "disposition_corrections_backup_243_records.csv"
+
+print("="*80)
+print("REGENERATING DISPOSITION CORRECTIONS FILE")
+print("="*80)
+print("\nThis will recreate the file with all null disposition records")
+print("and automatically backfill RMS matches and Assist Own Agency (Backup)\n")
+
+# Step 1: Get all records with null Disposition from ESRI file
+print("Step 1: Loading ESRI file and finding null Disposition records...")
+df = pd.read_excel(ESRI_FILE)
+print(f"  Total ESRI records: {len(df):,}")
+
+null_disp = df[df['Disposition'].isna()].copy()
+print(f"  Records with null Disposition: {len(null_disp):,}")
+
+# Create the corrections DataFrame - include CAD Notes if available
+base_columns = ['ReportNumberNew', 'TimeOfCall', 'Incident', 'How Reported', 'Disposition']
+cad_notes_col = None
+
+# Check if CADNotes column exists
+if 'CADNotes' in null_disp.columns:
+    cad_notes_col = 'CADNotes'
+    base_columns.append('CADNotes')
+elif 'Notes' in null_disp.columns:
+    cad_notes_col = 'Notes'
+    base_notes_col = 'Notes'
+    base_columns.append('Notes')
+
+disp_corrections = null_disp[base_columns].copy()
+disp_corrections['Corrected_Value'] = ''
+disp_corrections['Notes'] = ''  # This is for manual notes, not CAD Notes
+
+print(f"\nStep 2: Created corrections file with {len(disp_corrections):,} records")
+
+# Step 3: Load RMS and backfill
+print("\nStep 3: Loading RMS export and backfilling matches...")
+rms_df = pd.read_excel(RMS_PATH, dtype=str)
+rms_case_numbers = set(rms_df['Case Number'].dropna().astype(str).str.strip())
+print(f"  RMS Case Numbers: {len(rms_case_numbers):,}")
+
+# Track updates
+rms_matches = 0
+assist_backup_updates = 0
+
+# Backfill Corrected_Value
+for idx, row in disp_corrections.iterrows():
+    report_num = str(row['ReportNumberNew']).strip()
+    incident = str(row['Incident']).strip() if pd.notna(row['Incident']) else ''
+    
+    # Rule 1: Check if ReportNumberNew maps to RMS Case Number
+    if report_num in rms_case_numbers:
+        disp_corrections.at[idx, 'Corrected_Value'] = 'See Report'
+        rms_matches += 1
+        continue
+    
+    # Rule 2: If Incident is "Assist Own Agency (Backup)" → "Assisted"
+    if incident == 'Assist Own Agency (Backup)':
+        disp_corrections.at[idx, 'Corrected_Value'] = 'Assisted'
+        assist_backup_updates += 1
+
+# Save
+print("\n" + "="*80)
+print("BACKFILL SUMMARY")
+print("="*80)
+print(f"Total records: {len(disp_corrections):,}")
+print(f"Set to 'See Report' (RMS match): {rms_matches:,}")
+print(f"Set to 'Assisted' (Assist Own Agency Backup): {assist_backup_updates:,}")
+print(f"Total auto-filled: {rms_matches + assist_backup_updates:,}")
+print(f"Remaining to fill manually: {(disp_corrections['Corrected_Value'] == '').sum():,}")
+
+# Backup current file if it exists
+if OUTPUT_CSV.exists():
+    try:
+        import shutil
+        shutil.copy(OUTPUT_CSV, BACKUP_CSV)
+        print(f"\nBacked up current file (243 records) to: {BACKUP_CSV.name}")
+    except Exception as e:
+        print(f"\n[WARNING] Could not backup current file: {e}")
+
+print(f"\nSaving to: {OUTPUT_CSV}")
+try:
+    disp_corrections.to_csv(OUTPUT_CSV, index=False)
+except PermissionError:
+    print("\n[ERROR] File is open in Excel or another program!") print("Please close the file and run this script again.") print(f"\nAlternatively, the data is ready - you can manually save it.") print(f"Total records to save: {len(disp_corrections):,}")
+    exit(1)
+
+print("\n" + "="*80)
+print("[SUCCESS] File regenerated!") print("="*80)
+print(f"\nThe file now has {len(disp_corrections):,} records (restored from {len(null_disp):,} null dispositions)")
+print(f"  - {rms_matches:,} records auto-filled with 'See Report' (RMS matches)")
+print(f"  - {assist_backup_updates:,} records auto-filled with 'Assisted' (Assist Own Agency Backup)")
+print(f"  - {(disp_corrections['Corrected_Value'] == '').sum():,} records still need manual correction")
+print("\nYou can now add your manual corrections to the remaining empty Corrected_Value fields.") ```
+
+```python
+"""
+Regenerate disposition_corrections.csv with all records and RMS backfill. This recreates the file that was lost when saving Excel as CSV.
+""" import pandas as pd
+from pathlib import Path
+
+BASE_DIR = Path(r"C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine")
+ESRI_FILE = BASE_DIR / "data" / "ESRI_CADExport" / "CAD_ESRI_Final_20251117_v2.xlsx"
+CAD_FILE = BASE_DIR / "ref" / "2019_2025_11_17_Updated_CAD_Export.xlsx"  # Original CAD file with CADNotes
+RMS_PATH = BASE_DIR / "data" / "rms" / "2019_2025_11_16_16_57_00_ALL_RMS_Export.xlsx"
+OUTPUT_CSV = BASE_DIR / "manual_corrections" / "disposition_corrections.csv"
+BACKUP_CSV = BASE_DIR / "manual_corrections" / "disposition_corrections_backup_243_records.csv"
+
+print("="*80)
+print("REGENERATING DISPOSITION CORRECTIONS FILE")
+print("="*80)
+print("\nThis will recreate the file with all null disposition records")
+print("and automatically backfill RMS matches and Assist Own Agency (Backup)\n")
+
+# Step 1: Get all records with null Disposition from ESRI file
+print("Step 1: Loading ESRI file and finding null Disposition records...")
+df = pd.read_excel(ESRI_FILE)
+print(f"  Total ESRI records: {len(df):,}")
+
+null_disp = df[df['Disposition'].isna()].copy()
+print(f"  Records with null Disposition: {len(null_disp):,}")
+
+# Create the corrections DataFrame
+base_columns = ['ReportNumberNew', 'TimeOfCall', 'Incident', 'How Reported', 'Disposition']
+disp_corrections = null_disp[base_columns].copy()
+
+# Try to get CAD Notes from original CAD file
+print("\nStep 2a: Loading CAD Notes from original CAD export...")
+try:
+    if CAD_FILE.exists():
+        cad_df = pd.read_excel(CAD_FILE, usecols=['ReportNumberNew', 'CADNotes'], dtype=str)
+        print(f"  Loaded {len(cad_df):,} records with CAD Notes")
+        
+        # Merge CAD Notes
+        disp_corrections = disp_corrections.merge(
+            cad_df[['ReportNumberNew', 'CADNotes']],
+            on='ReportNumberNew',
+            how='left'
+        )
+        print(f"  Merged CAD Notes: {disp_corrections['CADNotes'].notna().sum():,} records have CAD Notes")
+    else:
+        print(f"  [WARNING] CAD file not found: {CAD_FILE.name}")
+        print(f"  CAD Notes column will not be included")
+        disp_corrections['CADNotes'] = ''
+except Exception as e:
+    print(f"  [WARNING] Could not load CAD Notes: {e}")
+    disp_corrections['CADNotes'] = ''
+
+disp_corrections['Corrected_Value'] = ''
+disp_corrections['Notes'] = ''  # This is for manual notes, not CAD Notes
+
+print(f"\nStep 2: Created corrections file with {len(disp_corrections):,} records")
+
+# Step 3: Load RMS and backfill
+print("\nStep 3: Loading RMS export and backfilling matches...")
+rms_df = pd.read_excel(RMS_PATH, dtype=str)
+rms_case_numbers = set(rms_df['Case Number'].dropna().astype(str).str.strip())
+print(f"  RMS Case Numbers: {len(rms_case_numbers):,}")
+
+# Track updates
+rms_matches = 0
+assist_backup_updates = 0
+
+# Backfill Corrected_Value
+for idx, row in disp_corrections.iterrows():
+    report_num = str(row['ReportNumberNew']).strip()
+    incident = str(row['Incident']).strip() if pd.notna(row['Incident']) else ''
+    
+    # Rule 1: Check if ReportNumberNew maps to RMS Case Number
+    if report_num in rms_case_numbers:
+        disp_corrections.at[idx, 'Corrected_Value'] = 'See Report'
+        rms_matches += 1
+        continue
+    
+    # Rule 2: If Incident is "Assist Own Agency (Backup)" → "Assisted"
+    if incident == 'Assist Own Agency (Backup)':
+        disp_corrections.at[idx, 'Corrected_Value'] = 'Assisted'
+        assist_backup_updates += 1
+
+# Save
+print("\n" + "="*80)
+print("BACKFILL SUMMARY")
+print("="*80)
+print(f"Total records: {len(disp_corrections):,}")
+print(f"Set to 'See Report' (RMS match): {rms_matches:,}")
+print(f"Set to 'Assisted' (Assist Own Agency Backup): {assist_backup_updates:,}")
+print(f"Total auto-filled: {rms_matches + assist_backup_updates:,}")
+print(f"Remaining to fill manually: {(disp_corrections['Corrected_Value'] == '').sum():,}")
+
+# Backup current file if it exists
+if OUTPUT_CSV.exists():
+    try:
+        import shutil
+        shutil.copy(OUTPUT_CSV, BACKUP_CSV)
+        print(f"\nBacked up current file (243 records) to: {BACKUP_CSV.name}")
+    except Exception as e:
+        print(f"\n[WARNING] Could not backup current file: {e}")
+
+print(f"\nSaving to: {OUTPUT_CSV}")
+try:
+    disp_corrections.to_csv(OUTPUT_CSV, index=False)
+except PermissionError:
+    print("\n[ERROR] File is open in Excel or another program!") print("Please close the file and run this script again.") print(f"\nAlternatively, the data is ready - you can manually save it.") print(f"Total records to save: {len(disp_corrections):,}")
+    exit(1)
+
+print("\n" + "="*80)
+print("[SUCCESS] File regenerated!") print("="*80)
+print(f"\nThe file now has {len(disp_corrections):,} records (restored from {len(null_disp):,} null dispositions)")
+print(f"  - {rms_matches:,} records auto-filled with 'See Report' (RMS matches)")
+print(f"  - {assist_backup_updates:,} records auto-filled with 'Assisted' (Assist Own Agency Backup)")
+print(f"  - {(disp_corrections['Corrected_Value'] == '').sum():,} records still need manual correction")
+print("\nYou can now add your manual corrections to the remaining empty Corrected_Value fields.") ```
+
+
+Verifying the file was created correctly with CAD Notes:
+
+
+
+CAD Notes column is present. There appear to be duplicates. Creating a verification script to check and fix:
+
+
+```python
+"""Verify the regenerated disposition_corrections.csv file.""" import pandas as pd
+from pathlib import Path
+
+BASE_DIR = Path(r"C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine")
+CSV_FILE = BASE_DIR / "manual_corrections" / "disposition_corrections.csv"
+
+df = pd.read_csv(CSV_FILE)
+
+print("="*80)
+print("DISPOSITION CORRECTIONS FILE VERIFICATION")
+print("="*80)
+print(f"\nTotal records: {len(df):,}")
+print(f"Unique ReportNumberNew: {df['ReportNumberNew'].nunique():,}")
+print(f"Duplicate ReportNumberNew: {df['ReportNumberNew'].duplicated().sum():,}")
+
+print(f"\nColumns: {list(df.columns)}")
+print(f"\nCAD Notes:")
+print(f"  Records with CADNotes: {df['CADNotes'].notna().sum():,}")
+print(f"  Records without CADNotes: {df['CADNotes'].isna().sum():,}")
+
+print(f"\nCorrected_Value:")
+print(f"  Records with Corrected_Value: {(df['Corrected_Value'].notna() & (df['Corrected_Value'] != '')).sum():,}")
+print(f"  'See Report': {(df['Corrected_Value'] == 'See Report').sum():,}")
+print(f"  'Assisted': {(df['Corrected_Value'] == 'Assisted').sum():,}")
+print(f"  Empty: {(df['Corrected_Value'].isna() | (df['Corrected_Value'] == '')).sum():,}")
+
+if df['ReportNumberNew'].duplicated().sum() > 0:
+    print(f"\n[WARNING] Found {df['ReportNumberNew'].duplicated().sum():,} duplicate ReportNumberNew values")
+    print("Sample duplicates:")
+    dup_sample = df[df['ReportNumberNew'].duplicated(keep=False)][['ReportNumberNew', 'Incident', 'CADNotes']].head(10)
+    print(dup_sample.to_string(index=False))
+
+```
+
+
+Fixing duplicate ReportNumberNew values. The CAD file has multiple rows per case. Updating the script to deduplicate:
+
+
+```python
+"""
+Regenerate disposition_corrections.csv with all records and RMS backfill. This recreates the file that was lost when saving Excel as CSV.
+""" import pandas as pd
+from pathlib import Path
+
+BASE_DIR = Path(r"C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine")
+ESRI_FILE = BASE_DIR / "data" / "ESRI_CADExport" / "CAD_ESRI_Final_20251117_v2.xlsx"
+CAD_FILE = BASE_DIR / "ref" / "2019_2025_11_17_Updated_CAD_Export.xlsx"  # Original CAD file with CADNotes
+RMS_PATH = BASE_DIR / "data" / "rms" / "2019_2025_11_16_16_57_00_ALL_RMS_Export.xlsx"
+OUTPUT_CSV = BASE_DIR / "manual_corrections" / "disposition_corrections.csv"
+BACKUP_CSV = BASE_DIR / "manual_corrections" / "disposition_corrections_backup_243_records.csv"
+
+print("="*80)
+print("REGENERATING DISPOSITION CORRECTIONS FILE")
+print("="*80)
+print("\nThis will recreate the file with all null disposition records")
+print("and automatically backfill RMS matches and Assist Own Agency (Backup)\n")
+
+# Step 1: Get all records with null Disposition from ESRI file
+print("Step 1: Loading ESRI file and finding null Disposition records...")
+df = pd.read_excel(ESRI_FILE)
+print(f"  Total ESRI records: {len(df):,}")
+
+null_disp = df[df['Disposition'].isna()].copy()
+print(f"  Records with null Disposition: {len(null_disp):,}")
+
+# Deduplicate by ReportNumberNew - keep first occurrence
+if null_disp['ReportNumberNew'].duplicated().sum() > 0:
+    print(f"  Found {null_disp['ReportNumberNew'].duplicated().sum():,} duplicate ReportNumberNew - deduplicating...")
+    null_disp = null_disp.drop_duplicates(subset=['ReportNumberNew'], keep='first')
+    print(f"  After deduplication: {len(null_disp):,} unique records")
+
+# Create the corrections DataFrame
+base_columns = ['ReportNumberNew', 'TimeOfCall', 'Incident', 'How Reported', 'Disposition']
+disp_corrections = null_disp[base_columns].copy()
+
+# Try to get CAD Notes from original CAD file
+print("\nStep 2a: Loading CAD Notes from original CAD export...")
+try:
+    if CAD_FILE.exists():
+        cad_df = pd.read_excel(CAD_FILE, usecols=['ReportNumberNew', 'CADNotes'], dtype=str)
+        print(f"  Loaded {len(cad_df):,} records with CAD Notes")
+        
+        # Merge CAD Notes
+        disp_corrections = disp_corrections.merge(
+            cad_df[['ReportNumberNew', 'CADNotes']],
+            on='ReportNumberNew',
+            how='left'
+        )
+        print(f"  Merged CAD Notes: {disp_corrections['CADNotes'].notna().sum():,} records have CAD Notes")
+    else:
+        print(f"  [WARNING] CAD file not found: {CAD_FILE.name}")
+        print(f"  CAD Notes column will not be included")
+        disp_corrections['CADNotes'] = ''
+except Exception as e:
+    print(f"  [WARNING] Could not load CAD Notes: {e}")
+    disp_corrections['CADNotes'] = ''
+
+disp_corrections['Corrected_Value'] = ''
+disp_corrections['Notes'] = ''  # This is for manual notes, not CAD Notes
+
+print(f"\nStep 2: Created corrections file with {len(disp_corrections):,} records")
+
+# Step 3: Load RMS and backfill
+print("\nStep 3: Loading RMS export and backfilling matches...")
+rms_df = pd.read_excel(RMS_PATH, dtype=str)
+rms_case_numbers = set(rms_df['Case Number'].dropna().astype(str).str.strip())
+print(f"  RMS Case Numbers: {len(rms_case_numbers):,}")
+
+# Track updates
+rms_matches = 0
+assist_backup_updates = 0
+
+# Backfill Corrected_Value
+for idx, row in disp_corrections.iterrows():
+    report_num = str(row['ReportNumberNew']).strip()
+    incident = str(row['Incident']).strip() if pd.notna(row['Incident']) else ''
+    
+    # Rule 1: Check if ReportNumberNew maps to RMS Case Number
+    if report_num in rms_case_numbers:
+        disp_corrections.at[idx, 'Corrected_Value'] = 'See Report'
+        rms_matches += 1
+        continue
+    
+    # Rule 2: If Incident is "Assist Own Agency (Backup)" → "Assisted"
+    if incident == 'Assist Own Agency (Backup)':
+        disp_corrections.at[idx, 'Corrected_Value'] = 'Assisted'
+        assist_backup_updates += 1
+
+# Save
+print("\n" + "="*80)
+print("BACKFILL SUMMARY")
+print("="*80)
+print(f"Total records: {len(disp_corrections):,}")
+print(f"Set to 'See Report' (RMS match): {rms_matches:,}")
+print(f"Set to 'Assisted' (Assist Own Agency Backup): {assist_backup_updates:,}")
+print(f"Total auto-filled: {rms_matches + assist_backup_updates:,}")
+print(f"Remaining to fill manually: {(disp_corrections['Corrected_Value'] == '').sum():,}")
+
+# Backup current file if it exists
+if OUTPUT_CSV.exists():
+    try:
+        import shutil
+        shutil.copy(OUTPUT_CSV, BACKUP_CSV)
+        print(f"\nBacked up current file (243 records) to: {BACKUP_CSV.name}")
+    except Exception as e:
+        print(f"\n[WARNING] Could not backup current file: {e}")
+
+print(f"\nSaving to: {OUTPUT_CSV}")
+try:
+    disp_corrections.to_csv(OUTPUT_CSV, index=False)
+except PermissionError:
+    print("\n[ERROR] File is open in Excel or another program!") print("Please close the file and run this script again.") print(f"\nAlternatively, the data is ready - you can manually save it.") print(f"Total records to save: {len(disp_corrections):,}")
+    exit(1)
+
+print("\n" + "="*80)
+print("[SUCCESS] File regenerated!") print("="*80)
+print(f"\nThe file now has {len(disp_corrections):,} records (restored from {len(null_disp):,} null dispositions)")
+print(f"  - {rms_matches:,} records auto-filled with 'See Report' (RMS matches)")
+print(f"  - {assist_backup_updates:,} records auto-filled with 'Assisted' (Assist Own Agency Backup)")
+print(f"  - {(disp_corrections['Corrected_Value'] == '').sum():,} records still need manual correction")
+print("\nYou can now add your manual corrections to the remaining empty Corrected_Value fields.") ```
+
+```python
+"""
+Regenerate disposition_corrections.csv with all records and RMS backfill. This recreates the file that was lost when saving Excel as CSV.
+"""

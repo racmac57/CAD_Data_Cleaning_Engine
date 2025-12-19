@@ -1,0 +1,1327 @@
+From PowerShell:
+
+```powershell
+# 1) Copy your updated CAD into the repo ref folder with the name esri_production_deploy.py expects
+copy "C:\Users\carucci_r\OneDrive - City of Hackensack\Desktop\2025_11_21_2019_2025_11_21_ALL_CAD_Data.xlsx" `
+     "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\ref\2019_2025_11_17_Updated_CAD_Export.xlsx" -Force
+```
+
+After that, rerun the ESRI deploy and downstream scripts:
+
+```powershell
+cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+python scripts/esri_production_deploy.py --config config\config_enhanced.json
+python scripts/final_cleanup_tro_fuzzy_rms.py
+python scripts/backfill_address_from_rms.py
+```
+
+```powershell
+# 1) Copy your updated CAD into the repo ref folder with the name esri_production_deploy.py expects
+copy "C:\Users\carucci_r\OneDrive - City of Hackensack\Desktop\2025_11_21_2019_2025_11_21_ALL_CAD_Data.xlsx" `
+     "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\ref\2019_2025_11_17_Updated_CAD_Export.xlsx" -Force
+```
+
+```powershell
+cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+python scripts/esri_production_deploy.py --config config\config_enhanced.json
+python scripts/final_cleanup_tro_fuzzy_rms.py
+python scripts/backfill_address_from_rms.py
+```
+
+---
+
+**User**
+
+below are the results of the scripts, is the process complete? Unmapped cases for manual backfill CSV: C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\data\02_reports\unmapped_cases_for_manual_backfill.csv
+
+
+
+============================================================
+
+SAVING OUTPUT
+
+============================================================
+
+Saved: C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\data\ESRI_CADExport\CAD_ESRI_Final_20251117_v2.xlsx
+
+
+
+============================================================
+
+FINAL SUMMARY
+
+============================================================
+
+Total records: 701,115
+
+Initial unmapped: 3,155
+
+Final unmapped: 309
+
+Improvement: 2,846 records
+
+Final coverage: 99.96%
+
+
+
+Completed: 2025-11-21 15:57:33
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> python scripts/backfill_address_from_rms.py
+
+============================================================
+
+ADDRESS BACKFILL FROM RMS
+
+============================================================
+
+Loaded CAD: 701,115 records from CAD_ESRI_Final_20251117_v2.xlsx
+
+Loaded RMS: 156,036 records from 2019_2025_11_16_16_57_00_ALL_RMS_Export.xlsx
+
+Valid before: 597,480 of 701,115
+
+RMS lookup addresses: 112,195 keys
+
+Targets for backfill (bad categories): 103,635
+
+Backfilled from RMS: 639 addresses
+
+Valid after: 598,119 of 701,115
+
+Backfill log written: C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\data\02_reports\address_backfill_from_rms_log.csv
+
+---
+
+**Cursor**
+
+Yes, the automated pipeline you just ran is complete. ### What you now have
+
+- **ESRI export files**
+  - `data/ESRI_CADExport/CAD_ESRI_Final_20251117_v2.xlsx` – after TRO/FRO (skipped), fuzzy, and RMS Incident backfill. - `data/ESRI_CADExport/CAD_ESRI_Final_20251117_v3.xlsx` – after **RMS address backfill** (this is your latest, best ESRI file). - **Response_Type coverage**
+  - Initial unmapped `Response_Type`: **3,155**
+  - Final unmapped: **309**
+  - **Improvement**: 2,846 records
+  - **Final coverage**: **99.96%**
+
+- **Address quality**
+  - Valid before: **597,480 / 701,115** (85.22%)
+  - Valid after: **598,119 / 701,115** (85.31%)
+  - **639 addresses** improved by RMS backfill. - **Key reports/CSVs**
+  - `data/02_reports/unmapped_final_report.md` – narrative summary of unmapped `Response_Type`. - `data/02_reports/unmapped_breakdown_summary.csv` – counts by unmapped category. - `data/02_reports/unmapped_cases_for_manual_backfill.csv` – **all 309 remaining unmapped cases**, with:
+    - Full CAD row,
+    - `Unmapped_Category`,
+    - blank `Manual_Backfill_Incident`, `Manual_Backfill_Response_Type`, `Manual_Notes` for you to fill. - `data/02_reports/address_backfill_from_rms_report.md` – before/after address quality. - `data/02_reports/address_backfill_from_rms_log.csv` – per-record address changes. ### What’s left (optional, manual)
+
+- **Manual TRO/FRO corrections** (if desired):
+  - Fill a `Corrected Incident` column in `data/02_reports/tro_fro_manual_review.csv`, then re-run `final_cleanup_tro_fuzzy_rms.py` to apply them. - **Manual incident/Response_Type cleanup**:
+  - Open `unmapped_cases_for_manual_backfill.csv` in Excel. - Fill the `Manual_Backfill_*` columns where you know the correct values. - If you want, I can then help you add a small script to read that CSV and apply your manual backfills back into `CAD_ESRI_Final_20251117_v2.xlsx`/`v3.xlsx`. ---
+
+**User**
+
+provide a way to check C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine for a .csv or .xlsx file that hs tro or TRO or fto or FTO in the file name that was created or modified in the last 5 weeks
+
+---
+
+**Cursor**
+
+Use this PowerShell one‑liner from your project root:
+
+```powershell
+cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+Get-ChildItem -Recurse -File -Include *.csv,*.xlsx |
+  Where-Object {
+    $_.Name -match '(?i)(tro|fto)' -and
+    $_.LastWriteTime -gt (Get-Date).AddDays(-35)
+  } |
+  Select-Object FullName, Name, Length, LastWriteTime
+```
+
+Explanation:
+
+- **`-Include *.csv,*.xlsx`**: only CSV and Excel files. - **`-Recurse -File`**: search all subdirectories, files only. - **`$_.Name -match '(?i)(tro|fto)'`**: filename contains `tro`, `TRO`, `fto`, or `FTO` (`(?i)` = case-insensitive). - **`LastWriteTime -gt (Get-Date).AddDays(-35)`**: modified in the last 35 days (~5 weeks). - `Select-Object` shows path, name, size, and modified time for anything it finds. ```powershell
+cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+Get-ChildItem -Recurse -File -Include *.csv,*.xlsx |
+  Where-Object {
+    $_.Name -match '(?i)(tro|fto)' -and
+    $_.LastWriteTime -gt (Get-Date).AddDays(-35)
+  } |
+  Select-Object FullName, Name, Length, LastWriteTime
+```
+
+---
+
+**User**
+
+is there a way to check the contents of excel files for Violation FRO - 2C:29-9b or Violation TRO - 2C:29-9b
+
+---
+
+**Cursor**
+
+Yes. The most reliable way is to scan the Excel files with a small Python script and search every cell for those strings. ### Python approach (recommended)
+
+From your project root, create `scripts/search_violation_in_excels.py` with:
+
+```python
+import os
+from pathlib import Path
+
+import pandas as pd
+
+BASE_DIR = Path(r"C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine")
+SEARCH_ROOT = BASE_DIR  # or BASE_DIR / "data" / "01_raw", etc. TARGETS = [
+    "Violation FRO - 2C:29-9b",
+    "Violation TRO - 2C:29-9b",
+]
+
+def scan_file(path: Path):
+    print(f"\nScanning: {path}")
+    try:
+        # Try all sheets
+        xls = pd.ExcelFile(path)
+        for sheet_name in xls.sheet_names:
+            df = xls.parse(sheet_name, dtype=str)
+            df = df.fillna("")
+            for target in TARGETS:
+                mask = df.apply(lambda col: col.str.contains(target, case=False, na=False))
+                hits = mask.any(axis=1)
+                if hits.any():
+                    print(f"  Found '{target}' in sheet '{sheet_name}' at rows: "
+                          f"{', '.join(str(i+1) for i in df.index[hits])}")
+    except Exception as e:
+        print(f"  Error reading {path}: {e}")
+
+def main():
+    for root, _, files in os.walk(SEARCH_ROOT):
+        for name in files:
+            if name.lower().endswith((".xlsx", ".xls")):
+                scan_file(Path(root) / name)
+
+if __name__ == "__main__":
+    main()
+```
+
+Then run:
+
+```powershell
+cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+python scripts/search_violation_in_excels.py
+```
+
+This will:
+
+- Walk the whole `CAD_Data_Cleaning_Engine` tree. - For every Excel file, check all sheets and cells for either:
+  - `Violation FRO - 2C:29-9b`
+  - `Violation TRO - 2C:29-9b`
+- Print the file, sheet, and row numbers where they appear. ```python
+import os
+from pathlib import Path
+
+import pandas as pd
+
+BASE_DIR = Path(r"C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine")
+SEARCH_ROOT = BASE_DIR  # or BASE_DIR / "data" / "01_raw", etc. TARGETS = [
+    "Violation FRO - 2C:29-9b",
+    "Violation TRO - 2C:29-9b",
+]
+
+def scan_file(path: Path):
+    print(f"\nScanning: {path}")
+    try:
+        # Try all sheets
+        xls = pd.ExcelFile(path)
+        for sheet_name in xls.sheet_names:
+            df = xls.parse(sheet_name, dtype=str)
+            df = df.fillna("")
+            for target in TARGETS:
+                mask = df.apply(lambda col: col.str.contains(target, case=False, na=False))
+                hits = mask.any(axis=1)
+                if hits.any():
+                    print(f"  Found '{target}' in sheet '{sheet_name}' at rows: "
+                          f"{', '.join(str(i+1) for i in df.index[hits])}")
+    except Exception as e:
+        print(f"  Error reading {path}: {e}")
+
+def main():
+    for root, _, files in os.walk(SEARCH_ROOT):
+        for name in files:
+            if name.lower().endswith((".xlsx", ".xls")):
+                scan_file(Path(root) / name)
+
+if __name__ == "__main__":
+    main()
+```
+
+```powershell
+cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+python scripts/search_violation_in_excels.py
+```
+
+---
+
+**User**
+
+
+
+C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\scripts>python search_violation_in_excels.py
+
+
+
+Scanning: C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\ESU - Targeted Patrol.xlsx
+
+C:\Users\carucci_r\scoop\apps\python\current\Lib\site-packages\openpyxl\styles\stylesheet.py:237: UserWarning: Workbook contains no default style, apply openpyxl's default
+
+  warn("Workbook contains no default style, apply openpyxl's default")
+
+
+
+Scanning: C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\FERPO-TERPO.xlsx
+
+
+
+Scanning: C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\Ferpo_terpo.xlsx
+
+C:\Users\carucci_r\scoop\apps\python\current\Lib\site-packages\openpyxl\styles\stylesheet.py:237: UserWarning: Workbook contains no default style, apply openpyxl's default
+
+  warn("Workbook contains no default style, apply openpyxl's default")
+
+
+
+Scanning: C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\data\01_raw\2019_2025_11_14_cad.xlsx
+
+C:\Users\carucci_r\scoop\apps\python\current\Lib\site-packages\openpyxl\styles\stylesheet.py:237: UserWarning: Workbook contains no default style, apply openpyxl's default
+
+  warn("Workbook contains no default style, apply openpyxl's default")
+
+
+
+---
+
+**Cursor**
+
+What you’re seeing is just the script **walking through each Excel file** and printing which one it’s scanning; the `UserWarning` is harmless. Key points:
+
+- For each workbook, the script will:
+  - Load each sheet. - Search all cells for:
+    - `Violation FRO - 2C:29-9b`
+    - `Violation TRO - 2C:29-9b`
+- **If it finds any**, you’ll see lines like:
+  - `Found 'Violation FRO - 2C:29-9b' in sheet 'Sheet1' at rows: 123, 456`
+- The output you pasted shows it has scanned:
+  - `ESU - Targeted Patrol.xlsx`
+  - `FERPO-TERPO.xlsx`
+  - `Ferpo_terpo.xlsx`
+  - `data\01_raw\2019_2025_11_14_cad.xlsx`
+  and **has not found the target strings in those files yet**. Just let the script finish; then scroll back and look for any `Found 'Violation ...'` lines. If you’d like, I can tweak it to only scan a specific folder (e.g., `ref` or `data\01_raw`) or to log matches to a CSV for easier review. ---
+
+**User**
+
+I founf the .csv where should I save the .csv? In ref? ---
+
+**Cursor**
+
+Save it under **`ref`**, with a clear name that tells us what it is, e.g. :
+
+```text
+ref/2025_11_21_TRO_FRO_violations_manual.csv
+```
+
+Then:
+
+- If this CSV is a **mapping/correction table** (e.g., ReportNumberNew + corrected Incident/Violation), we can wire a script to **apply it to the CAD/ESRI exports**. - If it’s an **updated CAD extract**, we can treat it like other CAD source files and either:
+  - Replace an existing `ref` CAD source (like we did for the updated CAD export), or
+  - Add a new script that reads this CSV and merges corrections into the main CAD. ```plaintext
+ref/2025_11_21_TRO_FRO_violations_manual.csv
+```
+
+---
+
+**User**
+
+@c:\Users\carucci_r\Downloads\tro_fro_manual_review(tro_fro_manual_review).csv here is the file do I need to add anything to the file for you? ---
+
+**Cursor**
+
+You’ve already given me exactly what the script expects; you don’t need to add anything. The file has the right columns:
+
+- `ReportNumberNew`
+- `Incident`
+- `Corrected Incident`
+
+### What to do next
+
+1. **Copy your downloaded file over the existing TRO/FRO review file**:
+
+```powershell
+cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+copy "C:\Users\carucci_r\Downloads\tro_fro_manual_review(tro_fro_manual_review).csv" `
+     "data\02_reports\tro_fro_manual_review.csv" -Force
+```
+
+2. **Re-run the final cleanup so these corrections are applied**:
+
+```powershell
+python scripts/final_cleanup_tro_fuzzy_rms.py
+```
+
+On this run, Step 2 (**TRO/FRO CORRECTIONS**) should no longer be skipped; it will use your `Corrected Incident` values to update those cases before the fuzzy matching and report generation. ```powershell
+cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+copy "C:\Users\carucci_r\Downloads\tro_fro_manual_review(tro_fro_manual_review).csv" `
+     "data\02_reports\tro_fro_manual_review.csv" -Force
+```
+
+```powershell
+python scripts/final_cleanup_tro_fuzzy_rms.py
+```
+
+---
+
+**User**
+
+do i run the commads in powershell? or command window? ---
+
+**Cursor**
+
+Run them in **PowerShell** from your existing session (the same place you’ve been running `python`). For example, in PowerShell:
+
+```powershell
+cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+copy "C:\Users\carucci_r\Downloads\tro_fro_manual_review(tro_fro_manual_review).csv" "data\02_reports\tro_fro_manual_review.csv" -Force
+
+python scripts/final_cleanup_tro_fuzzy_rms.py
+```
+
+No need for a separate “Command Prompt” window; PowerShell is exactly what you want here. ```powershell
+cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+copy "C:\Users\carucci_r\Downloads\tro_fro_manual_review(tro_fro_manual_review).csv" "data\02_reports\tro_fro_manual_review.csv" -Force
+
+python scripts/final_cleanup_tro_fuzzy_rms.py
+```
+
+---
+
+**User**
+
+do i need to press enter again from what you can see in the attached image? ---
+
+**Cursor**
+
+You’re in a **multi-line continuation** (the `>>` prompt), so that command isn’t finished yet. Easiest fix:
+
+1. Press **`Ctrl + C`** once to cancel the current (incomplete) command and get back to a normal `PS ... >` prompt. 2. Then run the copy on **one line**:
+
+```powershell
+copy "C:\Users\carucci_r\Downloads\tro_fro_manual_review(tro_fro_manual_review).csv" "data\02_reports\tro_fro_manual_review.csv" -Force
+```
+
+After that succeeds, run:
+
+```powershell
+python scripts/final_cleanup_tro_fuzzy_rms.py
+```
+
+```powershell
+copy "C:\Users\carucci_r\Downloads\tro_fro_manual_review(tro_fro_manual_review).csv" "data\02_reports\tro_fro_manual_review.csv" -Force
+```
+
+```powershell
+python scripts/final_cleanup_tro_fuzzy_rms.py
+```
+
+---
+
+**User**
+
+compair the below recient results against the previous versions
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> copy "C:\Users\carucci_r\Downloads\tro_fro_manual_review(tro_fro_manual_review).csv" "data\02_reports\tro_fro_manual_review.csv" -Force
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> python scripts/final_cleanup_tro_fuzzy_rms.py
+
+============================================================
+
+CAD DATA FINAL CLEANUP
+
+TRO/FRO + Fuzzy Match + RMS Backfill
+
+============================================================
+
+Started: 2025-11-21 16:47:50
+
+Loading input files...
+
+  CAD ESRI: 701,115 records
+
+  TRO/FRO corrections: 96 records
+
+  RAW call types: 526 records
+
+  Master mapping: 808 records
+
+  RMS export: 156,036 records
+
+
+
+Initial state:
+
+  Total records: 701,115
+
+  Unmapped Response_Type: 3,155
+
+  Null Incidents: 271
+
+
+
+============================================================
+
+STEP 1: RMS BACKFILL
+
+============================================================
+
+Before: 271 null Incidents, 3,155 unmapped Response_Type
+
+After: 174 null Incidents, 3,155 unmapped Response_Type
+
+Backfilled: 97 Incidents from RMS
+
+
+
+============================================================
+
+STEP 2: TRO/FRO CORRECTIONS
+
+============================================================
+
+Before: 3,155 unmapped Response_Type
+
+After: 3,155 unmapped Response_Type
+
+Applied: 166 TRO/FRO corrections
+
+
+
+============================================================
+
+STEP 3: FUZZY MATCHING
+
+============================================================
+
+Before: 3,155 unmapped Response_Type
+
+Processing 3,155 unmapped records... Processed 500/3,155 records... Processed 1,000/3,155 records... Processed 1,500/3,155 records... Processed 2,000/3,155 records... Processed 2,500/3,155 records... Processed 3,000/3,155 records...
+
+
+
+After: 309 unmapped Response_Type
+
+Auto-applied (>=75%): 3,001
+
+Needs review (70-75%): 8
+
+No match (<70%): 146
+
+
+
+Saved fuzzy review file: C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\data\02_reports\fuzzy_review.csv
+
+
+
+============================================================
+
+STEP 4: FUZZY MATCH RMS-BACKFILLED RECORDS
+
+============================================================
+
+Matched 2 of 97 RMS-backfilled records
+
+
+
+============================================================
+
+GENERATING FINAL REPORT
+
+============================================================
+
+Report saved to: C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\data\02_reports\unmapped_final_report.md
+
+Unmapped breakdown summary CSV: C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\data\02_reports\unmapped_breakdown_summary.csv
+
+Unmapped cases for manual backfill CSV: C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\data\02_reports\unmapped_cases_for_manual_backfill.csv
+
+
+
+============================================================
+
+SAVING OUTPUT
+
+============================================================
+
+Saved: C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\data\ESRI_CADExport\CAD_ESRI_Final_20251117_v2.xlsx
+
+
+
+============================================================
+
+FINAL SUMMARY
+
+============================================================
+
+Total records: 701,115
+
+Initial unmapped: 3,155
+
+Final unmapped: 309
+
+Improvement: 2,846 records
+
+Final coverage: 99.96%
+
+
+
+Completed: 2025-11-21 16:50:23
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine>
+
+---
+
+**Cursor**
+
+### Short comparison to previous run
+
+Here’s what changed vs. the earlier run (where TRO/FRO corrections were skipped):
+
+- **Step 2 – TRO/FRO Corrections**
+  - **Before (no CSV wired):**
+    - Log: “TRO/FRO manual review file is missing expected columns (Corrected Incident); skipping TRO/FRO corrections.”
+    - **0 corrections applied. **
+  - **Now (with your CSV copied in):**
+    - `TRO/FRO corrections: 96 records`
+    - **Applied: 166 TRO/FRO corrections**  
+      (some ReportNumberNew values have multiple CAD rows, hence 166 > 96). - **Overall Response_Type coverage**
+  - **Before and now**:
+    - Initial unmapped `Response_Type`: **3,155**
+    - Final unmapped: **309**
+    - Improvement: **2,846 records**
+    - Final coverage: **99.96%**
+
+So the **big picture metrics didn’t change** because:
+
+- The TRO/FRO corrections mainly update the **`Incident` text** (e.g., “Violation: TRO/ FRO  2C:25-31” → “Violation TRO - 2C:29-9b” or “Generated in error”), and
+- Those records already had `Response_Type` filled (or were handled the same by the fuzzy logic), so they didn’t add new mapped `Response_Type` coverage. ### Where your TRO/FRO work *does* matter
+
+Even though the coverage numbers stayed the same, your latest run **baked in your manual TRO/FRO decisions** into:
+
+- `data/ESRI_CADExport/CAD_ESRI_Final_20251117_v2.xlsx` (and downstream v3 after address backfill),
+- `data/02_reports/unmapped_final_report.md` and the ESRI deploy report, which now reflect:
+  - Corrected `Incident` text for:
+    - Genuine TRO vs FRO violations. - “Generated in error” cases. - Harassment reclassifications, etc. That means any **downstream analysis or DOJ reporting that keys off “Violation TRO/FRO - 2C:29-9b”** will now see your corrected incident labels instead of the generic `Violation: TRO/ FRO  2C:25-31`. If you’d like, next I can:
+
+- Pull a small **before/after sample** for a few ReportNumberNews from your TRO/FRO CSV, or
+- Help you generate a **TRO/FRO audit CSV** (ReportNumberNew + Incident_before + Incident_after + Response_Type) so you can sanity-check the corrections in one place. ---
+
+**User**
+
+can we check the incidents with null incident values against the rms export? or was that done already@data/02_reports/unmapped_final_report.md 
+
+these are the ReportNumberNew 
+
+19-053901
+
+19-054558
+
+19-054562
+
+19-054563
+
+19-054573
+
+19-054572
+
+19-054577
+
+19-054573
+
+19-054580
+
+19-054582
+
+19-054583
+
+19-054577
+
+19-054589
+
+19-054591
+
+19-054598
+
+19-054604
+
+19-054615
+
+19-054616
+
+19-054615
+
+19-054621
+
+19-054625
+
+19-054626
+
+19-054629
+
+19-054634
+
+19-054634
+
+19-054638
+
+19-054643
+
+19-054645
+
+19-054645
+
+19-054647
+
+19-054648
+
+19-054650
+
+19-054650
+
+19-054654
+
+19-054658
+
+19-054659
+
+19-054671
+
+19-054671
+
+19-054687
+
+19-054692
+
+19-054697
+
+19-054697
+
+19-054712
+
+19-054719
+
+19-054727
+
+19-054727
+
+19-054727
+
+19-054727
+
+19-054736
+
+19-054736
+
+19-054744
+
+19-054757
+
+19-054783
+
+19-054793
+
+19-054796
+
+19-054804
+
+19-054814
+
+19-054813
+
+19-054816
+
+19-054816
+
+19-054820
+
+19-054826
+
+19-054830
+
+19-054830
+
+19-054835
+
+19-054840
+
+19-054839
+
+19-054843
+
+19-054842
+
+19-054843
+
+19-054846
+
+19-054848
+
+19-054851
+
+19-054856
+
+19-054857
+
+19-054859
+
+19-054859
+
+19-054864
+
+19-054866
+
+19-054867
+
+19-054867
+
+19-054870
+
+19-054873
+
+19-054877
+
+19-054878
+
+19-054879
+
+19-054885
+
+19-054887
+
+19-054889
+
+19-054890
+
+19-054892
+
+19-054896
+
+19-054899
+
+19-054902
+
+19-054904
+
+19-054902
+
+19-054906
+
+19-054909
+
+19-054911
+
+19-054919
+
+19-054924
+
+19-054924
+
+19-054928
+
+19-054928
+
+19-054931
+
+19-054934
+
+19-054944
+
+19-054952
+
+19-054952
+
+19-054952
+
+19-054955
+
+19-054971
+
+19-054972
+
+19-054972
+
+19-054976
+
+19-054976
+
+19-054976
+
+19-054982
+
+19-054976
+
+19-054984
+
+19-054984
+
+19-054987
+
+19-054987
+
+19-054992
+
+19-054996
+
+19-055004
+
+19-055004
+
+19-055008
+
+19-055017
+
+19-055018
+
+19-055023
+
+19-055024
+
+19-055034
+
+19-055036
+
+19-055038
+
+19-055038
+
+19-055041
+
+19-055044
+
+19-055044
+
+19-055048
+
+19-055049
+
+19-055051
+
+19-055050
+
+19-055053
+
+19-055053
+
+19-055058
+
+19-055062
+
+19-055063
+
+19-055066
+
+19-055068
+
+19-055069
+
+19-055069
+
+19-055074
+
+19-055073
+
+19-055074
+
+19-055078
+
+19-055078
+
+19-055083
+
+19-055083
+
+19-055089
+
+19-055089
+
+19-055091
+
+19-055091
+
+19-055093
+
+19-055094
+
+19-055099
+
+19-055102
+
+19-055102
+
+19-055105
+
+19-055105
+
+19-055108
+
+19-055112
+
+19-055115
+
+19-055116
+
+19-055116
+
+19-055115
+
+19-055124
+
+19-055125
+
+19-055124
+
+19-055127
+
+19-055127
+
+19-055132
+
+19-055132
+
+19-055138
+
+19-055141
+
+19-055143
+
+19-055145
+
+19-055146
+
+19-055146
+
+19-055143
+
+19-055149
+
+19-055150
+
+19-055151
+
+19-055157
+
+19-055159
+
+19-055161
+
+19-055161
+
+19-055166
+
+19-055166
+
+19-055169
+
+19-055173
+
+19-055176
+
+19-055188
+
+19-055189
+
+19-055191
+
+19-055191
+
+19-055197
+
+19-055200
+
+19-055200
+
+19-055205
+
+19-055222
+
+19-055224
+
+19-055225
+
+19-055237
+
+19-055222
+
+19-055237
+
+19-055247
+
+19-055253
+
+19-055255
+
+19-055257
+
+19-055258
+
+19-055260
+
+19-055256
+
+19-055263
+
+19-055268
+
+19-055269
+
+19-055270
+
+19-055269
+
+19-062130
+
+20-019598
+
+20-024171
+
+20-036421
+
+20-037123
+
+20-037422
+
+20-061966
+
+20-074293
+
+21-023663
+
+21-062329
+
+21-076543
+
+21-088093
+
+22-020809
+
+22-043757
+
+22-070753
+
+22-072407
+
+22-085331
+
+22-095342
+
+22-096690
+
+22-100693
+
+23-000438
+
+23-034296
+
+23-035481
+
+23-044234
+
+23-044389
+
+23-048064
+
+23-062830
+
+23-068289
+
+23-075619
+
+23-079359
+
+23-096724
+
+23-096902
+
+23-110234
+
+24-004791
+
+24-006482
+
+25-019040
+
+25-022827
+
+25-023260
+
+25-023262
+
+25-036643
+
+25-040608
+
+25-050064
+
+25-083053
+
+25-094570
+
+
+
+---
+
+**Cursor**
+
+**Short answer:** Yes, those null-Incident cases have already been checked against RMS in Step 1 (RMS Backfill). The ones still null after that step are cases where **either there is no matching `Case Number` in the RMS export, or `Incident Type_1` is blank/invalid there as well. **
+
+### How RMS backfill already handled this
+
+In `step1_rms_backfill` of `final_cleanup_tro_fuzzy_rms.py`:
+
+- It builds a lookup:
+
+  ```python
+  rms_lookup = dict(zip(rms_df['Case Number'].astype(str), rms_df['Incident Type_1']))
+  ```
+
+- For every CAD row with **null Incident**, it tries:
+
+  ```python
+  report_num = str(cad_df.loc[idx, 'ReportNumberNew'])
+  if report_num in rms_lookup and Incident Type_1 is not blank:
+      cad_df['Incident'] = rms_incident
+  ```
+
+- Your latest run shows:
+
+  - **Before**: 271 null `Incident`. - **After**: 174 null `Incident`. - **Backfilled**: 97 records (where RMS had a usable `Incident Type_1` for that `ReportNumberNew`). So the remaining nulls (including the long list you pasted) are exactly the ones where:
+
+- RMS had **no matching `Case Number`**, or
+- `Incident Type_1` was also **null/empty/noisy**. ### If you want to double-check specific case numbers
+
+If you’d like to explicitly see, case by case, whether RMS has an incident for your list, we can add a tiny script like this (optional):
+
+```python
+import pandas as pd
+from pathlib import Path
+
+BASE = Path(r"C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine")
+CAD_PATH = BASE / "data" / "ESRI_CADExport" / "CAD_ESRI_Final_20251117_v2.xlsx"
+RMS_PATH = BASE / "data" / "rms" / "2019_2025_11_16_16_57_00_ALL_RMS_Export.xlsx"
+
+# Paste your ReportNumberNew list here
+case_numbers = [
+    "19-053901", "19-054558", "19-054562",  # ...
+]
+
+cad = pd.read_excel(CAD_PATH, dtype=str)
+rms = pd.read_excel(RMS_PATH, dtype=str)
+
+rms_lookup = rms.set_index("Case Number")["Incident Type_1"]
+
+rows = []
+for case in case_numbers:
+    cad_rows = cad[cad["ReportNumberNew"] == case]
+    rms_incident = rms_lookup.get(case, "")
+    rows.append({
+        "ReportNumberNew": case,
+        "CAD_Incident": "; ".join(cad_rows["Incident"].dropna().unique()) if not cad_rows.empty else "",
+        "RMS_Incident_Type_1": rms_incident,
+    })
+
+out = pd.DataFrame(rows)
+out.to_csv(BASE / "data" / "02_reports" / "null_incidents_vs_rms.csv", index=False)
+print("Wrote null_incidents_vs_rms.csv")
+```
+
+Run it once:
+
+```powershell
+python scripts/check_null_incidents_vs_rms.py
+```
+
+Then open `data/02_reports/null_incidents_vs_rms.csv` to see, for each of those `ReportNumberNew`, exactly what (if anything) RMS has in `Incident Type_1`. ```python
+  rms_lookup = dict(zip(rms_df['Case Number'].astype(str), rms_df['Incident Type_1']))
+```
+
+```python
+  report_num = str(cad_df.loc[idx, 'ReportNumberNew'])
+  if report_num in rms_lookup and Incident Type_1 is not blank:
+      cad_df['Incident'] = rms_incident
+```
+
+```python
+import pandas as pd
+from pathlib import Path
+
+BASE = Path(r"C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine")
+CAD_PATH = BASE / "data" / "ESRI_CADExport" / "CAD_ESRI_Final_20251117_v2.xlsx"
+RMS_PATH = BASE / "data" / "rms" / "2019_2025_11_16_16_57_00_ALL_RMS_Export.xlsx"
+
+# Paste your ReportNumberNew list here
+case_numbers = [
+    "19-053901", "19-054558", "19-054562",  # ...
+]
+
+cad = pd.read_excel(CAD_PATH, dtype=str)
+rms = pd.read_excel(RMS_PATH, dtype=str)
+
+rms_lookup = rms.set_index("Case Number")["Incident Type_1"]
+
+rows = []
+for case in case_numbers:
+    cad_rows = cad[cad["ReportNumberNew"] == case]
+    rms_incident = rms_lookup.get(case, "")
+    rows.append({
+        "ReportNumberNew": case,
+        "CAD_Incident": "; ".join(cad_rows["Incident"].dropna().unique()) if not cad_rows.empty else "",
+        "RMS_Incident_Type_1": rms_incident,
+    })
+
+out = pd.DataFrame(rows)
+out.to_csv(BASE / "data" / "02_reports" / "null_incidents_vs_rms.csv", index=False)
+print("Wrote null_incidents_vs_rms.csv")
+```
+
+```powershell
+python scripts/check_null_incidents_vs_rms.py
+```
+
+---
+
+**User**
+
+C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\scripts>python scripts/check_null_incidents_vs_rms.py
+
+python: can't open file 'C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\02_ETL_Scripts\\CAD_Data_Cleaning_Engine\\scripts\\scripts\\check_null_incidents_vs_rms.py': [Errno 2] No such file or directory
+
+
+
+C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\scripts>python check_null_incidents_vs_rms.py
+
+Wrote null_incidents_vs_rms.csv
+
+---
+
+**Cursor**
+
+Yes, the second command was correct and it worked. - You ran it from the `scripts` folder with:
+  ```powershell
+  python check_null_incidents_vs_rms.py
+  ```
+- The script printed:
+  ```text
+  Wrote null_incidents_vs_rms.csv
+  ```
+- That CSV is in the **same folder as the script**, i.e.

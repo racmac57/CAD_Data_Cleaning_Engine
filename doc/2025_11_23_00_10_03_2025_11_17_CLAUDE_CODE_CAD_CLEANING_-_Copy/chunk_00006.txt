@@ -1,0 +1,610 @@
+': 'Checked OK',
+       375 +          'UNFOUNDED': 'Unfounded',
+       376 +          'REPORT TAKEN': 'Report Taken',
+       377 +          'ARREST': 'Arrest',
+       378 +          'CITATION': 'Citation',
+       379 +          'GONE ON ARRIVAL': 'Gone on Arrival',
+       380 +          'GOA': 'Gone on Arrival',
+       381 +          'UNABLE TO LOCATE': 'Unable to Locate',
+       382 +          'UTL': 'Unable to Locate',
+       383 +          'WARNING': 'Warning',
+       384 +          'REFERRED': 'Referred',
+       385 +          'DUPLICATE': 'Duplicate',
+       386 +          'NO ACTION REQUIRED': 'No Action Required',
+       387 +          'TRANSPORTED': 'Transported'
+       388 +      }
+       389 +
+       390 +      if 'Disposition' not in cad_df.columns:
+       391 +          print("  No Disposition column found")
+       392 +          return cad_df
+       393 +
+       394 +      # Backup original
+       395 +      cad_df['Disposition_Original'] = cad_df['Disposition'].copy()
+       396 +
+       397 +      # Create uppercase version for mapping
+       398 +      disp_upper = cad_df['Disposition'].fillna('').astype(str).str.strip().str.upper()
+       399 +
+       400 +      # Apply specific mappings
+       401 +      mapped = disp_upper.map(disposition_map)
+       402 +
+       403 +      # For unmapped, apply title case
+       404 +      unmapped_mask = mapped.isna() & cad_df['Disposition'].notna()
+       405 +      title_cased = cad_df.loc[unmapped_mask, 'Disposition'].astype(str).str.strip().str.title()
+       406 +
+       407 +      # Combine
+       408 +      cad_df['Disposition'] = mapped.fillna(title_cased)
+       409 +
+       410 +      # Count changes
+       411 +      changed = cad_df['Disposition'] != cad_df['Disposition_Original']
+       412 +      metrics['disposition_normalized'] = changed.sum()
+       413 +
+       414 +      print(f"  Normalized {metrics['disposition_normalized']:,} disposition values")
+       415 +
+       416 +      return cad_df
+       417 +
+       418 +
+       419 +  def backfill_address_from_rms(cad_df, rms_df):
+       420 +      """Backfill invalid FullAddress2 values from RMS data.""" 421 +      print("\n" + "=" * 60)
+       422 +      print("BACKFILLING ADDRESSES FROM RMS")
+       423 +      print("=" * 60)
+       424 +
+       425 +      # Identify invalid addresses
+       426 +      def is_invalid_address(s):
+       427 +          if pd.isna(s):
+       428 +              return True
+       429 +          s = str(s).strip()
+       430 +          if not s:
+       431 +              return True
+       432 +          # Check if has street number (digit followed by space and letters)
+       433 +          if not re.search(r'\d+\s+[A-Za-z]', s):
+       434 +              return True
+       435 +          return False
+       436 +
+       437 +      invalid_mask = cad_df['FullAddress2'].apply(is_invalid_address)
+       438 +
+       439 +      # Build RMS address lookup
+       440 +      rms_valid = rms_df[rms_df['FullAddress'].notna()].copy()
+       441 +      rms_valid['_case_key'] = rms_valid['Case Number'].astype(str).str.strip()
+       442 +      rms_valid = rms_valid[~rms_valid['FullAddress'].apply(is_invalid_address)]
+       443 +
+       444 +      rms_address_lookup = rms_valid[['_case_key',
+           + 'FullAddress']].drop_duplicates(subset=['_case_key'])
+       445 +      rms_address_lookup = rms_address_lookup.set_index('_case_key')
+       446 +
+       447 +      print(f"  Built RMS address lookup with {len(rms_address_lookup):,} valid addresses")
+       448 +
+       449 +      # Backup original
+       450 +      cad_df['FullAddress2_Original'] = cad_df['FullAddress2'].copy()
+       451 +
+       452 +      # Get case keys for invalid addresses
+       453 +      cad_df['_report_key'] = cad_df['ReportNumberNew'].astype(str).str.strip()
+       454 +
+       455 +      # Merge to get RMS addresses
+       456 +      cad_df = cad_df.merge(
+       457 +          rms_address_lookup[['FullAddress']].rename(columns={'FullAddress': '_rms_address'}),
+       458 +          left_on='_report_key',
+       459 +          right_index=True,
+       460 +          how='left'
+       461 +      )
+       462 +
+       463 +      # Apply backfill
+       464 +      backfill_mask = invalid_mask & cad_df['_rms_address'].notna()
+       465 +      cad_df.loc[backfill_mask, 'FullAddress2'] = cad_df.loc[backfill_mask, '_rms_address']
+       466 +
+       467 +      metrics['address_backfilled'] = backfill_mask.sum()
+       468 +
+       469 +      print(f"  Backfilled {metrics['address_backfilled']:,} addresses from RMS")
+       470 +
+       471 +      # Clean up
+       472 +      cad_df = cad_df.drop(columns=['_report_key', '_rms_address'], errors='ignore')
+       473 +
+       474 +      return cad_df
+       475 +
+       476 +
+       477 +  def add_data_quality_flags(cad_df):
+       478 +      """Add data quality flags.""" 479 +      print("\n" + "=" * 60)
+       480 +      print("ADDING DATA QUALITY FLAGS")
+       481 +      print("=" * 60)
+       482 +
+       483 +      # Initialize flag
+       484 +      cad_df['data_quality_flag'] = 0
+       485 +
+       486 +      # Flag missing Response_Type
+       487 +      missing_response = cad_df['Response_Type'].isna() |
+           + (cad_df['Response_Type'].astype(str).str.strip() == '')
+       488 +
+       489 +      # Flag missing address
+       490 +      missing_address = cad_df['FullAddress2'].isna() |
+           + (cad_df['FullAddress2'].astype(str).str.strip() == '')
+       491 +
+       492 +      # Flag missing disposition
+       493 +      missing_disp = cad_df['Disposition'].isna() | (cad_df['Disposition'].astype(str).str.strip() ==
+           +  '')
+       494 +
+       495 +      # Set flags
+       496 +      needs_review = missing_response | missing_address | missing_disp
+       497 +      cad_df.loc[needs_review, 'data_quality_flag'] = 1
+       498 +
+       499 +      print(f"  Flagged {needs_review.sum():,} records for review")
+       500 +
+       501 +      return cad_df
+       502 +
+       503 +
+       504 +  def generate_esri_export(cad_df):
+       505 +      """Generate the final ESRI export file.""" 506 +      print("\n" + "=" * 60)
+       507 +      print("GENERATING ESRI EXPORT")
+       508 +      print("=" * 60)
+       509 +
+       510 +      # Define output columns
+       511 +      esri_columns = [
+       512 +          'TimeOfCall', 'cYear', 'cMonth', 'Hour', 'DayofWeek',
+       513 +          'Incident', 'Response_Type', 'How Reported',
+       514 +          'FullAddress2', 'Grid', 'PDZone',
+       515 +          'Officer', 'Disposition', 'ReportNumberNew',
+       516 +          'Latitude', 'Longitude', 'data_quality_flag'
+       517 +      ]
+       518 +
+       519 +      # Ensure all columns exist
+       520 +      for col in esri_columns:
+       521 +          if col not in cad_df.columns:
+       522 +              cad_df[col] = np.nan
+       523 +
+       524 +      # Select columns
+       525 +      export_df = cad_df[esri_columns].copy()
+       526 +
+       527 +      # Generate output filename
+       528 +      timestamp = datetime.now().strftime('%Y%m%d')
+       529 +      output_file = OUTPUT_DIR / f"CAD_ESRI_Final_{timestamp}.xlsx"
+       530 +
+       531 +      # Save
+       532 +      print(f"  Writing {len(export_df):,} records to Excel...")
+       533 +      export_df.to_excel(output_file, index=False)
+       534 +
+       535 +      print(f"  Output file: {output_file}")
+       536 +      metrics['total_records'] = len(export_df)
+       537 +
+       538 +      return output_file, export_df
+       539 +
+       540 +
+       541 +  def generate_validation_report(cad_df, output_file):
+       542 +      """Generate validation report.""" 543 +      print("\n" + "=" * 60)
+       544 +      print("GENERATING VALIDATION REPORT")
+       545 +      print("=" * 60)
+       546 +
+       547 +      total = len(cad_df)
+       548 +
+       549 +      # Coverage calculations
+       550 +      with_response = cad_df['Response_Type'].notna() &
+           + (cad_df['Response_Type'].astype(str).str.strip() != '')
+       551 +      response_coverage = (with_response.sum() / total) * 100
+       552 +
+       553 +      quality_issues = cad_df['data_quality_flag'].sum()
+       554 +      quality_score = ((total - quality_issues) / total) * 100
+       555 +
+       556 +      # Generate report
+       557 +      report_content = f"""# ESRI Production Deployment - Validation Report
+       558 +
+       559 +  **Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+       560 +  **Output File:** {output_file}
+       561 +
+       562 +  ## Summary Statistics
+       563 +
+       564 +  | Metric | Value |
+       565 +  |--------|-------|
+       566 +  | Total Records | {total:,} |
+       567 +  | Response_Type Coverage | {response_coverage:.2f}% |
+       568 +  | Data Quality Score | {quality_score:.2f}% |
+       569 +  | Records Needing Review | {quality_issues:,} |
+       570 +
+       571 +  ## Processing Results
+       572 +
+       573 +  ### Response_Type Mapping
+       574 +  - Records mapped: {metrics['response_type_mapped']:,}
+       575 +
+       576 +  ### TAPS Variant Resolution (Blocker #8)
+       577 +  - Records resolved: {metrics['taps_resolved']:,}
+       578 +
+       579 +  ### Domestic Dispute Classification (Blocker #9)
+       580 +  - Reclassified to Domestic Violence: {metrics['domestic_to_dv']:,}
+       581 +  - Reclassified to Dispute: {metrics['domestic_to_dispute']:,}
+       582 +
+       583 +  ### TRO/FRO Splitting (Blocker #10)
+       584 +  - Records split: {metrics['tro_fro_split']:,}
+       585 +  - Records for manual review: {metrics['tro_fro_manual_review']:,}
+       586 +
+       587 +  ### Disposition Normalization
+       588 +  - Records normalized: {metrics['disposition_normalized']:,}
+       589 +
+       590 +  ### Address Backfill from RMS
+       591 +  - Records improved: {metrics['address_backfilled']:,}
+       592 +
+       593 +  ## Response_Type Distribution
+       594 +
+       595 +  """
+       596 +
+       597 +      # Add distribution
+       598 +      response_dist = cad_df['Response_Type'].value_counts()
+       599 +      report_content += "| Response Type | Count | Percentage |\n"
+       600 +      report_content += "|--------------|-------|------------|\n"
+       601 +      for resp_type, count in response_dist.items():
+       602 +          pct = (count / total) * 100
+       603 +          report_content += f"| {resp_type} | {count:,} | {pct:.2f}% |\n"
+       604 +
+       605 +      # Quality assessment
+       606 +      report_content += f"""
+       607 +  ## Quality Assessment
+       608 +
+       609 +  | Criteria | Status |
+       610 +  |----------|--------|
+       611 +  | Response_Type Coverage >= 99% | {'PASS' if response_coverage >= 99 else 'FAIL'}
+           + ({response_coverage:.2f}%) |
+       612 +  | Data Quality Score >= 95% | {'PASS' if quality_score >= 95 else 'WARNING' if quality_score >= 90
+           + else 'FAIL'} ({quality_score:.2f}%) |
+       613 +
+       614 +  ### Overall Status: {'PRODUCTION READY' if response_coverage >= 99 and quality_score >= 95 else
+           + 'NEEDS REVIEW'}
+       615 +
+       616 +  ---
+       617 +  *Report generated by ESRI Production Deployment Script*
+       618 +  """
+       619 +
+       620 +      # Save report
+       621 +      report_file = REPORTS_DIR / "esri_deployment_report.md"
+       622 +      with open(report_file, 'w', encoding='utf-8') as f:
+       623 +          f.write(report_content)
+       624 +
+       625 +      print(f"  Report saved to: {report_file}")
+       626 +
+       627 +      return report_file
+       628 +
+       629 +
+       630 +  def main():
+       631 +      """Main execution function.""" 632 +      print("\n" + "=" * 60)
+       633 +      print("ESRI PRODUCTION DEPLOYMENT - DATA CLEANING")
+       634 +      print("=" * 60)
+       635 +      print(f"Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+       636 +
+       637 +      try:
+       638 +          # Load data
+       639 +          cad_df, dv_df, rms_df, mappings_df, raw_calltypes_df = load_data()
+       640 +
+       641 +          # Build mapping
+       642 +          response_map = build_response_type_mapping(mappings_df, raw_calltypes_df)
+       643 +
+       644 +          # Apply transformations
+       645 +          cad_df = apply_response_type_mapping(cad_df, response_map)
+       646 +          cad_df = resolve_taps_variants(cad_df)
+       647 +          cad_df = classify_domestic_disputes(cad_df, dv_df)
+       648 +          cad_df = split_tro_fro(cad_df, rms_df)
+       649 +          cad_df = normalize_disposition(cad_df)
+       650 +          cad_df = backfill_address_from_rms(cad_df, rms_df)
+       651 +          cad_df = add_data_quality_flags(cad_df)
+       652 +
+       653 +          # Generate output
+       654 +          output_file, export_df = generate_esri_export(cad_df)
+       655 +          report_file = generate_validation_report(export_df, output_file)
+       656 +
+       657 +          print("\n" + "=" * 60)
+       658 +          print("DEPLOYMENT COMPLETE")
+       659 +          print("=" * 60)
+       660 +          print(f"Output: {output_file}")
+       661 +          print(f"Report: {report_file}")
+       662 +          print(f"Finished: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+       663 +
+       664 +      except Exception as e:
+       665 +          print(f"\nERROR: {str(e)}")
+       666 +          import traceback
+       667 +          traceback.print_exc()
+       668 +          raise
+       669 +
+       670 +
+       671 +  if __name__ == "__main__":
+       672 +      main()
+
+● Now let me run the optimized script:
+
+● Bash(cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine" &&    timeout: 5m
+      python scripts/esri_production_deploy.py)                                                            0s
+  ⎿  Running in the background (down arrow to manage)
+
+● BashOutput(Reading shell output)
+  ⎿  ============================================================
+     ESRI PRODUCTION DEPLOYMENT - DATA CLEANING
+     ============================================================
+     … +103 lines (ctrl+o to expand)
+  ⎿ C:\Users\carucci_r\AppData\Roaming\Python\Python313\site-packages\openpyxl\styles\stylesheet.py:237: UserWarnin
+    g: Workbook contains no default style, apply openpyxl's default
+      warn("Workbook contains no default style, apply openpyxl's default")
+
+
+● Excellent! The deployment completed successfully. Let me update the todo list and review the validation report:
+
+● Read(data\02_reports\esri_deployment_report.md)
+  ⎿  Read 128 lines
+
+● The deployment is PRODUCTION READY with 99.57% Response_Type coverage and 96.92% quality score. However, I notice
+  there are some garbage Response_Type values from data entry errors. Let me add a cleanup step to standardize
+  these:
+
+● Update(scripts\esri_production_deploy.py)
+  ⎿  Updated scripts\esri_production_deploy.py with 56 additions
+       474        return cad_df
+       475
+       476
+       477 +  def clean_response_type_values(cad_df):
+       478 +      """Clean up garbage Response_Type values from data entry errors.""" 479 +      print("\n" + "=" * 60)
+       480 +      print("CLEANING RESPONSE_TYPE VALUES")
+       481 +      print("=" * 60)
+       482 +
+       483 +      # Valid response types
+       484 +      valid_types = {'Routine', 'Urgent', 'Emergency'}
+       485 +
+       486 +      # Standardize common variations
+       487 +      response_type_cleanup = {
+       488 +          'routine': 'Routine',
+       489 +          'routine ': 'Routine',
+       490 +          'routine\n': 'Routine',
+       491 +          '\nroutine': 'Routine',
+       492 +          'routinez': 'Routine',
+       493 +          'routinede': 'Routine',
+       494 +          'routinec': 'Routine',
+       495 +          'routinepdsca': 'Routine',
+       496 +          'routine tot mi': 'Routine',
+       497 +          'urgent': 'Urgent',
+       498 +          'urgent ': 'Urgent',
+       499 +          'urgentz': 'Urgent',
+       500 +          'urgen': 'Urgent',
+       501 +          'urgent/. ': 'Urgent',
+       502 +          'emergency': 'Emergency',
+       503 +      }
+       504 +
+       505 +      # Track cleanup
+       506 +      cleaned = 0
+       507 +
+       508 +      # Get current values
+       509 +      current_values = cad_df['Response_Type'].fillna('').astype(str).str.strip().str.lower()
+       510 +
+       511 +      for bad_value, good_value in response_type_cleanup.items():
+       512 +          mask = current_values == bad_value.lower()
+       513 +          if mask.sum() > 0:
+       514 +              cad_df.loc[mask, 'Response_Type'] = good_value
+       515 +              cleaned += mask.sum()
+       516 +
+       517 +      # Clear obviously invalid values (single chars, numbers, garbage)
+       518 +      invalid_mask = ~cad_df['Response_Type'].fillna('').astype(str).str.strip().isin(valid_types)
+       519 +      invalid_mask = invalid_mask & cad_df['Response_Type'].notna()
+       520 +
+       521 +      # Don't clear values that look like they might be valid variations
+       522 +      current = cad_df.loc[invalid_mask, 'Response_Type'].astype(str).str.strip()
+       523 +      garbage_mask = (current.str.len() <= 3) | (~current.str.contains('routine|urgent|emergency',
+           + case=False, na=False))
+       524 +
+       525 +      cad_df.loc[invalid_mask & garbage_mask, 'Response_Type'] = np.nan
+       526 +
+       527 +      print(f"  Cleaned {cleaned} Response_Type values")
+       528 +      print(f"  Cleared {(invalid_mask & garbage_mask).sum()} garbage values")
+       529 +
+       530 +      return cad_df
+       531 +
+       532 +
+       533    def add_data_quality_flags(cad_df):
+       534        """Add data quality flags.""" 535        print("\n" + "=" * 60)
+
+● Update(scripts\esri_production_deploy.py)
+  ⎿  Updated scripts\esri_production_deploy.py with 1 addition
+       704            cad_df = split_tro_fro(cad_df, rms_df)
+       705            cad_df = normalize_disposition(cad_df)
+       706            cad_df = backfill_address_from_rms(cad_df, rms_df)
+       707 +          cad_df = clean_response_type_values(cad_df)
+       708            cad_df = add_data_quality_flags(cad_df)
+       709
+       710            # Generate output
+
+● Let me run the updated script with the Response_Type cleanup:
+
+● Bash(cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine" &&    timeout: 5m
+      python scripts/esri_production_deploy.py)                                                            0s
+  ⎿  Running in the background (down arrow to manage)
+
+● BashOutput(Reading shell output)
+  ⎿ C:\Users\carucci_r\AppData\Roaming\Python\Python313\site-packages\openpyxl\styles\stylesheet.py:237: UserWarnin
+    g: Workbook contains no default style, apply openpyxl's default
+      warn("Workbook contains no default style, apply openpyxl's default")
+
+
+● Let me wait for it to complete and check again:
+
+● BashOutput(Reading shell output)
+  ⎿ C:\Users\carucci_r\AppData\Roaming\Python\Python313\site-packages\openpyxl\styles\stylesheet.py:237: UserWarnin
+    g: Workbook contains no default style, apply openpyxl's default
+      warn("Workbook contains no default style, apply openpyxl's default")
+
+
+● BashOutput(Reading shell output)
+  ⎿ C:\Users\carucci_r\AppData\Roaming\Python\Python313\site-packages\openpyxl\styles\stylesheet.py:237: UserWarnin
+    g: Workbook contains no default style, apply openpyxl's default
+      warn("Workbook contains no default style, apply openpyxl's default")
+
+
+● BashOutput(Reading shell output)
+  ⎿ C:\Users\carucci_r\AppData\Roaming\Python\Python313\site-packages\openpyxl\styles\stylesheet.py:237: UserWarnin
+    g: Workbook contains no default style, apply openpyxl's default
+      warn("Workbook contains no default style, apply openpyxl's default")
+
+
+● BashOutput(Reading shell output)
+  ⎿ C:\Users\carucci_r\AppData\Roaming\Python\Python313\site-packages\openpyxl\styles\stylesheet.py:237: UserWarnin
+    g: Workbook contains no default style, apply openpyxl's default
+      warn("Workbook contains no default style, apply openpyxl's default")
+
+
+● BashOutput(Reading shell output)
+  ⎿ C:\Users\carucci_r\AppData\Roaming\Python\Python313\site-packages\openpyxl\styles\stylesheet.py:237: UserWarnin
+    g: Workbook contains no default style, apply openpyxl's default
+      warn("Workbook contains no default style, apply openpyxl's default")
+
+
+● BashOutput(Reading shell output)
+  ⎿ C:\Users\carucci_r\AppData\Roaming\Python\Python313\site-packages\openpyxl\styles\stylesheet.py:237: UserWarnin
+    g: Workbook contains no default style, apply openpyxl's default
+      warn("Workbook contains no default style, apply openpyxl's default")
+
+
+● BashOutput(Reading shell output)
+  ⎿ C:\Users\carucci_r\AppData\Roaming\Python\Python313\site-packages\openpyxl\styles\stylesheet.py:237: UserWarnin
+    g: Workbook contains no default style, apply openpyxl's default
+      warn("Workbook contains no default style, apply openpyxl's default")
+
+
+● BashOutput(Reading shell output)
+  ⎿ C:\Users\carucci_r\AppData\Roaming\Python\Python313\site-packages\openpyxl\styles\stylesheet.py:237: UserWarnin
+    g: Workbook contains no default style, apply openpyxl's default
+      warn("Workbook contains no default style, apply openpyxl's default")
+
+
+● BashOutput(Reading shell output)
+  ⎿ C:\Users\carucci_r\AppData\Roaming\Python\Python313\site-packages\openpyxl\styles\stylesheet.py:237: UserWarnin
+    g: Workbook contains no default style, apply openpyxl's default
+      warn("Workbook contains no default style, apply openpyxl's default")
+
+
+● BashOutput(Reading shell output)
+  ⎿ C:\Users\carucci_r\AppData\Roaming\Python\Python313\site-packages\openpyxl\styles\stylesheet.py:237: UserWarnin
+    g: Workbook contains no default style, apply openpyxl's default
+      warn("Workbook contains no default style, apply openpyxl's default")
+
+
+● BashOutput(Reading shell output)
+  ⎿ C:\Users\carucci_r\AppData\Roaming\Python\Python313\site-packages\openpyxl\styles\stylesheet.py:237: UserWarnin
+    g: Workbook contains no default style, apply openpyxl's default
+      warn("Workbook contains no default style, apply openpyxl's default")
+
+
+● BashOutput(Reading shell output)
+  ⎿ C:\Users\carucci_r\AppData\Roaming\Python\Python313\site-packages\openpyxl\styles\stylesheet.py:237: UserWarnin
+    g: Workbook contains no default style, apply openpyxl's default
+      warn("Workbook contains no default style, apply openpyxl's default")
+
+
+● BashOutput(Reading shell output)
+  ⎿ C:\Users\carucci_r\AppData\Roaming\Python\Python313\site-packages\openpyxl\styles\stylesheet.py:237: UserWarnin
+    g: Workbook contains no default style, apply openpyxl's default
+      warn("Workbook contains no default style, apply openpyxl's default")
+
+
+● BashOutput(Reading shell output)
+  ⎿ C:\Users\carucci_r\AppData\Roaming\Python\Python313\site-packages\openpyxl\styles\stylesheet.py:237: UserWarnin
+    g: Workbook contains no default style, apply openpyxl's default
+      warn("Workbook contains no default style, apply openpyxl's default")
+
+
+● BashOutput(Reading shell output)
+  ⎿ C:\Users\carucci_r\AppData\Roaming\Python\Python313\site-packages\openpyxl\styles\stylesheet.py:237: UserWarnin
+    g: Workbook contains no default style, apply openpyxl's default
+      warn("Workbook contains no default style, apply openpyxl's default")
+
+
+● BashOutput(Reading shell output)
+  ⎿ C:\Users\carucci_r\AppData\Roaming\Python\Python313\site-packages\openpyxl\styles\stylesheet.py:237: UserWarnin
+    g: Workbook contains no default style, apply openpyxl's default
+      warn("Workbook contains no default style, apply openpyxl's default")
+
+
+● BashOutput(Reading shell output)
+  ⎿ C:\Users\carucci_r\AppData\Roaming\Python\Python313\site-packages\openpyxl\styles\stylesheet.py:237: UserWarnin
+    g: Workbook contains no default style, apply openpyxl's default
+      warn("Workbook contains no default style, apply openpyxl's default")
+
+
+● BashOutput(Reading shell output)
+  ⎿ C:\Users\carucci_r\AppData\Roaming\Python\Python313\site-packages\openpyxl\styles\stylesheet.py:237: UserWarnin
+    g: Workbook contains no default style, apply openpyxl's default
+      warn("Workbook contains no default style, apply openpyxl's default")
+
+
+● BashOutput(Reading shell output)
+  ⎿ C:\Users\carucci_r\AppData\Roaming\Python\Python313\site-packages\openpyxl\styles\stylesheet.py:237: UserWarnin
+    g: Workbook contains no default style, apply openpyxl's default
+      warn("Workbook contains no default style, apply openpyxl's default")
+
+
+● BashOutput(Reading shell output)
+  ⎿  ============================================================
+     ESRI PRODUCTION DEPLOYMENT - DATA CLEANING
+     ============================================================
+     … +109 lines (ctrl+o to expand)
+  ⎿ C:\Users\carucci_r\AppData\Roaming\Python\Python313\site-packages\openpyxl\styles\stylesheet.py:237: UserWarnin
+    g: Workbook contains no default style, apply openpyxl's default
+      warn("Workbook contains no default style, apply openpyxl's default")
+
+
+● The deployment completed successfully with comprehensive cleanup. Let me read the final validation report:
+
+● Read(data\02_reports\esri_deployment_report.md)
+  ⎿  Read 56 lines
+
+● ESRI Production Deployment Complete
+
+  Summary
+
+  Output File: data/ESRI_CADExport/CAD_ESRI_Final_20251117.xlsx
+
+  Final Metrics
+
+  | Metric                 | Value            | Status |
+  |------------------------|------------------|--------|
+  | Total Records          | 701,115          | -      |
+  | Response_Type Coverage | 99.55%           | PASS   |
+  | Data Quality Score     | 96.91%           | PASS   |
+  | Overall Status         | PRODUCTION READY | -      |
+
+  Processing Results
+
+  | Task                                        | Records Processed |
+  |---------------------------------------------|-------------------|
+  | Response_Type Mapped                        | 160,022           |
+  | TAPS Variants Resolved (Blocker #8)         | 21,201            |
+  | Domestic Violence Reclassified (Blocker #9) | 458               |
+  | Disputes Reclassified                       | 1,327             |
+  | TRO/FRO Split (Blocker #10)                 | 257               |
+  | TRO/FRO Manual Review                       | 96                |
+  | Disposition Normalized                      | 58,604            |
+  | Address Backfilled from RMS                 | 2,362             |
+  | Garbage Response_Type Cleared               | 107               |
+
+  Response_Type Distribution (Clean)
+
+  - Routine: 425,335 (60.67%)
+  - Urgent: 239,170 (34.11%)
+  - Emergency: 33,455 (4.77%)
+
+  Output Files
+
+  1. ESRI Export: data/ESRI_CADExport/CAD_ESRI_Final_20251117.xlsx
+  2. Validation Report: data/02_reports/esri_deployment_report.md
+  3. TRO/FRO Manual Review: data/02_reports/tro_fro_manual_review.csv (96 records)
+
+  Notes
+
+  - 148 unmapped incident types remain (mostly due to trailing spaces or slight naming variations)
+  - 21,681 records flagged with data_quality_flag=1 for review (missing address, disposition, or Response_Type)
+  - All garbage Response_Type values have been cleared and standardized to Routine/Urgent/Emergency
+
+  The export is ready for ESRI deployment with 99.55% Response_Type coverage and 96.91% data quality score. > please update "C:\Users\carucci_r\OneDrive - City of
+Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\doc\CHANGELOG.md" with the recient changes you made please
+
+● Read(doc\CHANGELOG.md)
+  ⎿  Read 380 lines
+
+● Update(doc\CHANGELOG.md)
+  ⎿  Updated doc\CHANGELOG.md with 55 additions and 1 removal
+        1    # CAD Data Pipeline - Changelog
+        2
+        3 -  # CAD Data Pipeline - Changelog
+        3 +  ## [2025-11-17-b] - ESRI Production Deployment Final
+        4
+        5 +  ### Summary
+        6 +  Completed final ESRI production deployment with comprehensive data cleaning achieving 99.55%
+          + Response_Type coverage and 96.91% data quality score. Created optimized vectorized processing script
+          + for 701,115 records. Resolved all Notion blockers and standardized all Response_Type values to clean
+          + Routine/Urgent/Emergency.

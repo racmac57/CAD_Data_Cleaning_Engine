@@ -1,0 +1,82 @@
+{
+  "source_file": "Claude-02_Police Analytics Knowledge Base Builder.md",
+  "source_path": "C:\\_chunker\\02_data\\Claude-02_Police Analytics Knowledge Base Builder.md",
+  "manifest_path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\KB_Shared\\04_output\\2025_11_23_00_17_53_Claude-02_Police_Analytics_Knowledge_Base_Builder\\2025_11_23_00_17_53_Claude-02_Police_Analytics_Knowledge_Base_Builder.origin.json",
+  "created_at": "2025_11_23_00_17_53",
+  "tags": [
+    "API",
+    "ai",
+    "config",
+    "data",
+    "docs",
+    "error handling",
+    "function",
+    "input/output",
+    "it-ops",
+    "markdown",
+    "python",
+    "sql",
+    "steps",
+    "workflow"
+  ],
+  "metadata": {
+    "project_name": "02_data",
+    "source_type": "documentation",
+    "language": "en",
+    "department": "admin",
+    "key_terms": [
+      "files",
+      "chunking",
+      "claude",
+      "system",
+      "analysis",
+      "prompt"
+    ],
+    "enrichment_version": "1.0.0"
+  },
+  "summaries": {
+    "file_summary": "# 02_Police Analytics Knowledge Base Builder\n\n**Created:** 8/24/2025 20:47:25  \n**Updated:** 8/29/2025 18:20:59  \n**Exported:** 10/17/2025 15:24:00  \n**Link:** [https://claude.ai/chat/37b85bf2-df55-4dd4-b736-d9d562d7401d](https://claude....",
+    "first_line": "# 02_Police Analytics Knowledge Base Builder"
+  },
+  "chunks": [
+    {
+      "chunk_id": "2025-11-23T00:17:53+00:00_Claude-02_Police_Analytics_Knowledge_Base_Builder_chunk1",
+      "chunk_index": 1,
+      "file": "chunk_00000.txt",
+      "tags": [
+        "ai",
+        "analysis",
+        "api",
+        "chunking",
+        "claude",
+        "config",
+        "data",
+        "docs",
+        "error handling",
+        "files",
+        "function",
+        "input/output",
+        "it-ops",
+        "markdown",
+        "prompt",
+        "python",
+        "sql",
+        "steps",
+        "system",
+        "workflow"
+      ],
+      "key_terms": [
+        "files",
+        "chunking",
+        "claude",
+        "system",
+        "analysis",
+        "prompt"
+      ],
+      "summary": "# 02_Police Analytics Knowledge Base Builder\n\n**Created:** 8/24/2025 20:47:25  \n**Updated:** 8/29/2025 18:20:59  \n**Exported:** 10/17/2025 15:24:00  \n**Link:** [https://claude.ai/chat/37b85bf2-df55-4dd4-b736-d9d562d7401d](https://claude....",
+      "char_length": 7240,
+      "byte_length": 7370
+    }
+  ],
+  "enrichment_version": "1.0.0"
+}

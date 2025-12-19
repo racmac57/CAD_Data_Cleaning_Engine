@@ -1,0 +1,763 @@
+logger.info("Validating Latitude and Longitude...")
+
+        total = len(df)
+        lat_null = df['Latitude'].isna().sum()
+        lon_null = df['Longitude'].isna().sum()
+
+        # Check valid ranges
+        df_check = df[(df['Latitude'].notna()) & (df['Longitude'].notna())].copy()
+
+        lat_valid = ((df_check['Latitude'] >= -90) & (df_check['Latitude'] <= 90)).sum()
+        lon_valid = ((df_check['Longitude'] >= -180) & (df_check['Longitude'] <= 180)).sum()
+
+        lat_invalid = len(df_check) - lat_valid
+        lon_invalid = len(df_check) - lon_valid
+
+        # Check Hackensack range (approximately)
+        hackensack_lat_range = (40.85, 40.91)
+        hackensack_lon_range = (-74.07, -74.01)
+
+        in_hackensack = (
+            (df_check['Latitude'] >= hackensack_lat_range[0]) &
+            (df_check['Latitude'] <= hackensack_lat_range[1]) &
+            (df_check['Longitude'] >= hackensack_lon_range[0]) &
+            (df_check['Longitude'] <= hackensack_lon_range[1])
+        ).sum()
+
+        result = {
+            'status': 'INFO',
+            'total_records': total,
+            'lat_null_count': int(lat_null),
+            'lon_null_count': int(lon_null),
+            'lat_valid_count': int(lat_valid),
+            'lon_valid_count': int(lon_valid),
+            'lat_invalid_count': int(lat_invalid),
+            'lon_invalid_count': int(lon_invalid),
+            'in_hackensack_range': int(in_hackensack),
+            'null_percent': round((lat_null / total * 100) if total > 0 else 0, 2)
+        }
+
+        return result
+
+    def validate_data_quality_flags(self, df: pd.DataFrame) -> dict:
+        """Validate data_quality_flag field.""" logger.info("Validating data_quality_flag...")
+
+        total = len(df)
+
+        # Get distribution of flags
+        distribution = df['data_quality_flag'].value_counts(dropna=False).to_dict()
+        flagged_count = (df['data_quality_flag'] != 0).sum()
+
+        result = {
+            'status': 'INFO',
+            'total_records': total,
+            'flagged_count': int(flagged_count),
+            'flagged_percent': round((flagged_count / total * 100) if total > 0 else 0, 2),
+            'distribution': {str(k): int(v) for k, v in distribution.items()}
+        }
+
+        return result
+
+    def calculate_overall_score(self) -> dict:
+        """Calculate overall data quality score.""" logger.info("Calculating overall data quality score...")
+
+        # Weight each validation category
+        weights = {
+            'schema': 10,
+            'timeofcall': 10,
+            'response_type': 15,
+            'how_reported': 15,
+            'fulladdress2': 10,
+            'reportnumbernew': 10,
+            'officer': 5,
+            'disposition': 10,
+            'grid_pdzone': 5,
+            'incident': 10,
+            'coordinates': 0,  # Informational only
+            'data_quality_flags': 0  # Informational only
+        }
+
+        scores = {}
+        for category, result in self.validation_results.items():
+            if category not in weights or weights[category] == 0:
+                continue
+
+            status = result.get('status', 'INFO')
+            if status == 'PASS':
+                scores[category] = weights[category]
+            elif status == 'WARNING':
+                scores[category] = weights[category] * 0.75
+            elif status == 'FAIL':
+                scores[category] = 0
+            else:
+                scores[category] = weights[category]  # INFO gets full credit
+
+        total_score = sum(scores.values())
+        max_score = sum(w for w in weights.values() if w > 0)
+
+        overall_percent = (total_score / max_score * 100) if max_score > 0 else 0
+
+        return {
+            'total_score': round(total_score, 2),
+            'max_score': max_score,
+            'overall_percent': round(overall_percent, 2),
+            'category_scores': scores
+        }
+
+    def generate_markdown_report(self) -> str:
+        """Generate comprehensive validation report in markdown format.""" logger.info("Generating markdown report...")
+
+        overall = self.calculate_overall_score()
+
+        # Determine overall pass/fail status
+        overall_status = "PASS" if overall['overall_percent'] >= 95 else "FAIL"
+
+        report = f"""# CAD ESRI Final Export Validation Report
+
+**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+**Input File:** {self.input_file}
+**Overall Status:** {overall_status}
+**Data Quality Score:** {overall['overall_percent']:.1f}% ({overall['total_score']:.1f}/{overall['max_score']})
+
+---
+
+## Executive Summary
+
+"""
+
+        # Add executive summary
+        if overall_status == "PASS":
+            report += "✅ **VALIDATION PASSED** - All critical validation checks passed with acceptable thresholds.\n\n"
+        else:
+            report += "❌ **VALIDATION FAILED** - One or more critical validation checks failed. Review findings below.\n\n"
+
+        # Summary statistics
+        schema_result = self.validation_results.get('schema', {})
+        report += f"""### Key Statistics
+
+- **Total Records:** {schema_result.get('total_columns', 'N/A'):,} (Expected: {len(self.required_columns)})
+- **Data Quality Score:** {overall['overall_percent']:.1f}%
+- **Critical Failures:** {sum(1 for r in self.validation_results.values() if r.get('status') == 'FAIL')}
+- **Warnings:** {sum(1 for r in self.validation_results.values() if r.get('status') == 'WARNING')}
+
+---
+
+## Detailed Validation Results
+
+"""
+
+        # 1. Schema Validation
+        report += self._format_schema_section()
+
+        # 2. TimeOfCall Validation
+        report += self._format_timeofcall_section()
+
+        # 3. Response_Type Validation
+        report += self._format_response_type_section()
+
+        # 4. How Reported Validation
+        report += self._format_how_reported_section()
+
+        # 5. FullAddress2 Validation
+        report += self._format_fulladdress2_section()
+
+        # 6. ReportNumberNew Validation
+        report += self._format_reportnumbernew_section()
+
+        # 7. Officer Validation
+        report += self._format_officer_section()
+
+        # 8. Disposition Validation
+        report += self._format_disposition_section()
+
+        # 9. Grid and PDZone Validation
+        report += self._format_grid_pdzone_section()
+
+        # 10. Incident Validation
+        report += self._format_incident_section()
+
+        # 11. Latitude/Longitude Validation
+        report += self._format_coordinates_section()
+
+        # 12. Data Quality Flags
+        report += self._format_data_quality_flags_section()
+
+        # Recommendations
+        report += self._format_recommendations_section()
+
+        return report
+
+    def _format_schema_section(self) -> str:
+        """Format schema validation section.""" result = self.validation_results.get('schema', {})
+        status_icon = "✅" if result.get('status') == 'PASS' else "❌"
+
+        section = f"""### 1. Schema Validation {status_icon}
+
+**Status:** {result.get('status', 'N/A')}
+
+- **Total Columns:** {result.get('total_columns', 0)}
+- **Required Columns:** {result.get('required_columns', 0)}
+- **Missing Columns:** {len(result.get('missing_columns', []))}
+- **Unexpected Columns:** {len(result.get('unexpected_columns', []))}
+
+"""
+
+        if result.get('missing_columns'):
+            section += f"**Missing:** {', '.join(result['missing_columns'])}\n\n"
+
+        if result.get('unexpected_columns'):
+            section += f"**Unexpected:** {', '.join(result['unexpected_columns'])}\n\n"
+
+        return section
+
+    def _format_timeofcall_section(self) -> str:
+        """Format TimeOfCall validation section.""" result = self.validation_results.get('timeofcall', {})
+        status_icon = "✅" if result.get('status') == 'PASS' else "❌"
+
+        section = f"""### 2. TimeOfCall Validation {status_icon}
+
+**Status:** {result.get('status', 'N/A')}
+
+- **Total Records:** {result.get('total_records', 0):,}
+- **Null Values:** {result.get('null_count', 0):,}
+- **Valid Format:** {result.get('valid_format_count', 0):,}
+
+**Derived Field Issues:**
+- **cYear Issues:** {result.get('cyear_issues', 0):,}
+- **cMonth Issues:** {result.get('cmonth_issues', 0):,}
+- **Hour Issues:** {result.get('hour_issues', 0):,}
+- **DayofWeek Issues:** {result.get('dayofweek_issues', 0):,}
+
+"""
+        return section
+
+    def _format_response_type_section(self) -> str:
+        """Format Response_Type validation section.""" result = self.validation_results.get('response_type', {})
+        status_icon = "✅" if result.get('status') == 'PASS' else "⚠️" if result.get('status') == 'WARNING' else "❌"
+
+        section = f"""### 3. Response_Type Validation {status_icon}
+
+**Status:** {result.get('status', 'N/A')}
+
+- **Total Records:** {result.get('total_records', 0):,}
+- **Coverage:** {result.get('coverage_percent', 0):.2f}%
+- **Valid Values:** {result.get('valid_count', 0):,}
+- **Invalid Values:** {result.get('invalid_count', 0):,}
+- **Null Values:** {result.get('null_count', 0):,}
+
+**Distribution:**
+"""
+
+        for value, count in result.get('distribution', {}).items():
+            pct = (count / result.get('total_records', 1) * 100)
+            section += f"- {value}: {count:,} ({pct:.2f}%)\n"
+
+        section += "\n"
+        return section
+
+    def _format_how_reported_section(self) -> str:
+        """Format How Reported validation section.""" result = self.validation_results.get('how_reported', {})
+        status_icon = "✅" if result.get('status') == 'PASS' else "❌"
+
+        section = f"""### 4. How Reported Validation {status_icon}
+
+**Status:** {result.get('status', 'N/A')}
+
+- **Total Records:** {result.get('total_records', 0):,}
+- **Null Values:** {result.get('null_count', 0):,}
+- **Valid Values:** {result.get('valid_count', 0):,}
+- **Invalid Values:** {result.get('invalid_count', 0):,}
+
+"""
+
+        if result.get('invalid_values'):
+            section += "**Top Invalid Values:**\n"
+            for value, count in list(result['invalid_values'].items())[:10]:
+                section += f"- {value}: {count:,}\n"
+            section += "\n"
+
+        return section
+
+    def _format_fulladdress2_section(self) -> str:
+        """Format FullAddress2 validation section.""" result = self.validation_results.get('fulladdress2', {})
+        status_icon = "✅" if result.get('status') == 'PASS' else "⚠️" if result.get('status') == 'WARNING' else "❌"
+
+        section = f"""### 5. FullAddress2 Validation {status_icon}
+
+**Status:** {result.get('status', 'N/A')}
+
+- **Total Records:** {result.get('total_records', 0):,}
+- **Null Values:** {result.get('null_count', 0):,}
+- **Valid Addresses:** {result.get('valid_count', 0):,} ({result.get('valid_percent', 0):.2f}%)
+- **Invalid Addresses:** {result.get('invalid_count', 0):,}
+
+**Invalid Pattern Breakdown:**
+"""
+
+        for pattern, count in result.get('invalid_patterns', {}).items():
+            section += f"- {pattern.replace('_', ' ').title()}: {count:,}\n"
+
+        section += "\n"
+        return section
+
+    def _format_reportnumbernew_section(self) -> str:
+        """Format ReportNumberNew validation section.""" result = self.validation_results.get('reportnumbernew', {})
+        status_icon = "✅" if result.get('status') == 'PASS' else "❌"
+
+        section = f"""### 6. ReportNumberNew Validation {status_icon}
+
+**Status:** {result.get('status', 'N/A')}
+
+- **Total Records:** {result.get('total_records', 0):,}
+- **Null Values:** {result.get('null_count', 0):,}
+- **Valid Format:** {result.get('valid_count', 0):,} ({result.get('valid_percent', 0):.2f}%)
+- **Invalid Format:** {result.get('invalid_count', 0):,}
+- **Duplicates:** {result.get('duplicate_count', 0):,}
+
+"""
+        return section
+
+    def _format_officer_section(self) -> str:
+        """Format Officer validation section.""" result = self.validation_results.get('officer', {})
+        status_icon = "✅" if result.get('status') == 'PASS' else "⚠️"
+
+        section = f"""### 7. Officer Validation {status_icon}
+
+**Status:** {result.get('status', 'N/A')}
+
+- **Total Records:** {result.get('total_records', 0):,}
+- **Null Values:** {result.get('null_count', 0):,}
+- **Valid Format:** {result.get('valid_count', 0):,} ({result.get('valid_percent', 0):.2f}%)
+- **Invalid Format:** {result.get('invalid_count', 0):,}
+
+"""
+        return section
+
+    def _format_disposition_section(self) -> str:
+        """Format Disposition validation section.""" result = self.validation_results.get('disposition', {})
+        status_icon = "✅" if result.get('status') == 'PASS' else "❌"
+
+        section = f"""### 8. Disposition Validation {status_icon}
+
+**Status:** {result.get('status', 'N/A')}
+
+- **Total Records:** {result.get('total_records', 0):,}
+- **Null Values:** {result.get('null_count', 0):,}
+- **Unique Values:** {result.get('unique_values', 0):,}
+
+**Top Disposition Values:**
+"""
+
+        for value, count in list(result.get('distribution', {}).items())[:10]:
+            pct = (count / result.get('total_records', 1) * 100)
+            section += f"- {value}: {count:,} ({pct:.2f}%)\n"
+
+        section += "\n"
+        return section
+
+    def _format_grid_pdzone_section(self) -> str:
+        """Format Grid/PDZone validation section.""" result = self.validation_results.get('grid_pdzone', {})
+        status_icon = "✅" if result.get('status') == 'PASS' else "⚠️"
+
+        section = f"""### 9. Grid and PDZone Validation {status_icon}
+
+**Status:** {result.get('status', 'N/A')}
+
+**Grid:**
+- **Null Values:** {result.get('grid_null_count', 0):,}
+- **Valid Values:** {result.get('grid_valid_count', 0):,}
+- **Invalid Values:** {result.get('grid_invalid_count', 0):,}
+
+**PDZone:**
+- **Null Values:** {result.get('pdzone_null_count', 0):,}
+- **Valid Values:** {result.get('pdzone_valid_count', 0):,}
+- **Invalid Values:** {result.get('pdzone_invalid_count', 0):,}
+
+**Mapping Issues:** {result.get('mapping_issues', 0):,}
+
+"""
+        return section
+
+    def _format_incident_section(self) -> str:
+        """Format Incident validation section.""" result = self.validation_results.get('incident', {})
+        status_icon = "✅" if result.get('status') == 'PASS' else "⚠️"
+
+        section = f"""### 10. Incident Validation {status_icon}
+
+**Status:** {result.get('status', 'N/A')}
+
+- **Total Records:** {result.get('total_records', 0):,}
+- **Null Values:** {result.get('null_count', 0):,} ({result.get('null_percent', 0):.2f}%)
+- **Unique Incidents:** {result.get('unique_values', 0):,}
+- **Mojibake Characters:** {result.get('mojibake_count', 0):,}
+- **Case Sensitivity Duplicates:** {result.get('case_duplicates', 0)}
+
+**Top Incident Types:**
+"""
+
+        for value, count in list(result.get('top_incidents', {}).items())[:10]:
+            pct = (count / result.get('total_records', 1) * 100)
+            section += f"- {value}: {count:,} ({pct:.2f}%)\n"
+
+        section += "\n"
+        return section
+
+    def _format_coordinates_section(self) -> str:
+        """Format coordinates validation section.""" result = self.validation_results.get('coordinates', {})
+
+        section = f"""### 11. Latitude/Longitude Validation ℹ️
+
+**Status:** {result.get('status', 'N/A')} (Informational)
+
+- **Total Records:** {result.get('total_records', 0):,}
+- **Null Coordinates:** {result.get('lat_null_count', 0):,} ({result.get('null_percent', 0):.2f}%)
+- **Valid Latitude:** {result.get('lat_valid_count', 0):,}
+- **Valid Longitude:** {result.get('lon_valid_count', 0):,}
+- **In Hackensack Range:** {result.get('in_hackensack_range', 0):,}
+- **Invalid Latitude:** {result.get('lat_invalid_count', 0):,}
+- **Invalid Longitude:** {result.get('lon_invalid_count', 0):,}
+
+"""
+        return section
+
+    def _format_data_quality_flags_section(self) -> str:
+        """Format data quality flags section.""" result = self.validation_results.get('data_quality_flags', {})
+
+        section = f"""### 12. Data Quality Flags ℹ️
+
+**Status:** {result.get('status', 'N/A')} (Informational)
+
+- **Total Records:** {result.get('total_records', 0):,}
+- **Flagged Records:** {result.get('flagged_count', 0):,} ({result.get('flagged_percent', 0):.2f}%)
+
+**Flag Distribution:**
+"""
+
+        for flag, count in result.get('distribution', {}).items():
+            pct = (count / result.get('total_records', 1) * 100)
+            section += f"- Flag {flag}: {count:,} ({pct:.2f}%)\n"
+
+        section += "\n"
+        return section
+
+    def _format_recommendations_section(self) -> str:
+        """Format recommendations section.""" section = "## Recommendations\n\n"
+
+        recommendations = []
+
+        # Check each validation result for issues
+        if self.validation_results.get('response_type', {}).get('coverage_percent', 100) < 99:
+            recommendations.append("- **Response_Type Coverage:** Coverage is below 99%. Review and populate missing Response_Type values.") if self.validation_results.get('how_reported', {}).get('invalid_count', 0) > 0:
+            recommendations.append("- **How Reported:** Invalid values detected. Review and map to valid How Reported categories.") if self.validation_results.get('fulladdress2', {}).get('valid_percent', 100) < 90:
+            recommendations.append("- **FullAddress2:** Address validity is below 90%. Review and correct invalid address formats.") if self.validation_results.get('reportnumbernew', {}).get('invalid_count', 0) > 0:
+            recommendations.append("- **ReportNumberNew:** Invalid case number formats detected. Review and correct to YY-XXXXXX format.") if self.validation_results.get('disposition', {}).get('null_count', 0) > 0:
+            recommendations.append("- **Disposition:** Null values detected. Populate all Disposition fields.") if self.validation_results.get('incident', {}).get('null_percent', 0) > 1:
+            recommendations.append("- **Incident:** High percentage of null incidents. Continue RMS backfill process.") if not recommendations:
+            section += "✅ No critical recommendations. All validation checks passed acceptable thresholds.\n\n"
+        else:
+            section += "\n".join(recommendations) + "\n\n"
+
+        return section
+
+    def save_reports(self, df: pd.DataFrame):
+        """Save all validation reports and CSV files.""" logger.info("Saving validation reports...")
+
+        # Save markdown report
+        report = self.generate_markdown_report()
+        report_path = self.output_dir / f"esri_final_validation_{self.timestamp}.md"
+        with open(report_path, 'w', encoding='utf-8') as f:
+            f.write(report)
+        logger.info(f"Saved validation report: {report_path}")
+
+        # Save invalid records CSVs
+        for record_type, invalid_df in self.invalid_records.items():
+            csv_path = self.output_dir / f"{record_type}_{self.timestamp}.csv"
+            invalid_df.to_csv(csv_path, index=False, encoding='utf-8-sig')
+            logger.info(f"Saved {record_type}: {csv_path}")
+
+        # Save null critical fields CSV
+        critical_fields = ['Incident', 'How Reported', 'Disposition', 'ReportNumberNew']
+        null_mask = df[critical_fields].isna().any(axis=1)
+        if null_mask.any():
+            null_df = df[null_mask][['ReportNumberNew', 'TimeOfCall'] + critical_fields].head(1000)
+            csv_path = self.output_dir / f"null_critical_fields_{self.timestamp}.csv"
+            null_df.to_csv(csv_path, index=False, encoding='utf-8-sig')
+            logger.info(f"Saved null critical fields: {csv_path}")
+
+    def run_validation(self):
+        """Run complete validation workflow.""" logger.info("Starting ESRI final validation...")
+
+        # Load data
+        df = self.load_data()
+
+        # Run all validations
+        self.validation_results['schema'] = self.validate_schema(df)
+        self.validation_results['timeofcall'] = self.validate_timeofcall(df)
+        self.validation_results['response_type'] = self.validate_response_type(df)
+        self.validation_results['how_reported'] = self.validate_how_reported(df)
+        self.validation_results['fulladdress2'] = self.validate_fulladdress2(df)
+        self.validation_results['reportnumbernew'] = self.validate_reportnumbernew(df)
+        self.validation_results['officer'] = self.validate_officer(df)
+        self.validation_results['disposition'] = self.validate_disposition(df)
+        self.validation_results['grid_pdzone'] = self.validate_grid_pdzone(df)
+        self.validation_results['incident'] = self.validate_incident(df)
+        self.validation_results['coordinates'] = self.validate_coordinates(df)
+        self.validation_results['data_quality_flags'] = self.validate_data_quality_flags(df)
+
+        # Save reports
+        self.save_reports(df)
+
+        # Print summary
+        overall = self.calculate_overall_score()
+        logger.info(f"\n{'='*60}")
+        logger.info(f"VALIDATION COMPLETE")
+        logger.info(f"{'='*60}")
+        logger.info(f"Overall Score: {overall['overall_percent']:.1f}%")
+        logger.info(f"Status: {'PASS' if overall['overall_percent'] >= 95 else 'FAIL'}")
+        logger.info(f"{'='*60}\n")
+
+        return self.validation_results
+
+
+def main():
+    """Main execution function.""" import sys
+
+    # Input file
+    input_file = "data/ESRI_CADExport/CAD_ESRI_Final_20251117_v2.xlsx"
+
+    # Allow command-line override
+    if len(sys.argv) > 1:
+        input_file = sys.argv[1]
+
+    # Create validator and run
+    validator = ESRIFinalValidator(input_file)
+    results = validator.run_validation()
+
+    print("\n✅ Validation complete! Check data/02_reports/ for detailed results.") if __name__ == "__main__":
+    main()
+
+```
+
+```python
+#!/usr/bin/env python
+"""
+Final Cleanup Script - TRO/FRO + Fuzzy Match + RMS Backfill
+============================================================
+Performs comprehensive data cleaning for CAD ESRI export:
+1. RMS Backfill - Fill null Incidents from RMS data
+2. TRO/FRO Corrections - Apply manual review corrections
+3. Fuzzy Match - Match unmapped Incidents to call types
+
+Author: Claude Code
+Date: 2025-11-17
+"""
+
+import pandas as pd
+import numpy as np
+from pathlib import Path
+from datetime import datetime
+from thefuzz import fuzz
+import warnings
+warnings.filterwarnings('ignore')
+
+# Configuration
+BASE_DIR = Path(r"C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine")
+DATA_DIR = BASE_DIR / "data"
+REF_DIR = BASE_DIR / "ref"
+REPORTS_DIR = DATA_DIR / "02_reports"
+
+# Input files
+CAD_FILE = DATA_DIR / "ESRI_CADExport" / "CAD_ESRI_Final_20251117_v2.xlsx"
+TRO_FRO_FILE = REPORTS_DIR / "tro_fro_manual_review.csv"
+RAW_CALLTYPE_FILE = REF_DIR / "RAW_CAD_CALL_TYPE_EXPORT.xlsx"
+MASTER_MAPPING_FILE = REF_DIR / "call_types" / "CallType_Master_Mapping.csv"
+RMS_FILE = DATA_DIR / "rms" / "2019_2025_11_16_16_57_00_ALL_RMS_Export.xlsx"
+
+# Output files
+OUTPUT_CAD_FILE = DATA_DIR / "ESRI_CADExport" / "CAD_ESRI_Final_20251117_v2.xlsx"
+FUZZY_REVIEW_FILE = REPORTS_DIR / "fuzzy_review.csv"
+FINAL_REPORT_FILE = REPORTS_DIR / "unmapped_final_report.md"
+
+# Fuzzy match thresholds
+AUTO_APPLY_THRESHOLD = 75
+REVIEW_THRESHOLD = 70
+
+
+class CleanupStats:
+    """Track statistics for each cleanup step"""
+    def __init__(self, total_records):
+        self.total_records = total_records
+        self.initial_unmapped = 0
+        self.initial_null_incident = 0
+        self.steps = []
+
+    def add_step(self, name, before_unmapped, after_unmapped, details=None):
+        improvement = before_unmapped - after_unmapped
+        self.steps.append({
+            'name': name,
+            'before': before_unmapped,
+            'after': after_unmapped,
+            'improvement': improvement,
+            'details': details or {}
+        })
+
+    def get_summary(self):
+        return self.steps
+
+
+def load_data():
+    """Load all input files"""
+    print("Loading input files...")
+
+    # Load CAD data
+    cad_df = pd.read_excel(CAD_FILE)
+    print(f"  CAD ESRI: {len(cad_df):,} records")
+
+    # Load TRO/FRO corrections
+    tro_fro_df = pd.read_csv(TRO_FRO_FILE)
+    print(f"  TRO/FRO corrections: {len(tro_fro_df):,} records")
+
+    # Load RAW call types
+    raw_calltype_df = pd.read_excel(RAW_CALLTYPE_FILE)
+    print(f"  RAW call types: {len(raw_calltype_df):,} records")
+
+    # Load master mapping
+    master_mapping_df = pd.read_csv(MASTER_MAPPING_FILE)
+    print(f"  Master mapping: {len(master_mapping_df):,} records")
+
+    # Load RMS data
+    rms_df = pd.read_excel(RMS_FILE)
+    print(f"  RMS export: {len(rms_df):,} records")
+
+    return cad_df, tro_fro_df, raw_calltype_df, master_mapping_df, rms_df
+
+
+def count_unmapped(df):
+    """Count records with blank/null Response_Type"""
+    return df['Response_Type'].isna().sum() + (df['Response_Type'] == '').sum()
+
+
+def count_null_incident(df):
+    """Count records with blank/null Incident"""
+    return df['Incident'].isna().sum() + (df['Incident'] == '').sum()
+
+
+def step1_rms_backfill(cad_df, rms_df, stats):
+    """
+    Step 1: RMS Backfill - Fill null Incidents from RMS data
+    Join CAD.ReportNumberNew = RMS. 'Case Number'
+    Fill from RMS. 'Incident Type_1'
+    """
+    print("\n" + "="*60)
+    print("STEP 1: RMS BACKFILL")
+    print("="*60)
+
+    before_null = count_null_incident(cad_df)
+    before_unmapped = count_unmapped(cad_df)
+
+    print(f"Before: {before_null:,} null Incidents, {before_unmapped:,} unmapped Response_Type")
+
+    # Find records with null Incident
+    null_incident_mask = cad_df['Incident'].isna() | (cad_df['Incident'] == '')
+    null_incident_records = cad_df[null_incident_mask]['ReportNumberNew'].tolist()
+
+    # Create RMS lookup dictionary
+    rms_lookup = dict(zip(rms_df['Case Number'].astype(str), rms_df['Incident Type_1']))
+
+    # Track backfills
+    backfilled = 0
+    backfill_details = []
+
+    for idx in cad_df[null_incident_mask].index:
+        report_num = str(cad_df.loc[idx, 'ReportNumberNew'])
+        if report_num in rms_lookup:
+            rms_incident = rms_lookup[report_num]
+            if pd.notna(rms_incident) and str(rms_incident).strip():
+                cad_df.loc[idx, 'Incident'] = rms_incident
+                backfilled += 1
+                backfill_details.append({
+                    'ReportNumberNew': report_num,
+                    'RMS_Incident': rms_incident
+                })
+
+    after_null = count_null_incident(cad_df)
+    after_unmapped = count_unmapped(cad_df)
+
+    print(f"After: {after_null:,} null Incidents, {after_unmapped:,} unmapped Response_Type")
+    print(f"Backfilled: {backfilled:,} Incidents from RMS")
+
+    stats.add_step('RMS Backfill', before_unmapped, after_unmapped, {
+        'null_before': before_null,
+        'null_after': after_null,
+        'backfilled': backfilled
+    })
+
+    return cad_df, backfill_details
+
+
+def step2_tro_fro_corrections(cad_df, tro_fro_df, stats):
+    """
+    Step 2: Apply TRO/FRO Corrections
+    Join on ReportNumberNew
+    Update Incident with Corrected Incident values
+    """
+    print("\n" + "="*60)
+    print("STEP 2: TRO/FRO CORRECTIONS")
+    print("="*60)
+
+    # Guard: if the manual review file has not been populated with a
+    # 'Corrected Incident' column yet, skip this step gracefully. expected_cols = {'ReportNumberNew', 'Corrected Incident'}
+    missing = expected_cols.difference(tro_fro_df.columns)
+    if missing:
+        print(
+            "TRO/FRO manual review file is missing expected columns "
+            f"({', '.join(sorted(missing))}); skipping TRO/FRO corrections." )
+        stats.add_step('TRO/FRO Corrections', count_unmapped(cad_df), count_unmapped(cad_df), {
+            'corrections_applied': 0,
+            'total_corrections': len(tro_fro_df)
+        })
+        return cad_df, []
+
+    before_unmapped = count_unmapped(cad_df)
+
+    # Create correction lookup
+    correction_lookup = dict(zip(
+        tro_fro_df['ReportNumberNew'].astype(str),
+        tro_fro_df['Corrected Incident']
+    ))
+
+    # Apply corrections
+    corrected = 0
+    correction_details = []
+
+    for report_num, corrected_incident in correction_lookup.items():
+        mask = cad_df['ReportNumberNew'].astype(str) == report_num
+        if mask.any():
+            old_incident = cad_df.loc[mask, 'Incident'].values[0]
+            cad_df.loc[mask, 'Incident'] = corrected_incident
+            corrected += mask.sum()
+            correction_details.append({
+                'ReportNumberNew': report_num,
+                'Old_Incident': old_incident,
+                'New_Incident': corrected_incident
+            })
+
+    after_unmapped = count_unmapped(cad_df)
+
+    print(f"Before: {before_unmapped:,} unmapped Response_Type")
+    print(f"After: {after_unmapped:,} unmapped Response_Type")
+    print(f"Applied: {corrected:,} TRO/FRO corrections")
+
+    stats.add_step('TRO/FRO Corrections', before_unmapped, after_unmapped, {
+        'corrections_applied': corrected,
+        'total_corrections': len(tro_fro_df)
+    })
+
+    return cad_df, correction_details
+
+
+def step3_fuzzy_match(cad_df, raw_calltype_df, master_mapping_df, stats):
+    """
+    Step 3: Fuzzy Match Unmapped Incidents
+    For blank Response_Type:
+    - First: fuzzy match Incident to RAW_CAD_CALL_TYPE_EXPORT.

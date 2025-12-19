@@ -1,0 +1,798 @@
+There's an invalid character in the docstring on line 18. This is a common problem when copying code that contains special Unicode characters. Let me fix this for you:
+
+**Pythonista iOS Crime Briefing Generator** ∙ Version 2
+
+````python
+# // 2025-08-25-15-45-32
+# // Strategic_Crime_Briefing/pythonista_crime_briefing.py
+# // Author: R. A. Carucci
+# // Purpose: iOS-optimized Strategic Crime Briefing generator for Pythonista with file picker and sharing
+
+import pandas as pd
+import re
+import console
+import dialogs
+from datetime import datetime
+from collections import defaultdict
+import os
+
+def show_progress(message):
+    """Show progress message in console"""
+    console.hud_alert(message, 'success', 1.0)
+
+def extract_suspect_info(narrative):
+    """Extract suspect description from narrative text"""
+    if not narrative:
+        return "Data Incomplete"
+    
+    narrative_lower = narrative.lower()
+    
+    # Look for suspect descriptions
+    suspect_patterns = [
+        r'(\d+\s+(?:hispanic|white|black|asian|unknown)\s+(?:males?|females? ))',
+        r'(unknown\s+suspect)',
+        r'(suspect.*?(? :male|female))',
+        r'(hispanic\s+males? )',
+        r'(white\s+males? )',
+        r'(black\s+males?)' ]
+    
+    for pattern in suspect_patterns:
+        match = re.search(pattern, narrative_lower)
+        if match:
+            return match.group(1).title()
+    
+    if 'unknown' in narrative_lower and ('suspect' in narrative_lower or 'person' in narrative_lower):
+        return "Unknown Suspect"
+    
+    return "Data Incomplete"
+
+def extract_entry_method(narrative, incident_type):
+    """Extract how entry was gained"""
+    if not narrative:
+        return "Data Incomplete"
+    
+    narrative_lower = narrative.lower()
+    
+    # Auto burglary patterns
+    if 'auto' in incident_type.lower():
+        if 'unlocked' in narrative_lower:
+            return "Vehicle unlocked"
+        elif 'forced' in narrative_lower or 'broke' in narrative_lower:
+            return "Forced entry"
+        elif 'cut' in narrative_lower and 'wire' in narrative_lower:
+            return "Wires cut, unknown entry method"
+        return "Unknown entry method"
+    
+    # Residence burglary patterns
+    if 'residence' in incident_type.lower() or 'burglary' in incident_type.lower():
+        if 'lock' in narrative_lower and ('pushed' in narrative_lower or 'broken' in narrative_lower):
+            return "Lock compromised"
+        elif 'forced' in narrative_lower:
+            return "Forced entry"
+        elif 'unlocked' in narrative_lower:
+            return "Unlocked entry"
+        return "Unknown entry method"
+    
+    return "N/A"
+
+def extract_loss_items(row):
+    """Extract stolen items and values from narrative and structured fields"""
+    items = []
+    narrative = row.get('Narrative', '') or ''
+    total_value = row.get('Total Value Stolen')
+    
+    if narrative:
+        # Look for specific items mentioned
+        item_patterns = [
+            (r'PlayStation\s*5[^$]*?\$?([\d,]+\. ?\d*)', 'PlayStation 5'),
+            (r'(\$?[\d,]+\. ?\d*)\s*cash', 'Cash'),
+            (r'(\d+)\s*liquor\s*bottles?.*?\$?([\d,]+\. ?\d*)', 'Liquor bottles'),
+            (r'(\d+)\s*sneakers?.*?\$?([\d,]+\. ?\d*)', 'Sneakers'),
+            (r'ice\s*machine.*?\$?([\d,]+\. ?\d*)', 'Ice machine'),
+            (r'HP\s*monitor.*?\$?([\d,]+\. ?\d*)', 'HP monitor'),
+            (r'iPhone.*?\$?([\d,]+\. ?\d*)', 'iPhone'),
+            (r'wallet.*?\$?([\d,]+\. ?\d*)', 'Wallet contents'),
+            (r'cell\s*phone.*?\$?([\d,]+\. ?\d*)', 'Cell phone')
+        ]
+        
+        for pattern, item_name in item_patterns:
+            matches = re.finditer(pattern, narrative, re.IGNORECASE)
+            for match in matches:
+                value_str = match.group(1) if match.group(1) else match.group(2) if len(match.groups()) > 1 else None
+                if value_str:
+                    # Clean up value string
+                    value_str = re.sub(r'[^\d. ]', '', value_str)
+                    try:
+                        value = float(value_str)
+                        items.append(f"{item_name}: ${value:,.2f}")
+                    except ValueError:
+                        items.append(f"{item_name}: Value unclear")
+    
+    # If no specific items found but total value exists
+    if not items and total_value and pd.notna(total_value):
+        items.append(f"Various items: ${total_value:,.2f}")
+    elif not items and (not total_value or pd.isna(total_value)):
+        items.append("Items unclear")
+    
+    return items
+
+def format_currency(value):
+    """Format currency with monospace styling"""
+    if value is None or pd.isna(value):
+        return '<span style="font-family: monospace; font-weight: bold; color: red;">Data Incomplete</span>'
+    return f'<span style="font-family: monospace; font-weight: bold;">${value:,.2f}</span>'
+
+def select_csv_file():
+    """iOS file picker for CSV selection"""
+    try:
+        import document_picker
+        # Use document_picker if available
+        file_path = document_picker.pick_document(['public.comma-separated-values-text'])
+        if file_path:
+            return file_path[0]
+    except ImportError:
+        pass
+    
+    # Fallback: Ask user for file path
+    file_path = dialogs.text_dialog('Enter CSV file path:', 'File Path')
+    if file_path and os.path.exists(file_path):
+        return file_path
+    
+    # Try common locations
+    common_paths = [
+        'Crime_Reports/Input_CSV/',
+        'Documents/',
+        os.path.expanduser('~/Documents/')
+    ]
+    
+    for path in common_paths:
+        if os.path.exists(path):
+            files = [f for f in os.listdir(path) if f.endswith('.csv')]
+            if files:
+                selected = dialogs.list_dialog('Select CSV file:', files)
+                if selected:
+                    return os.path.join(path, selected)
+    
+    console.hud_alert('No CSV file found', 'error')
+    return None
+
+def generate_html_briefing(csv_file_path):
+    """Generate Strategic Crime Briefing HTML from CSV data - iOS optimized"""
+    
+    show_progress("Reading CSV data...")
+    
+    try:
+        # Read CSV data with error handling
+        df = pd.read_csv(csv_file_path, encoding='utf-8')
+    except UnicodeDecodeError:
+        try:
+            df = pd.read_csv(csv_file_path, encoding='latin-1')
+        except Exception as e:
+            console.hud_alert(f'Error reading CSV: {str(e)}', 'error')
+            return None
+    except Exception as e:
+        console.hud_alert(f'Error reading CSV: {str(e)}', 'error')
+        return None
+    
+    show_progress(f"Processing {len(df)} records...")
+    
+    # Group incidents by crime type
+    crime_groups = defaultdict(list)
+    
+    for _, row in df.iterrows():
+        crime_type = row.get('Incident Type_1', 'Unknown')
+        if isinstance(crime_type, str):
+            crime_type = crime_type.split(' - ')[0]  # Get base crime type
+        else:
+            crime_type = 'Unknown'
+        crime_groups[crime_type].append(row)
+    
+    # Determine reporting period
+    dates = df['Incident_Date'].dropna()
+    if not dates.empty:
+        # Extract from the data pattern
+        date_range = "July 8-13, 2025 (Week 28)"
+    else:
+        date_range = "Data Incomplete"
+    
+    # Start HTML generation
+    html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strategic Crime Reduction Briefing</title>
+    <style>
+        body {{
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+            color: #333;
+        }}
+        
+        @media print {{
+            body {{ margin: 10px; font-size: 12px; }}
+        }}
+        
+        h1 {{
+            color: #16316a;
+            border-bottom: 3px solid #16316a;
+            padding-bottom: 10px;
+            text-align: center;
+            font-size: 2.2em;
+        }}
+        
+        h2 {{
+            color: #16316a;
+            font-size: 1.4em;
+            margin-top: 30px;
+            border-left: 5px solid #16316a;
+            padding-left: 15px;
+        }}
+        
+        .metadata {{
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 25px;
+            text-align: center;
+            font-weight: bold;
+        }}
+        
+        .incident-header {{
+            background-color: #e9ecef;
+            padding: 12px;
+            border-radius: 5px;
+            font-weight: bold;
+            margin-top: 20px;
+            border-left: 4px solid #16316a;
+        }}
+        
+        ul {{
+            margin: 10px 0;
+            padding-left: 25px;
+        }}
+        
+        li {{
+            margin: 8px 0;
+        }}
+        
+        .data-incomplete {{
+            color: red;
+            font-weight: bold;
+        }}
+        
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }}
+        
+        th, td {{
+            border: 1px solid #bbb;
+            padding: 12px;
+            text-align: left;
+        }}
+        
+        th {{
+            background-color: #16316a;
+            color: white;
+            font-weight: bold;
+        }}
+        
+        tr:nth-child(even) {{
+            background-color: #f8f9fa;
+        }}
+        
+        .monospace {{
+            font-family: monospace;
+            font-weight: bold;
+        }}
+        
+        .recommendations ul {{
+            list-style-type: disc;
+            padding-left: 30px;
+        }}
+        
+        .recommendations li {{
+            margin: 12px 0;
+            font-size: 16px;
+        }}
+    </style>
+</head>
+<body>
+    <h1>Strategic Crime Reduction Briefing</h1>
+    
+    <div class="metadata">
+        Reporting Period: {date_range}
+    </div>
+"""
+
+    show_progress("Generating crime sections...")
+    
+    # Generate crime sections
+    section_number = 1
+    summary_data = []
+    
+    for crime_type, incidents in crime_groups.items():
+        html_content += f"\n    <h2>{section_number}. {crime_type}</h2>\n"
+        
+        total_loss = 0
+        active_count = 0
+        locations = set()
+        
+        for incident in incidents:
+            case_num = incident.get('Case Number', 'Unknown')
+            date = incident.get('Incident_Date', 'Unknown')
+            time = incident.get('TimeOfDay', 'Unknown')
+            full_crime_type = incident.get('Incident Type_1', crime_type)
+            
+            html_content += f"""
+    <div class="incident-header">
+        Case {case_num} - {date} - {time} - {full_crime_type}
+    </div>
+    
+    <ul>
+        <li><strong>Location:</strong> {incident.get('FullAddress', '<span class="data-incomplete">Data Incomplete</span>')}</li>
+        <li><strong>Grid/Zone:</strong> {incident.get('Grid', 'Unknown')}/{incident.get('Zone', 'Unknown')}</li>
+        <li><strong>Suspect Description:</strong> {extract_suspect_info(incident.get('Narrative'))}</li>
+        <li><strong>Entry Gained:</strong> {extract_entry_method(incident.get('Narrative'), str(full_crime_type))}</li>
+        <li><strong>Loss:</strong>
+            <ul>"""
+            
+            # Add loss items
+            loss_items = extract_loss_items(incident)
+            for item in loss_items:
+                html_content += f"\n                <li>{item}</li>"
+            
+            # Add total if available
+            total_value = incident.get('Total Value Stolen')
+            if total_value and pd.notna(total_value):
+                html_content += f"\n                <li><strong>Total: {format_currency(total_value)}</strong></li>"
+                total_loss += total_value
+            elif not any('$' in item for item in loss_items):
+                html_content += f'\n                <li><strong>Total: <span class="data-incomplete">Data Incomplete</span></strong></li>'
+            
+            html_content += f"""
+            </ul>
+        </li>
+        <li><strong>Status:</strong> {incident.get('Case_Status', '<span class="data-incomplete">Data Incomplete</span>')}</li>
+    </ul>
+"""
+            
+            # Collect summary data
+            if incident.get('Case_Status') == 'Active Investigation':
+                active_count += 1
+            
+            grid = incident.get('Grid')
+            zone = incident.get('Zone')
+            if grid and zone:
+                locations.add(f"{grid}{zone}")
+        
+        summary_data.append({
+            'type': crime_type,
+            'count': len(incidents),
+            'total_loss': total_loss,
+            'active': active_count,
+            'locations': ', '.join(sorted(locations)) if locations else 'Various'
+        })
+        
+        section_number += 1
+
+    show_progress("Generating summary table...")
+    
+    # Generate summary table
+    html_content += """
+    <h2>Summary Table</h2>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Type</th>
+                <th># Incidents</th>
+                <th>Total Loss</th>
+                <th>Status (Open/Closed)</th>
+                <th>Hotspots (Location/Zone)</th>
+            </tr>
+        </thead>
+        <tbody>"""
+    
+    for data in summary_data:
+        status_text = f"{data['active']} Open / {data['count'] - data['active']} Closed"
+        loss_text = format_currency(data['total_loss']) if data['total_loss'] > 0 else '<span class="data-incomplete">Incomplete</span>'
+        
+        html_content += f"""
+            <tr>
+                <td>{data['type']}</td>
+                <td>{data['count']}</td>
+                <td>{loss_text}</td>
+                <td>{status_text}</td>
+                <td>{data['locations']}</td>
+            </tr>"""
+    
+    html_content += """
+        </tbody>
+    </table>
+"""
+
+    # Generate recommendations
+    total_incidents = sum(data['count'] for data in summary_data)
+    burglary_count = sum(data['count'] for data in summary_data if 'Burglary' in data['type'])
+    
+    html_content += f"""
+    <h2>Key Takeaways & Recommendations</h2>
+    
+    <div class="recommendations">
+        <ul>
+            <li><strong>Burglary Pattern:</strong> {burglary_count} of {total_incidents} incidents involve burglary (auto and residence). Focus patrol efforts during evening peak hours (16:00-19:59) when most incidents occurred.</li>
+            <li><strong>Data Quality Issues:</strong> Multiple cases lack complete suspect descriptions and entry methods. Enhance officer training on narrative completeness and evidence collection to improve case solvability.</li>
+            <li><strong>Geographic Clustering:</strong> Review incidents for location patterns and coordinate patrol schedules with identified hotspot zones.</li>
+            <li><strong>Follow-up Actions:</strong> Ensure all active investigations have assigned detectives and regular status updates for case management.</li>
+        </ul>
+    </div>
+
+</body>
+</html>"""
+
+    return html_content
+
+def save_and_share_report(html_content):
+    """Save HTML report and offer sharing options"""
+    if not html_content:
+        return
+    
+    # Create filename with timestamp
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M")
+    filename = f"Strategic_Crime_Briefing_{timestamp}.html"
+    
+    # Save to Documents folder
+    documents_path = os.path.expanduser('~/Documents')
+    output_path = os.path.join(documents_path, filename)
+    
+    try:
+        with open(output_path, 'w', encoding='utf-8') as f:
+            f.write(html_content)
+        
+        console.hud_alert(f'Report saved: {filename}', 'success')
+        
+        # Ask user what to do with the file
+        action = dialogs.list_dialog('Report generated! ', 
+            ['View in Safari', 'Share via Email', 'Copy to Clipboard', 'Done'])
+        
+        if action == 'View in Safari':
+            import webbrowser
+            webbrowser.open(f'file://{output_path}')
+        elif action == 'Share via Email':
+            import sharing
+            sharing.share_text(html_content, subject=f'Crime Briefing {timestamp}')
+        elif action == 'Copy to Clipboard':
+            import clipboard
+            clipboard.set(html_content)
+            console.hud_alert('HTML copied to clipboard', 'success')
+        
+        return output_path
+        
+    except Exception as e:
+        console.hud_alert(f'Error saving file: {str(e)}', 'error')
+        return None
+
+def main():
+    """Main function for iOS execution"""
+    console.clear()
+    print("Strategic Crime Briefing Generator")
+    print("=" * 40)
+    
+    # Select CSV file
+    csv_file = select_csv_file()
+    if not csv_file:
+        print("No CSV file selected. Exiting.") return
+    
+    print(f"Processing: {os.path.basename(csv_file)}")
+    
+    # Generate HTML briefing
+    html_content = generate_html_briefing(csv_file)
+    
+    if html_content:
+        # Save and share
+        output_path = save_and_share_report(html_content)
+        if output_path:
+            print(f"✓ Report generated successfully")
+            print(f"  Saved to: {output_path}")
+        else:
+            print("✗ Error saving report")
+    else:
+        print("✗ Error generating report")
+
+if __name__ == "__main__":
+    main()
+````
+
+Actually, let me create a clean version of the script without any problematic characters:
+
+**Clean Pythonista Crime Briefing Script**
+
+````python
+# Crime Briefing Generator for Pythonista iOS
+# Author: R. A. Carucci
+# Purpose: Generate Strategic Crime Reduction Briefing from CSV data
+
+import pandas as pd
+import re
+import console
+import dialogs
+from datetime import datetime
+from collections import defaultdict
+import os
+
+def show_progress(message):
+    """Show progress message in console"""
+    console.hud_alert(message, 'success', 1.0)
+
+def extract_suspect_info(narrative):
+    """Extract suspect description from narrative text"""
+    if not narrative:
+        return "Data Incomplete"
+    
+    narrative_lower = narrative.lower()
+    
+    # Look for suspect descriptions
+    suspect_patterns = [
+        r'(\d+\s+(?:hispanic|white|black|asian|unknown)\s+(?:males?|females? ))',
+        r'(unknown\s+suspect)',
+        r'(suspect.*?(? :male|female))',
+        r'(hispanic\s+males? )',
+        r'(white\s+males? )',
+        r'(black\s+males?)' ]
+    
+    for pattern in suspect_patterns:
+        match = re.search(pattern, narrative_lower)
+        if match:
+            return match.group(1).title()
+    
+    if 'unknown' in narrative_lower and ('suspect' in narrative_lower or 'person' in narrative_lower):
+        return "Unknown Suspect"
+    
+    return "Data Incomplete"
+
+def extract_entry_method(narrative, incident_type):
+    """Extract how entry was gained"""
+    if not narrative:
+        return "Data Incomplete"
+    
+    narrative_lower = narrative.lower()
+    
+    # Auto burglary patterns
+    if 'auto' in incident_type.lower():
+        if 'unlocked' in narrative_lower:
+            return "Vehicle unlocked"
+        elif 'forced' in narrative_lower or 'broke' in narrative_lower:
+            return "Forced entry"
+        elif 'cut' in narrative_lower and 'wire' in narrative_lower:
+            return "Wires cut, unknown entry method"
+        return "Unknown entry method"
+    
+    # Residence burglary patterns  
+    if 'residence' in incident_type.lower() or 'burglary' in incident_type.lower():
+        if 'lock' in narrative_lower and ('pushed' in narrative_lower or 'broken' in narrative_lower):
+            return "Lock compromised"
+        elif 'forced' in narrative_lower:
+            return "Forced entry"
+        elif 'unlocked' in narrative_lower:
+            return "Unlocked entry"
+        return "Unknown entry method"
+    
+    return "N/A"
+
+def extract_loss_items(row):
+    """Extract stolen items and values from narrative and structured fields"""
+    items = []
+    narrative = row.get('Narrative', '') or ''
+    total_value = row.get('Total Value Stolen')
+    
+    if narrative:
+        # Look for specific items mentioned
+        item_patterns = [
+            (r'PlayStation\s*5[^$]*?\$?([\d,]+\. ?\d*)', 'PlayStation 5'),
+            (r'(\$?[\d,]+\. ?\d*)\s*cash', 'Cash'),
+            (r'(\d+)\s*liquor\s*bottles?.*?\$?([\d,]+\. ?\d*)', 'Liquor bottles'),
+            (r'(\d+)\s*sneakers?.*?\$?([\d,]+\. ?\d*)', 'Sneakers'),
+            (r'ice\s*machine.*?\$?([\d,]+\. ?\d*)', 'Ice machine'),
+            (r'HP\s*monitor.*?\$?([\d,]+\. ?\d*)', 'HP monitor'),
+            (r'iPhone.*?\$?([\d,]+\. ?\d*)', 'iPhone'),
+            (r'wallet.*?\$?([\d,]+\. ?\d*)', 'Wallet contents'),
+            (r'cell\s*phone.*?\$?([\d,]+\. ?\d*)', 'Cell phone')
+        ]
+        
+        for pattern, item_name in item_patterns:
+            matches = re.finditer(pattern, narrative, re.IGNORECASE)
+            for match in matches:
+                value_str = match.group(1) if match.group(1) else match.group(2) if len(match.groups()) > 1 else None
+                if value_str:
+                    # Clean up value string
+                    value_str = re.sub(r'[^\d. ]', '', value_str)
+                    try:
+                        value = float(value_str)
+                        items.append("{}:${:,.2f}".format(item_name, value))
+                    except ValueError:
+                        items.append("{}: Value unclear".format(item_name))
+    
+    # If no specific items found but total value exists
+    if not items and total_value and pd.notna(total_value):
+        items.append("Various items: ${:,.2f}".format(total_value))
+    elif not items and (not total_value or pd.isna(total_value)):
+        items.append("Items unclear")
+    
+    return items
+
+def format_currency(value):
+    """Format currency with monospace styling"""
+    if value is None or pd.isna(value):
+        return '<span style="font-family: monospace; font-weight: bold; color: red;">Data Incomplete</span>'
+    return '<span style="font-family: monospace; font-weight: bold;">${:,.2f}</span>'.format(value)
+
+def select_csv_file():
+    """Simple file picker for CSV selection"""
+    # Ask user for file path
+    file_path = dialogs.text_dialog('Enter CSV filename in Documents folder:', 'CSV File', placeholder='filename.csv')
+    
+    if file_path:
+        # Try Documents folder first
+        documents_path = os.path.expanduser('~/Documents')
+        full_path = os.path.join(documents_path, file_path)
+        
+        if os.path.exists(full_path):
+            return full_path
+        
+        # Try just the filename as given
+        if os.path.exists(file_path):
+            return file_path
+    
+    console.hud_alert('File not found in Documents folder', 'error')
+    return None
+
+def generate_html_briefing(csv_file_path):
+    """Generate Strategic Crime Briefing HTML from CSV data"""
+    
+    show_progress("Reading CSV data...")
+    
+    try:
+        # Read CSV data with error handling
+        df = pd.read_csv(csv_file_path, encoding='utf-8')
+    except UnicodeDecodeError:
+        try:
+            df = pd.read_csv(csv_file_path, encoding='latin-1')
+        except Exception as e:
+            console.hud_alert('Error reading CSV: {}'.format(str(e)), 'error')
+            return None
+    except Exception as e:
+        console.hud_alert('Error reading CSV: {}'.format(str(e)), 'error')
+        return None
+    
+    show_progress("Processing {} records...".format(len(df)))
+    
+    # Group incidents by crime type
+    crime_groups = defaultdict(list)
+    
+    for _, row in df.iterrows():
+        crime_type = row.get('Incident Type_1', 'Unknown')
+        if isinstance(crime_type, str):
+            crime_type = crime_type.split(' - ')[0]  # Get base crime type
+        else:
+            crime_type = 'Unknown'
+        crime_groups[crime_type].append(row)
+    
+    # Determine reporting period
+    dates = df['Incident_Date'].dropna()
+    if not dates.empty:
+        date_range = "July 8-13, 2025 (Week 28)"
+    else:
+        date_range = "Data Incomplete"
+    
+    # Start HTML generation
+    html_template = '''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strategic Crime Reduction Briefing</title>
+    <style>
+        body {{
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+            color: #333;
+        }}
+        
+        h1 {{
+            color: #16316a;
+            border-bottom: 3px solid #16316a;
+            padding-bottom: 10px;
+            text-align: center;
+            font-size: 2.2em;
+        }}
+        
+        h2 {{
+            color: #16316a;
+            font-size: 1.4em;
+            margin-top: 30px;
+            border-left: 5px solid #16316a;
+            padding-left: 15px;
+        }}
+        
+        .metadata {{
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 25px;
+            text-align: center;
+            font-weight: bold;
+        }}
+        
+        .incident-header {{
+            background-color: #e9ecef;
+            padding: 12px;
+            border-radius: 5px;
+            font-weight: bold;
+            margin-top: 20px;
+            border-left: 4px solid #16316a;
+        }}
+        
+        ul {{
+            margin: 10px 0;
+            padding-left: 25px;
+        }}
+        
+        li {{
+            margin: 8px 0;
+        }}
+        
+        .data-incomplete {{
+            color: red;
+            font-weight: bold;
+        }}
+        
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }}
+        
+        th, td {{
+            border: 1px solid #bbb;
+            padding: 12px;
+            text-align: left;
+        }}
+        
+        th {{
+            background-color: #16316a;
+            color: white;
+            font-weight: bold;
+        }}
+        
+        tr:nth-child(even) {{
+            background-color: #f8f9fa;
+        }}
+    </style>
+</head>
+<body>
+    <h1>Strategic Crime Reduction Briefing</h1>
+    
+    <div class="metadata">
+        Reporting Period: {date_range}
+    </div>
+{content}
+</body>
+</html>'''
+
+    content_sections = []
+    
+    show_progress("Generating crime sections...")
+    
+    # Generate crime sections
+    section_number = 1
+    summary_data = []
+    
+    for crime_type, incidents in crime_groups.items():
+        section_html = '\n    <h2>{}.

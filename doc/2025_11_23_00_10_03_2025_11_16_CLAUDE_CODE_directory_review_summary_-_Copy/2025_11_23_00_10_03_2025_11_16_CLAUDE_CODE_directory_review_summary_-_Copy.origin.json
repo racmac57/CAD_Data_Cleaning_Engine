@@ -1,0 +1,54 @@
+{
+  "original_full_path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\02_ETL_Scripts\\CAD_Data_Cleaning_Engine\\doc\\2025_11_16_CLAUDE_CODE_directory_review_summary - Copy.md",
+  "original_directory": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\02_ETL_Scripts\\CAD_Data_Cleaning_Engine\\doc",
+  "original_filename": "2025_11_16_CLAUDE_CODE_directory_review_summary - Copy.md",
+  "operation": "MOVE",
+  "sent_at": "2025-11-23T05:09:54.2440667Z",
+  "size_bytes": 200750,
+  "modified_time": "2025-11-17T00:44:49.9983483Z",
+  "integrity_sha256": "a411aa3eb382dcc31d9cbfd2b4c3ac1f8e4e0cda251e3255719014acbb8f6956",
+  "created_time": "2025-11-23T05:09:37.9906741Z",
+  "tags": [
+    "API",
+    "ai",
+    "code",
+    "config",
+    "data",
+    "docs",
+    "error handling",
+    "excel",
+    "input/output",
+    "it-ops",
+    "json",
+    "loop",
+    "markdown",
+    "police",
+    "python",
+    "regex",
+    "sql"
+  ],
+  "metadata_enrichment": {
+    "metadata": {
+      "project_name": "02_data",
+      "source_type": "documentation",
+      "language": "multi",
+      "department": "admin",
+      "key_terms": [
+        "scripts",
+        "data",
+        "csv",
+        "read",
+        "lines",
+        "missing"
+      ],
+      "enrichment_version": "1.0.0"
+    },
+    "summaries": {
+      "file_summary": "╭─── Claude Code v2.0.37 ──────────────────────────────────────────────────────────────────────────────────────────────╮\n│                                                    │ Tips for getting started...",
+      "first_line": "╭─── Claude Code v2.0.37 ──────────────────────────────────────────────────────────────────────────────────────────────╮"
+    },
+    "enrichment_version": "1.0.0"
+  },
+  "last_processed_at": "2025-11-23T00:10:02.823871",
+  "department": "admin"
+}

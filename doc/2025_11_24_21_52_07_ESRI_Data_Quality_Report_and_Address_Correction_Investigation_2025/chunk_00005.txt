@@ -1,0 +1,543 @@
+dataset_label = self.validation_results.get('source_dataset') or getattr(self, 'current_dataset_label', None)
+        if output_path is None:
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            prefix = ''
+            if dataset_label:
+                label_stem = os.path.splitext(os.path.basename(dataset_label))[0]
+                year_match = re.match(r'^(\d{4})', label_stem)
+                if year_match:
+                    prefix = f"{year_match.group(1)}_"
+                else:
+                    sanitized = re.sub(r'[^A-Za-z0-9]+', '_', label_stem).strip('_')
+                    if sanitized:
+                        prefix = f"{sanitized}_"
+            output_path = f"{prefix}cad_validation_report_{timestamp}.json"
+
+        report = {
+            'validation_metadata': {
+                'timestamp': datetime.now().isoformat(),
+                'validator_version': 'CAD_Validator_2025.10.17',
+                'total_records_validated': self.validation_results['total_records'],
+                'stratification_method': self.validation_results.get('stratification_method', 'unknown'),
+                'source_dataset': dataset_label,
+                'report_filename': output_path
+            },
+            'validation_summary': {
+                'overall_quality_score': self.validation_results.get('overall_quality_score', 0),
+                'recommendations_count': len(self.validation_results.get('recommended_actions', []))
+            },
+            'sampling_metadata': {
+                'stratum_distribution': self.validation_results.get('stratum_distribution', {}),
+                'stratification_method': self.validation_results.get('stratification_method', 'unknown'),
+                'sample_size': self.sampling_config.get('stratified_sample_size', 1000)
+            },
+            'recommended_actions': self.validation_results.get('recommended_actions', []),
+            'validation_details': self.validation_results,
+            'sampling_configuration': self.sampling_config
+        }
+        def clean_for_json(obj):
+            """Recursively clean data structures for JSON serialization.""" if isinstance(obj, dict):
+                return {str(k): clean_for_json(v) for k, v in obj.items()}
+            elif isinstance(obj, (list, tuple)):
+                return [clean_for_json(item) for item in obj]
+            elif hasattr(obj, 'isoformat'):  # datetime objects
+                return obj.isoformat()
+            elif isinstance(obj, (pd.Timestamp, pd.Timedelta)):
+                return str(obj)
+            elif hasattr(obj, 'tolist'):  # numpy arrays
+                return obj.tolist()
+            elif hasattr(obj, '__dict__'):  # custom objects
+                return str(obj)
+            else:
+                return obj
+        
+        # Clean the report data before JSON serialization
+        cleaned_report = clean_for_json(report)
+        
+        with open(output_path, 'w') as f:
+            json.dump(cleaned_report, f, indent=2)
+        logger.info(f"Validation report saved: {output_path}")
+        return output_path
+
+    def _initialize_validation_rules(self) -> dict:
+        """Initialize comprehensive validation rules for CAD data. Returns:
+            dict: Dictionary of validation rules organized by severity.
+        """ return {
+            'critical_rules': {
+                'case_number_format': {
+                    'rule_id': 'CRIT_001',
+                    'description': 'Case number must follow format: YY-XXXXXX or YY-XXXXXX[A-Z] for supplements',
+                    'field': 'ReportNumberNew',
+                    'pattern': r'^\d{2,4}-\d{6}[A-Z]?$',
+                    'severity': 'critical',
+                    'fix_suggestion': 'Standardize case number format, pad with zeros if needed'
+                },
+                'case_number_uniqueness': {
+                    'rule_id': 'CRIT_002',
+                    'description': 'Case numbers must be unique within dataset',
+                    'field': 'ReportNumberNew',
+                    'severity': 'critical',
+                    'fix_suggestion': 'Remove duplicates, investigate duplicate sources'
+                },
+                'call_datetime_validity': {
+                    'rule_id': 'CRIT_003',
+                    'description': 'Time of Call must be valid datetime within reasonable range',
+                    'field': 'Time of Call',
+                    'severity': 'critical',
+                    'fix_suggestion': 'Validate datetime parsing, check for timezone issues'
+                },
+                'incident_type_presence': {
+                    'rule_id': 'CRIT_004',
+                    'description': 'Incident type must not be null or empty',
+                    'field': 'Incident',
+                    'severity': 'critical',
+                    'fix_suggestion': 'Map null values to "Unknown" or investigate missing data'
+                }
+            },
+            'important_rules': {
+                'address_completeness': {
+                    'rule_id': 'IMP_001',
+                    'description': 'Address should be present and not generic',
+                    'field': 'FullAddress2',
+                    'severity': 'important',
+                    'fix_suggestion': 'Validate address completeness, flag generic addresses'
+                },
+                'officer_assignment': {
+                    'rule_id': 'IMP_002',
+                    'description': 'Officer field should not be null for dispatched calls',
+                    'field': 'Officer',
+                    'severity': 'important',
+                    'fix_suggestion': 'Check officer assignment logic, validate against roster'
+                },
+                'disposition_consistency': {
+                    'rule_id': 'IMP_003',
+                    'description': 'Disposition should be from approved list',
+                    'field': 'Disposition',
+                    'severity': 'important',
+                    'fix_suggestion': 'Standardize disposition values, create lookup table'
+                },
+                'time_sequence_validity': {
+                    'rule_id': 'IMP_004',
+                    'description': 'Time sequence should be logical (Call -> Dispatch -> Out -> In)',
+                    'fields': ['Time of Call', 'Time Dispatched', 'Time Out', 'Time In'],
+                    'severity': 'important',
+                    'fix_suggestion': 'Validate time sequence logic, flag outliers'
+                },
+                'datetime_duration_validity': {
+                    'rule_id': 'IMP_005',
+                    'description': 'Durations between datetime fields must be non-negative',
+                    'fields': ['Time of Call', 'Time Dispatched', 'Time Out', 'Time In'],
+                    'severity': 'important',
+                    'fix_suggestion': 'Correct negative durations or investigate data entry errors'
+                },
+                'time_spent_validity': {
+                    'rule_id': 'IMP_006',
+                    'description': 'Time Spent must be a positive duration',
+                    'field': 'Time Spent',
+                    'severity': 'important',
+                    'fix_suggestion': 'Validate duration format and ensure positive values'
+                }
+            },
+            'optional_rules': {
+                'how_reported_standardization': {
+                    'rule_id': 'OPT_001',
+                    'description': 'How Reported should be from standardized list',
+                    'field': 'How Reported',
+                    'severity': 'optional',
+                    'fix_suggestion': 'Map variations to standard values (9-1-1, Phone, Walk-in, etc.)' },
+                'zone_validity': {
+                    'rule_id': 'OPT_002',
+                    'description': 'PD Zone should be valid zone identifier',
+                    'field': 'PDZone',
+                    'severity': 'optional',
+                    'fix_suggestion': 'Validate against zone master list'
+                },
+                'response_type_consistency': {
+                    'rule_id': 'OPT_003',
+                    'description': 'Response Type should align with incident severity',
+                    'fields': ['Response Type', 'Incident'],
+                    'severity': 'optional',
+                    'fix_suggestion': 'Create response type validation matrix'
+                }
+            }
+        }
+
+def validate_cad_dataset_with_sampling(
+    config: Dict[str, Any],
+    sampling_method: str = 'stratified',
+    validator: CADDataValidator | None = None
+):
+    """Validate CAD dataset with specified sampling method. Args:
+        config (Dict[str, Any]): Configuration dictionary with 'file_path' and optional 'config_path'. sampling_method (str): Sampling method ('stratified', 'systematic', 'random'). Defaults to 'stratified'. validator (CADDataValidator | None): Existing validator instance to reuse. Returns:
+        tuple: Validation results and path to the saved report. Raises:
+        ValueError: If 'file_path' is missing from config.
+    """ cad_file = config.get('file_path', '')
+    if not cad_file:
+        raise ValueError("Config must include 'file_path' key.") logger.info(f"Loading data from: {cad_file}")
+    df = pd.read_excel(cad_file) if cad_file.endswith('.xlsx') else pd.read_csv(cad_file)
+    if validator is None:
+        validator = CADDataValidator(config_path=config.get('config_path', 'config_enhanced.json'))
+    else:
+        config_path = config.get('config_path')
+        if config_path and config_path != validator.config_path:
+            validator.reload_config(config_path)
+    dataset_label = os.path.basename(cad_file)
+    validator.current_dataset_label = dataset_label
+    validator.validation_results['source_dataset'] = dataset_label
+    results = validator.validate_cad_dataset(df, sampling_method)
+    report_path = validator.create_validation_report()
+    return results, report_path
+
+# --- Unit Tests ---
+
+@pytest.fixture
+def sample_data():
+    """Provide sample data for testing, including edge cases.""" return pd.DataFrame({
+        'ReportNumberNew': ['25-123456', '25-987654A', '25-123457', '25-123456B', None, 'invalid', '25-123456AB'],
+        'Incident': ['Noise Complaint', 'ROBBERY', 'Task Assignment', 'ASSAULT', '', None, 'UNKNOWN'],
+        'How Reported': ['PHONE', '9-1-1', 'INVALID', 'RADIO', None, '2024-01-01', 'EMAIL'],
+        'FullAddress2': ['123 Main Street, Hackensack, NJ, 07601', 'INVALID', '456 Elm St, Hackensack, NJ, 07601', 'Main & Atlantic, Hackensack, NJ, 07601', None, '123 Main St', '123 Main Street, Other City, NJ, 00000'],
+        'PDZone': ['7', '5', '10', '6', None, '4', '9'],
+        'Time of Call': ['2025-10-17 17:00:00', '2025-10-17 17:05:00', '2025-10-17 17:10:00', '2025-10-17 17:15:00', '2035-01-01 00:00:00', None, '2019-01-01 00:00:00'],
+        'Time Dispatched': ['2025-10-17 17:02:00', '2025-10-17 17:06:00', '2025-10-17 17:12:00', '2025-10-17 17:14:00', None, '2025-10-17 16:59:00', '2025-10-17 17:16:00'],
+        'Time Out': ['2025-10-17 17:03:00', '2025-10-17 17:07:00', '2025-10-17 17:13:00', '2025-10-17 17:16:00', None, '2025-10-17 17:00:00', '2025-10-17 17:15:00'],
+        'Time In': ['2025-10-17 17:04:00', '2025-10-17 17:08:00', '2025-10-17 17:14:00', '2025-10-17 17:17:00', None, '2025-10-17 16:58:00', '2025-10-17 17:18:00'],
+        'Time Spent': ['0 days 00:04:00', '0 days 00:03:00', '-0 days 00:01:00', '0 days 25:00:00', None, 'invalid', '0 days 00:00:00'],
+        'Officer': ['P.O. John Doe', None, 'P.O. Jane Doe', 'P.O. John Doe', '', 'P.O. Invalid', None],
+        'Disposition': ['COMPLETE', 'ADVISED', 'INVALID', 'COMPLETE', None, 'COMPLETE', 'ADVISED'],
+        'Response Type': ['ROUTINE', 'EMERGENCY', 'ROUTINE', 'URGENT', None, 'EMERGENCY', 'ROUTINE']
+    })
+
+@pytest.fixture
+def validator():
+    """Provide a test instance of CADDataValidator.""" return CADDataValidator()
+
+def test_validate_case_number_format(validator, sample_data):
+    result = validator._validate_case_number_format(sample_data, {'rule_id': 'CRIT_001', 'field': 'ReportNumberNew', 'severity': 'critical'})
+    assert result['passed'] == 4
+    assert result['failed'] == 3
+
+def test_validate_case_number_uniqueness(validator, sample_data):
+    result = validator._validate_case_number_uniqueness(sample_data, {'rule_id': 'CRIT_002', 'field': 'ReportNumberNew', 'severity': 'critical'})
+    assert result['passed'] == 6
+    assert result['failed'] == 1
+
+def test_validate_call_datetime(validator, sample_data):
+    result = validator._validate_call_datetime(sample_data, {'rule_id': 'CRIT_003', 'field': 'Time of Call', 'severity': 'critical'})
+    assert result['passed'] == 4
+    assert result['failed'] == 3
+
+def test_validate_incident_type_presence(validator, sample_data):
+    result = validator._validate_incident_type_presence(sample_data, {'rule_id': 'CRIT_004', 'field': 'Incident', 'severity': 'critical'})
+    assert result['passed'] == 5
+    assert result['failed'] == 2
+
+def test_validate_address_completeness(validator, sample_data):
+    result = validator._validate_address_completeness(sample_data, {'rule_id': 'IMP_001', 'field': 'FullAddress2', 'severity': 'important'})
+    assert result['passed'] == 2
+    assert result['failed'] == 5
+
+def test_validate_officer_assignment(validator, sample_data):
+    result = validator._validate_officer_assignment(sample_data, {'rule_id': 'IMP_002', 'field': 'Officer', 'severity': 'important'})
+    assert result['passed'] == 5
+    assert result['failed'] == 2
+
+def test_validate_disposition_consistency(validator, sample_data):
+    result = validator._validate_disposition_consistency(sample_data, {'rule_id': 'IMP_003', 'field': 'Disposition', 'severity': 'important'})
+    assert result['passed'] == 5
+    assert result['failed'] == 2
+
+def test_validate_time_sequence(validator, sample_data):
+    result = validator._validate_time_sequence(sample_data, {'rule_id': 'IMP_004', 'fields': ['Time of Call', 'Time Dispatched', 'Time Out', 'Time In'], 'severity': 'important'})
+    assert result['passed'] == 4
+    assert result['failed'] == 3
+
+def test_validate_datetime_duration(validator, sample_data):
+    result = validator._validate_datetime_duration(sample_data, {'rule_id': 'IMP_005', 'fields': ['Time of Call', 'Time Dispatched', 'Time Out', 'Time In'], 'severity': 'important'})
+    assert result['passed'] == 4
+    assert result['failed'] == 3
+
+def test_validate_time_spent(validator, sample_data):
+    result = validator._validate_time_spent(sample_data, {'rule_id': 'IMP_006', 'field': 'Time Spent', 'severity': 'important'})
+    assert result['passed'] == 4
+    assert result['failed'] == 3
+
+def test_validate_how_reported(validator, sample_data):
+    result = validator._validate_how_reported(sample_data, {'rule_id': 'OPT_001', 'field': 'How Reported', 'severity': 'optional'})
+    assert result['passed'] == 4
+    assert result['failed'] == 3
+
+def test_validate_zone_validity(validator, sample_data):
+    result = validator._validate_zone_validity(sample_data, {'rule_id': 'OPT_002', 'field': 'PDZone', 'severity': 'optional'})
+    assert result['passed'] == 4
+    assert result['failed'] == 3
+
+def test_validate_response_type_consistency(validator, sample_data):
+    result = validator._validate_response_type_consistency(sample_data, {'rule_id': 'OPT_003', 'fields': ['Response Type', 'Incident'], 'severity': 'optional'})
+    assert result['passed'] == 6
+    assert result['failed'] == 1
+
+def test_clean_data_incident_mapping(validator, sample_data):
+    cleaned = validator.clean_data(sample_data)
+    assert cleaned['Incident'].iloc[0] == 'Noise Complaint'
+    assert cleaned['Response Type'].iloc[0] == 'Routine'
+
+def test_fix_mojibake_replaces_encoded_dash():
+    text = "MOTOR VEHICLE CRASH â€“ PEDESTRIAN STRUCK"
+    fixed = fix_mojibake(text)
+    assert 'â€“' not in fixed
+    assert '–' in fixed
+
+def test_how_reported_normalization_variants():
+    variants = ['911', '9/1/1', '9 1 1', 'EMERGENCY 911', '2001-09-01']
+    normalized = {normalize_how_reported_value(v) for v in variants}
+    assert normalized == {'9-1-1'}
+
+def test_apply_incident_mapping_backfills(validator):
+    mapping_df = pd.DataFrame({
+        'Incident': ['MOTOR VEHICLE CRASH – PEDESTRIAN STRUCK'],
+        'Incident_Norm': ['TRAFFIC CRASH'],
+        'Response_Type': ['EMERGENCY RESPONSE']
+    })
+    mapping_df['Incident'] = mapping_df['Incident'].apply(fix_mojibake)
+    mapping_df['Incident_Norm'] = mapping_df['Incident_Norm'].apply(fix_mojibake)
+    mapping_df['Response_Type'] = mapping_df['Response_Type'].apply(fix_mojibake)
+    mapping_df['Incident_key'] = mapping_df['Incident'].apply(normalize_incident_key)
+    validator.incident_mapping = mapping_df
+
+    df = pd.DataFrame({
+        'Incident': ['MOTOR VEHICLE CRASH â€“ PEDESTRIAN STRUCK', 'MOTOR VEHICLE CRASH â€“ PEDESTRIAN STRUCK'],
+        'Response Type': ['', 'ROUTINE'],
+        'How Reported': ['911', 'PHONE']
+    })
+
+    result = validator._apply_incident_mapping(df)
+    assert result.loc[0, 'Incident'] == 'TRAFFIC CRASH'
+    assert result.loc[0, 'Response Type'] == 'EMERGENCY RESPONSE'
+    assert result.loc[1, 'Response Type'] == 'ROUTINE'
+
+def test_validate_empty_dataframe(validator):
+    empty_df = pd.DataFrame()
+    cleaned = validator.clean_data(empty_df)
+    assert cleaned.empty
+    results = validator.validate_cad_dataset(empty_df)
+    assert results['total_records'] == 0
+    assert results['data_quality_score'] == 0.0
+
+def test_validate_missing_columns(validator):
+    df_missing = pd.DataFrame({'InvalidColumn': [1, 2]})
+    results = validator.validate_cad_dataset(df_missing)
+    for category, rules in results.items():
+        if isinstance(rules, dict):
+            for rule in rules.values():
+                if isinstance(rule, dict):
+                    assert 'error' in rule or rule.get('passed', 0) == 0
+
+def test_config_reload(tmp_path):
+    cfg = {
+        "address_abbreviations": {" ST ": " STREET "},
+        "validation_lists": {
+            "valid_dispositions": ["COMPLETE", "ADVISED"],
+            "valid_zones": ["5", "6", "7", "8", "9"],
+            "emergency_incidents": ["ROBBERY"],
+            "non_emergency_incidents": ["NOISE COMPLAINT"],
+            "how_reported": ["9-1-1", "PHONE"]
+        }
+    }
+    config_path = tmp_path / "config_enhanced.json"
+    config_path.write_text(json.dumps(cfg))
+    validator = CADDataValidator(config_path=str(config_path))
+    cfg["validation_lists"]["valid_dispositions"].append("REFERRED")
+    config_path.write_text(json.dumps(cfg))
+    validator.reload_config(str(config_path))
+    assert "REFERRED" in validator.config["validation_lists"]["valid_dispositions"]
+
+
+def main():
+    pd.options.mode.copy_on_write = True
+    parser = argparse.ArgumentParser(description="Clean and validate CAD datasets.") parser.add_argument(
+        "--config",
+        default=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config', 'config_enhanced.json'),
+        help="Path to configuration JSON file." )
+    parser.add_argument(
+        "--raw-dir",
+        default=None,
+        help="Directory containing CAD source files (overrides config path)." )
+    parser.add_argument(
+        "--sampling-method",
+        choices=['stratified', 'systematic', 'random'],
+        default='stratified',
+        help="Sampling method to apply." )
+    parser.add_argument(
+        "--reload-config",
+        action="store_true",
+        help="Reload configuration before processing." )
+    args = parser.parse_args()
+
+    validator = CADDataValidator(config_path=args.config)
+    if args.reload_config:
+        validator.reload_config(args.config)
+
+    # Use --raw-dir argument if provided, otherwise use config path
+    raw_dir = args.raw_dir
+    if raw_dir is None and 'paths' in validator.config and 'raw_data_dir' in validator.config['paths']:
+        raw_dir = validator.config['paths']['raw_data_dir']
+
+    if raw_dir is None:
+        raise ValueError("No raw data directory specified. Use --raw-dir or set paths.raw_data_dir in config.") all_cad_files = sorted(glob.glob(os.path.join(raw_dir, "*.xlsx")))
+    print(f"Found {len(all_cad_files)} files to process.") for cad_file_path in all_cad_files:
+        print(f"\n{'='*60}\nPROCESSING: {os.path.basename(cad_file_path)}\n{'='*60}")
+        validator.current_dataset_label = os.path.basename(cad_file_path)
+        validator.validation_results['source_dataset'] = validator.current_dataset_label
+        results, report_file = validate_cad_dataset_with_sampling(
+            {
+                'file_path': cad_file_path,
+                'config_path': args.config
+            },
+            args.sampling_method,
+            validator=validator
+        )
+        print(f"  - Overall Quality Score: {results.get('overall_quality_score', 0):.1f}/100")
+        print(f"  - Full report saved to: {report_file}")
+
+    print("\nAll files processed successfully!") if __name__ == "__main__":
+    main()
+```
+
+### What I implemented
+
+- **Loaded corrections once in the validator**:  
+  - `CADDataValidator.__init__` now calls a new helper `_load_fulladdress2_corrections()` and stores the result in `self.fulladdress2_corrections`. - `_load_fulladdress2_corrections()`:  
+    - Looks first for `config['paths']['fulladdress2_corrections']` (if you add it to `config_enhanced.json`). - Falls back to `doc/updates_corrections_FullAddress2.csv`. - Renames columns to `Incident_filter`, `FullAddress2_old`, `FullAddress2_new` and trims them. - Logs how many rules were loaded. - `reload_config()` also refreshes `self.fulladdress2_corrections` so changes to config/CSV are picked up. - **Applied rules at the start of `clean_data()`**:  
+  - Right after `cleaned_df = df.copy()`, I call `_apply_fulladdress2_corrections(cleaned_df)` (only if `FullAddress2` exists and rules are loaded). - `_apply_fulladdress2_corrections()`:
+    - For each rule:
+      - Builds a mask where `FullAddress2 == FullAddress2_old`. - If `Incident_filter` is non-blank and `Incident` exists, further requires `Incident == Incident_filter`. - Overwrites `FullAddress2` with `FullAddress2_new` for matched rows. - Returns the total number of updated records, which is added into `total_modified` and logged:  
+      - **“Applied FullAddress2 corrections to X records”** (if any were changed). - **Interaction with existing pipeline**:  
+  - After this manual correction layer, the existing steps still run as before:
+    - Address abbreviation/uppercasing and `_normalize_text`. - `merge_zone_data()` zone/grid backfill using the now-corrected `FullAddress2`. - Incident mapping and ESRI export logic remain unchanged. You can now just rerun your usual validation/ESRI export; the park/home/intersection fixes in `updates_corrections_FullAddress2.csv` will be applied automatically, which should significantly reduce invalid/missing addresses and improve zone coverage. ---
+
+**User**
+
+Make changes to the README, SUMMARY and changelog files to reflect recent updates. Then Please stage and commit the changes locally, then push the commits to the GitHub repository. ---
+
+**Cursor**
+
+I’ll update the three docs to describe the new `FullAddress2` correction layer, then stage, commit, and push the changes via Git from the repo root. I’ll update `README.md`, `IMPLEMENTATION_SUMMARY.md`, and `doc/CHANGELOG.md` to describe the new FullAddress2 correction rules, then attempt to stage/commit/push via the Git tools. I’ll switch to using `apply_patch` to edit the three markdown files directly, then I’ll stage, commit, and attempt to push via the Git tools. ```markdown
+# **Complete CAD Data Cleaning & Enrichment Code**
+
+Here’s the comprehensive code for CAD data processing that you can provide to an AI assistant. ## Recent Updates (2025-11-21)
+- Added support for rule-based `FullAddress2` corrections using `doc/updates_corrections_FullAddress2.csv` (or `paths.fulladdress2_corrections` in `config_enhanced.json`). These rules are applied at the start of the cleaning pipeline so downstream zone/grid backfill sees corrected park/home/intersection addresses. - Trimmed the repository history and working tree by removing legacy `NJ_Geocode` assets that exceeded GitHub’s 100 MB cap. - Added `doc/reminder_tomorrow.md` to track upcoming delivery tasks and QA follow-ups. - ESRI sample exports now pull `Incident` text and `Response Type` directly from `CallType_Categories.csv`, title-case key human-readable fields, wrap `9-1-1` with an Excel guard, and write with a UTF-8 BOM so en dashes render correctly. A helper script (`ref/clean_calltypes.py`) keeps the mapping workbook’s casing and punctuation consistent. - Introduced `scripts/build_calltype_master.py`, which builds `ref/CallType_Master_Mapping.csv` plus duplicate, anomaly, mapping-change, and unmapped review CSVs from the cleaned call-type workbook and historical incidents. These artifacts are the new source of truth for call type normalization. > **Heads up:** The local working directory now lives at `CAD_Data_Cleaning_Engine`. Update any automation or shortcuts that referenced the previous folder name. ## **CAD Data Processing Class**
+
+```python
+import pandas as pd
+import numpy as np
+import logging
+import re
+from datetime import datetime, time
+from typing import Dict, List, Optional, Tuple
+
+class CADDataProcessor:
+    """Comprehensive CAD data cleaning and enrichment processor.""" def __init__(self):
+        """Initialize CAD processor with configuration.""" self.processing_stats = {
+            'records_processed': 0,
+            'case_numbers_cleaned': 0,
+            'addresses_normalized': 0,
+            'time_fields_fixed': 0,
+            'officer_names_mapped': 0,
+            'narrative_entries_cleaned': 0,
+            'quality_issues_fixed': 0
+        }
+    
+    def process_cad_data(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Main entry point for CAD data processing.""" logger.info(f"Starting CAD data processing for {len(df):,} records...")
+        
+        # Step 1: Core field standardization
+        df = self.standardize_core_fields(df)
+        
+        # Step 2: How Reported field cleaning (critical for 9-1-1 analysis)
+        df = self.fix_how_reported_field(df)
+        
+        # Step 3: Time field cleaning and enhancement
+        df = self.clean_and_enhance_time_fields(df)
+        
+        # Step 4: Officer field enhancement
+        df = self.enhance_officer_fields(df)
+        
+        # Step 5: Address enhancement and geographic processing
+        df = self.enhance_address_fields(df)
+        
+        # Step 6: Text field cleaning
+        df = self.clean_text_fields(df)
+        
+        # Step 7: Data quality validation and scoring
+        df = self.add_data_quality_metrics(df)
+        
+        # Step 8: Create enhanced derived fields
+        df = self.create_enhanced_fields(df)
+        
+        self.processing_stats['records_processed'] = len(df)
+        logger.info(f"CAD processing completed. Records processed: {len(df):,}")
+        
+        return df
+    
+    def standardize_core_fields(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Standardize core CAD fields with comprehensive cleaning.""" logger.info("Standardizing core CAD fields...")
+        
+        # Case Number Standardization
+        if 'ReportNumberNew' in df.columns:
+            # Create clean case number
+            df['CAD_Case_Number_Clean'] = df['ReportNumberNew'].astype(str).str.strip().str.upper()
+            
+            # Extract valid case number pattern (e.g., 24-123456)
+            df['Case_Number'] = df['ReportNumberNew'].astype(str).str.extract(r'(\d{2}-\d{6})', expand=False)
+            
+            # Remove records without valid case numbers
+            initial_count = len(df)
+            df = df.dropna(subset=['Case_Number'])
+            dropped_count = initial_count - len(df)
+            if dropped_count > 0:
+                logger.info(f"  Dropped {dropped_count:,} records without valid case numbers")
+                self.processing_stats['case_numbers_cleaned'] += dropped_count
+        
+        # Incident Type Standardization
+        if 'Incident' in df.columns:
+            df['CAD_Incident_Type'] = df['Incident'].astype(str).str.strip()
+        
+        # Address Standardization
+        if 'FullAddress2' in df.columns:
+            df['CAD_Address_Clean'] = df['FullAddress2'].astype(str).str.strip().str.upper()
+        
+        # DateTime Standardization
+        if 'Time of Call' in df.columns:
+            df['CAD_DateTime'] = pd.to_datetime(df['Time of Call'], errors='coerce')
+        
+        # Disposition Standardization
+        if 'Disposition' in df.columns:
+            df['CAD_Disposition'] = df['Disposition'].astype(str).str.strip()
+        
+        # Add processing metadata
+        df['CAD_Processing_Stage'] = 'Enhanced'
+        df['CAD_Processing_DateTime'] = datetime.now()
+        
+        return df
+    
+    def fix_how_reported_field(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Fix How Reported field - critical for 9-1-1 analysis.""" logger.info("Fixing How Reported field...")
+        
+        if 'How Reported' not in df.columns:
+            logger.warning("How Reported field not found in data")
+            return df
+        
+        # Convert to string first
+        df['How Reported'] = df['How Reported'].astype(str)
+        
+        # Fix date conversion artifacts (common Excel issue where 9-1-1 becomes dates)
+        patterns_to_fix = [
+            r'.*1901. *',           # Excel date conversion artifacts
+            r'.*44197. *',          # Excel serial date numbers
+            r'.*sep.*1.*1901. *',   # September 1, 1901 variations
+            r'.*9/1/1901. *',       # Date format variations
+            r'.*1901-09-01. *',     # ISO date format
+            r'^911$',              # Just "911"
+            r'.*9.*1.*1. *',        # Various 9-1-1 formats
+            r'.*september.*1.*1901.

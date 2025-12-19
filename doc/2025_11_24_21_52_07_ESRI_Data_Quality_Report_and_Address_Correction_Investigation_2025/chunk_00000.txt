@@ -1,0 +1,609 @@
+# Review documentation for context
+_Exported on 11/24/2025 at 20:14:47 EST from Cursor (2.1.26)_
+
+---
+
+**User**
+
+please review the CHANGELOG, SUMMARY AND README files to get context
+
+---
+
+**Cursor**
+
+I’ll first locate the CHANGELOG, SUMMARY, and README files, then read them to understand the project’s history, current state, and usage so I have solid context for future changes. I’ll keep you posted briefly once I’ve ingested them. Now I’ll read `doc/CHANGELOG.md`, `IMPLEMENTATION_SUMMARY.md`, and `README.md` so I have a good understanding of the project history, current implementation, and usage. ### Context loaded
+
+I’ve reviewed the three key docs and have the overall picture:
+
+- **`doc/CHANGELOG.md`**:  
+  - Project has matured into a **production-ready ESRI export pipeline** with vectorized pandas processing for ~700K records, strong **Response_Type coverage (~99.5%)**, and **data quality scoring**. - Recent work focuses on **ESRI deployment**, **TAPS/DV/TRO-FRO handling**, **mojibake + 9‑1‑1 normalization**, and **stratified sampling** with adaptive thresholds, plus ESRI audit/export helpers. - **`IMPLEMENTATION_SUMMARY.md`**:  
+  - Describes the latest implementation pass (6 priorities), including:  
+    - **Config centralization / path expansion** and removal of hardcoded paths in `01_validate_and_clean.py` and `cad_zone_merger.py`. - New scripts: **`audit_response_type_coverage.py`**, **`generate_case_numbers.py`**, **`backfill_incidents_from_rms.py`**, **`classify_burglary_ollama.py`**. - Integration of **zone backfill** into the main cleaning pipeline and high-level testing checklist + dependencies. - **`README.md`**:  
+  - Provides a **self-contained CAD processing module** (`CADDataProcessor`) that:  
+    - Standardizes core fields (case numbers, incidents, addresses, datetime, disposition). - Fixes **How Reported** (especially 9‑1‑1 Excel date artifacts), cleans time/duration fields, officer fields, addresses, narratives, and dispositions. - Adds **data quality metrics**, enhanced analytic fields (response time, day-of-week, shifts, priority), and a **summary report** API. I’m ready to dive into whatever you’d like next (e.g., modify scripts, add features, run validations, or help design new ETL pieces) using this context. ---
+
+**User**
+
+@updates_corrections_FullAddress2.csv please read the file and advise if you understand
+
+---
+
+**Cursor**
+
+Yes, I understand this file. ### What `updates_corrections_FullAddress2.csv` is doing
+
+- **Purpose**: It defines **manual corrections for the `FullAddress2` field**, sometimes constrained by `Incident`. - **Columns**:
+  - **`If Incident is`**: Optional filter on the `Incident` value. - If blank, the rule applies **regardless of Incident** (only `FullAddress2` must match). - **`And/Or If FullAddress2 is`**: The **exact current value** of `FullAddress2` the row is targeting. - **`Then Change FullAddress2 to`**: The **new, corrected address** to overwrite `FullAddress2` with. ### Example interpretations
+
+- Row 2:  
+  - If `Incident == "Task Assignment"` **and** `FullAddress2 == "Hudson Street & , Hackensack, NJ, 07601"`,  
+  - Then set `FullAddress2 = "127 Hudson Street, Hackensack, NJ, 07601"`. - Row 5 (blank Incident):  
+  - If `FullAddress2 == "Carver Park & , Hackensack, NJ, 07601"` (for any Incident),  
+  - Then set `FullAddress2 = "302 Second Street, Hackensack, NJ 0760"` (likely a minor ZIP typo, but I understand the intent). So this file is a **rule table** you can join/loop over to patch known bad `FullAddress2` values to precise park/home/intersection addresses, sometimes scoped to particular Incident types. ---
+
+**User**
+
+what is the best way to fold this into the cleaning process? I think it willgreatly reduce the number of invalid address
+
+---
+
+**Cursor**
+
+I’ll inspect the main cleaning script to see where addresses are currently normalized, then suggest (or implement) a step that applies this CSV as a rule-based correction layer before/after zone merging. ### Short answer
+
+**Best place:** Add this as a **dedicated “manual address correction” step at the very start of `clean_data()`**, before any other text/FullAddress2 normalization and before `merge_zone_data()` runs. That way:
+
+- Zone/grid backfill will see the **already-corrected addresses**, which should sharply reduce “invalid/no-zone” cases. - You keep the logic **simple and auditable**: one small rule table, applied once, with a clear log of how many rows were changed. ### Concretely, I’d wire it in like this
+
+- **1. Load the CSV once in the validator init**  
+  - In `CADDataValidator.__init__`, add a `_load_fulladdress2_corrections()` helper that:
+    - Looks for a path in config (e.g. `config['paths']['fulladdress2_corrections']`) and, if missing, falls back to `doc/updates_corrections_FullAddress2.csv`. - Reads it with `dtype=str` and renames columns to something like:
+      - `If Incident is` → `Incident_filter`
+      - `And/Or If FullAddress2 is` → `FullAddress2_old`
+      - `Then Change FullAddress2 to` → `FullAddress2_new`. - **2. Apply rules at the top of `clean_data()`**  
+  - Right after `cleaned_df = df.copy()`, call a helper, e.g. `_apply_fulladdress2_corrections(cleaned_df)`, that:
+    - Skips if `FullAddress2` is missing or corrections table is empty. - For each rule:
+      - Build a mask on `FullAddress2 == FullAddress2_old`. - If `Incident_filter` is non-empty, further require `Incident == Incident_filter`. - Overwrite `FullAddress2` with `FullAddress2_new` where the mask is true. - Log how many records were updated in total and (optionally) store a small counter in `address_issue_summary`. - **3. Let the existing steps run as-is afterwards**  
+  - Your current “address abbreviations + uppercasing” and then `merge_zone_data()` will now operate on **clean, park/home-specific addresses**, improving zone matches and overall data quality without touching the rest of the pipeline. If you’d like, I can go ahead and add the loader + `_apply_fulladdress2_corrections()` helper and wire it into `clean_data()` following this pattern. ---
+
+**User**
+
+please proceed
+
+---
+
+**Cursor**
+
+I’ll add a CSV loader for the address corrections, a helper to apply them inside `CADDataValidator.clean_data()`, and then run a quick lint check on the updated script. ```python
+import argparse
+import pandas as pd
+import numpy as np
+import logging
+import re
+import json
+import glob
+import os
+from datetime import datetime
+from collections import Counter
+from pathlib import Path
+from sklearn.model_selection import train_test_split
+from typing import Dict, Any
+import dask.dataframe as dd
+from dask import delayed
+import dask.diagnostics as diagnostics
+import psutil
+from pydantic import BaseModel, ValidationError
+import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import pytest
+
+# --- Setup ---
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+
+# --- Path expansion helpers ---
+def expand_config_paths(config: dict) -> dict:
+    """Expand path templates in config using {key} substitution. Args:
+        config (dict): Configuration dictionary with paths section. Returns:
+        dict: Config with expanded paths.
+    """ if 'paths' not in config:
+        return config
+
+    paths = config['paths'].copy()
+    # Iteratively expand paths until no more substitutions needed
+    max_iterations = 10
+    for _ in range(max_iterations):
+        changed = False
+        for key, value in paths.items():
+            if isinstance(value, str) and '{' in value:
+                # Expand any {key} references
+                for ref_key, ref_value in paths.items():
+                    if '{' + ref_key + '}' in value and '{' not in ref_value:
+                        paths[key] = value.replace('{' + ref_key + '}', ref_value)
+                        changed = True
+        if not changed:
+            break
+
+    config['paths'] = paths
+    return config
+
+
+# --- Mojibake helpers ---
+ENCODING_REPLACEMENTS = {
+    "â€“": "–",
+    "â€”": "—",
+    "â€œ": "“",
+    "â€": "”",
+    "â€˜": "‘",
+    "â€™": "’",
+    "â€¢": "•",
+    "â€¦": "…",
+    "â€": "”",
+    "\ufffd": "-"
+}
+
+
+def fix_mojibake(text):
+    if pd.isna(text):
+        return text
+    s = str(text)
+    try:
+        s_round = s.encode("latin1").decode("utf-8")
+        s = s_round
+    except Exception:
+        pass
+    for bad, good in ENCODING_REPLACEMENTS.items():
+        s = s.replace(bad, good)
+    return s
+
+
+# --- How Reported normalizers and Excel guard ---
+HOW_REPORTED_STANDARD = {
+    '9-1-1': {'911', '9-1-1', '9/1/1', '9 1 1', 'E911', 'E-911', 'EMERGENCY 911', 'EMERGENCY-911', 'EMERGENCY/911'},
+    'PHONE': {'PHONE', 'TEL', 'TELEPHONE', 'CALL-IN', 'CALL IN'},
+    'WALK-IN': {'WALK-IN', 'WALK IN', 'IN PERSON', 'PERSON'},
+    'SELF-INITIATED': {'SELF-INITIATED', 'SELF INITIATED', 'OFFICER INITIATED', 'OI', 'SI'},
+    'RADIO': {'RADIO'},
+    'TELETYPE': {'TELETYPE'},
+    'FAX': {'FAX'},
+    'EMAIL': {'EMAIL', 'E-MAIL'},
+    'MAIL': {'MAIL', 'POST'},
+    'VIRTUAL PATROL': {'VIRTUAL PATROL'},
+    'CANCELED CALL': {'CANCELED CALL', 'CANCELLED CALL'},
+}
+
+
+def _norm_txt(x: object) -> str:
+    if x is None or (isinstance(x, float) and np.isnan(x)):
+        return ''
+    s = fix_mojibake(str(x)).strip().upper()
+    s = re.sub(r'\s+', ' ', s)
+    return s
+
+
+def looks_like_date_2001_09_01(x: object) -> bool:
+    try:
+        ts = pd.to_datetime(x, errors='raise')
+        return ts.date() == datetime(2001, 9, 1).date()
+    except Exception:
+        return False
+
+
+def normalize_how_reported_value(x: object) -> str:
+    s = _norm_txt(x)
+    if s in {'9-1-1', '911', '9/1/1', '9 1 1', 'E911', 'EMERGENCY 911', 'EMERGENCY/911', 'EMERGENCY-911'}:
+        return '9-1-1'
+    if looks_like_date_2001_09_01(x) or s in {'2001-09-01', '09/01/2001', '9/1/2001'}:
+        return '9-1-1'
+    for target, variants in HOW_REPORTED_STANDARD.items():
+        if s in variants:
+            return target
+    if re.fullmatch(r'9\s*[-/ ]\s*1\s*[-/ ]\s*1', s):
+        return '9-1-1'
+    return s or 'UNKNOWN'
+
+
+def guard_excel_text(value: object) -> object:
+    if value is None:
+        return value
+    s = str(value)
+    if s == '9-1-1':
+        return f'="{s}"'
+    return s
+
+
+PRESERVE_TOKENS = {
+    'NJ', 'GOA', 'UTL', 'OCA#', 'TOT', 'ESU', 'UAS', 'EMS', 'HQ', 'PD', 'PO', 'FD', 'CAD', 'RMS',
+    'ABC', 'USA', 'CPR', 'DWI', 'DUI', 'FTO', 'OCA', 'ID', 'POA'
+}
+
+
+def smart_title(value: object) -> object:
+    if value is None or (isinstance(value, float) and np.isnan(value)):
+        return value
+    s = str(value).strip()
+    if not s:
+        return s
+    titled = s.title()
+    for token in PRESERVE_TOKENS:
+        pattern = re.compile(r'\b' + re.escape(token.title()) + r'\b')
+        titled = pattern.sub(token, titled)
+    # Handle tokens adjacent to punctuation
+    for token in ['NJ', 'GOA', 'UTL', 'OCA#', 'TOT', 'ESU', 'UAS', 'EMS', 'HQ']:
+        titled = titled.replace(f"{token.title()}-", f"{token}-")
+    return titled
+
+
+def normalize_incident_key(value: object) -> str:
+    return _norm_txt(value)
+
+
+# --- Zone backfill helpers ---
+def merge_zone_data(df: pd.DataFrame, zone_master_path: str) -> pd.DataFrame:
+    """Merge zone/grid data from master lookup into CAD DataFrame. Args:
+        df: CAD DataFrame with FullAddress2 column. zone_master_path: Path to zone master Excel file. Returns:
+        DataFrame with PDZone and Grid columns backfilled where possible.
+    """ try:
+        # Load zone lookup
+        zone_df = pd.read_excel(zone_master_path)
+        zone_df = (
+            zone_df[["CrossStreetName", "Grid", "PDZone"]]
+            .drop_duplicates()
+            .rename(columns={"CrossStreetName": "LookupAddress"})
+        )
+
+        # Address normalization for matching
+        SUFFIX_MAP = {
+            "Street": "St", "Avenue": "Ave", "Road": "Rd", "Place": "Pl",
+            "Drive": "Dr", "Court": "Ct", "Boulevard": "Blvd"
+        }
+
+        def normalize_address_for_zone(addr):
+            """Normalize address for zone lookup matching.""" if pd.isna(addr):
+                return addr
+            s = str(addr).replace(" & ", " / ")
+            for full, abbr in SUFFIX_MAP.items():
+                s = re.sub(rf"\b{full}\b", abbr, s, flags=re.IGNORECASE)
+            return s.title().strip()
+
+        # Create normalized lookup column
+        df["_CleanAddress"] = df["FullAddress2"].apply(normalize_address_for_zone)
+        zone_df["LookupAddress"] = zone_df["LookupAddress"].apply(normalize_address_for_zone)
+
+        # Merge in zone/grid data (only backfill where null)
+        merged = df.merge(
+            zone_df,
+            left_on="_CleanAddress",
+            right_on="LookupAddress",
+            how="left",
+            suffixes=('', '_zone')
+        )
+
+        # Backfill PDZone and Grid where null
+        if 'PDZone' not in df.columns:
+            merged['PDZone'] = merged['PDZone_zone']
+        else:
+            merged['PDZone'] = merged['PDZone'].fillna(merged['PDZone_zone'])
+
+        if 'Grid' not in df.columns:
+            merged['Grid'] = merged['Grid_zone']
+        else:
+            merged['Grid'] = merged['Grid'].fillna(merged['Grid_zone'])
+
+        # Drop temporary columns
+        merged = merged.drop(columns=['_CleanAddress', 'LookupAddress', 'PDZone_zone', 'Grid_zone'], errors='ignore')
+
+        backfilled = (df['PDZone'].isna() if 'PDZone' in df.columns else pd.Series([True]*len(df))) & merged['PDZone'].notna()
+        logger.info(f"Zone backfill: {backfilled.sum():,} records updated")
+
+        return merged
+
+    except FileNotFoundError:
+        logger.warning(f"Zone master file not found: {zone_master_path}")
+        return df
+    except Exception as e:
+        logger.warning(f"Zone backfill failed: {e}")
+        return df
+
+
+def _clean_partition(part, config, incident_mapping):
+    """Clean a single partition of the DataFrame. Args:
+        part (pd.DataFrame): DataFrame partition to clean. config (dict): Configuration dictionary. incident_mapping (pd.DataFrame): Incident mapping DataFrame. Returns:
+        pd.DataFrame: Cleaned partition with modification stats in attrs.
+    """ part = part.copy()
+    stats = {'rows_modified': 0}
+    for col in ['Incident', 'How Reported', 'Response Type', 'Disposition', 'Officer']:
+        if col in part.columns:
+            original = part[col].copy()
+            part[col] = part[col].astype(str).str.upper().str.strip()
+            stats['rows_modified'] += (part[col] != original).sum()
+    if 'FullAddress2' in part.columns:
+        original = part['FullAddress2'].copy()
+        abbreviations = config.get('address_abbreviations', {})
+        for abbr, full in abbreviations.items():
+            part['FullAddress2'] = part['FullAddress2'].astype(str).str.replace(abbr, full, case=False, regex=True)
+        part['FullAddress2'] = part['FullAddress2'].str.upper()
+        stats['rows_modified'] += (part['FullAddress2'] != original).sum()
+    if 'Incident' in part.columns and not incident_mapping.empty:
+        part = part.merge(incident_mapping, on='Incident', how='left')
+        part['Incident'] = part['Incident_Norm'].fillna(part['Incident'])
+        part['Response Type'] = part['Response Type_x'].fillna(part['Response Type_y'])
+        stats['rows_modified'] += part['Incident_Norm'].notna().sum()
+    part.attrs['stats'] = stats
+    return part
+
+class ConfigSchema(BaseModel):
+    """Pydantic schema for validating configuration.""" address_abbreviations: Dict[str, str]
+    validation_lists: Dict[str, list[str]]
+
+class CADDataValidator:
+    """A robust class for cleaning, validating, and analyzing CAD data with parallel processing. Incorporates feedback for consistency, active cleaning, external configuration, and Dask-based parallelism.
+    """ def __init__(self, config_path: str = 'config_enhanced.json'):
+        """Initialize validator with configuration, rules, and cleaning patterns. Args:
+            config_path (str): Path to the JSON configuration file. Defaults to 'config_enhanced.json'. Attributes:
+            config (Dict[str, Any]): Loaded configuration dictionary. validation_rules (Dict): Rules for data validation. sampling_config (Dict): Configuration for sampling methods. validation_results (Dict): Results of validation process.
+        """ self.config_path = config_path
+        self.config = self._load_config(config_path)
+        self.incident_mapping = self._load_incident_mapping()
+        self.validation_rules = self._initialize_validation_rules()
+        self.sampling_config = {
+            'stratified_sample_size': 1000,
+            'systematic_interval': 100,
+            'quality_thresholds': {'critical': 0.95, 'important': 0.85, 'optional': 0.70}
+        }
+        self.validation_results = {
+            'total_records': 0,
+            'rules_passed': {},
+            'rules_failed': {},
+            'sample_analysis': {},
+            'data_quality_score': 0.0,
+            'recommended_actions': [],
+            'source_dataset': None
+        }
+        self.current_dataset_label = None
+        self.original_columns: list[str] = []
+        self.unmapped_incidents: set[str] = set()
+        self.address_issue_summary: Counter = Counter()
+        self.fulladdress2_corrections: pd.DataFrame = self._load_fulladdress2_corrections()
+
+    def _load_config(self, config_path: str) -> Dict[str, Any]:
+        """Load configuration JSON. Merge with defaults. Fail safe on errors.""" logger.info(f"Loading configuration from {config_path}...")
+
+        default_config = {
+            "address_abbreviations": {
+                " ST ": " STREET ",
+                " AVE ": " AVENUE ",
+                " BLVD ": " BOULEVARD "
+            },
+            "validation_lists": {
+                "valid_dispositions": [
+                    "COMPLETE", "ADVISED", "ARREST", "UNFOUNDED", "CANCELLED",
+                    "GOA", "UTL", "SEE REPORT", "REFERRED"
+                ],
+                "valid_zones": ["5", "6", "7", "8", "9"],
+                "emergency_incidents": ["ROBBERY", "ASSAULT", "BURGLARY", "SHOOTING", "STABBING"],
+                "non_emergency_incidents": ["NOISE COMPLAINT", "PARKING VIOLATION", "CIVIL DISPUTE"],
+                "how_reported": [
+                    "9-1-1", "WALK-IN", "PHONE", "SELF-INITIATED", "RADIO", "TELETYPE", "FAX",
+                    "OTHER - SEE NOTES", "EMAIL", "MAIL", "VIRTUAL PATROL", "CANCELED CALL"
+                ]
+            }
+        }
+
+        try:
+            with open(config_path, "r", encoding="utf-8") as f:
+                cfg = json.load(f)
+        except FileNotFoundError:
+            logger.error(f"Config file {config_path} not found. Using defaults.") return default_config
+        except json.JSONDecodeError as e:
+            logger.error(f"Config JSON invalid: {e}. Using defaults.") return default_config
+
+        try:
+            if "ConfigSchema" in globals():
+                from pydantic import ValidationError  # type: ignore
+                ConfigSchema(**cfg)  # type: ignore[name-defined]
+        except Exception as e:
+            logger.error(f"Invalid config schema: {e}. Using defaults.") return default_config
+
+        for k, v in default_config.items():
+            if k not in cfg:
+                cfg[k] = v
+
+        if "validation_lists" in cfg and isinstance(cfg["validation_lists"], dict):
+            for k, v in default_config["validation_lists"].items():
+                cfg["validation_lists"].setdefault(k, v)
+        else:
+            cfg["validation_lists"] = default_config["validation_lists"]
+
+        # Expand path templates
+        cfg = expand_config_paths(cfg)
+
+        return cfg
+
+    def reload_config(self, config_path: str | None = None) -> Dict[str, Any]:
+        """Reload configuration from disk and rebuild dependent lookups.""" path = config_path or self.config_path
+        logger.info(f"Reloading configuration from {path}...")
+        self.config = self._load_config(path)
+        self.config_path = path
+        self.validation_rules = self._initialize_validation_rules()
+        # Reload any config-dependent lookups
+        self.fulladdress2_corrections = self._load_fulladdress2_corrections()
+        return self.config
+
+    def _load_fulladdress2_corrections(self) -> pd.DataFrame:
+        """Load manual FullAddress2 correction rules from CSV, if available. The CSV is expected to have columns:
+        - 'If Incident is'
+        - 'And/Or If FullAddress2 is'
+        - 'Then Change FullAddress2 to'
+
+        An optional config path can be provided via:
+        config['paths']['fulladdress2_corrections']
+        """
+        possible_paths: list[str] = []
+
+        # Configurable path (preferred)
+        if 'paths' in self.config and isinstance(self.config['paths'], dict):
+            cfg_paths = self.config['paths']
+            if 'fulladdress2_corrections' in cfg_paths:
+                possible_paths.append(cfg_paths['fulladdress2_corrections'])
+
+        # Fallback to repo doc folder
+        repo_root = os.path.dirname(os.path.dirname(__file__))
+        possible_paths.append(os.path.join(repo_root, 'doc', 'updates_corrections_FullAddress2.csv'))
+
+        for csv_path in possible_paths:
+            try:
+                if not os.path.exists(csv_path):
+                    continue
+                df = pd.read_csv(csv_path, dtype=str).fillna('')
+                expected_cols = {
+                    'If Incident is',
+                    'And/Or If FullAddress2 is',
+                    'Then Change FullAddress2 to'
+                }
+                missing = expected_cols.difference(df.columns)
+                if missing:
+                    logger.warning(
+                        "FullAddress2 corrections file %s is missing expected columns: %s",
+                        csv_path, ", ".join(sorted(missing))
+                    )
+                    continue
+
+                df = df.rename(
+                    columns={
+                        'If Incident is': 'Incident_filter',
+                        'And/Or If FullAddress2 is': 'FullAddress2_old',
+                        'Then Change FullAddress2 to': 'FullAddress2_new',
+                    }
+                )
+
+                # Normalize text for consistent matching
+                df['Incident_filter'] = df['Incident_filter'].astype(str).str.strip()
+                df['FullAddress2_old'] = df['FullAddress2_old'].astype(str).str.strip()
+                df['FullAddress2_new'] = df['FullAddress2_new'].astype(str).str.strip()
+
+                logger.info(
+                    "Loaded %d FullAddress2 correction rules from %s",
+                    len(df), csv_path
+                )
+                return df
+            except Exception as exc:
+                logger.warning("Failed to load FullAddress2 corrections from %s: %s", csv_path, exc)
+
+        logger.info("No FullAddress2 correction rules loaded (file not found or invalid).") return pd.DataFrame(columns=['Incident_filter', 'FullAddress2_old', 'FullAddress2_new'])
+
+    def _load_incident_mapping(self) -> pd.DataFrame:
+        """Load incident mapping from CSV file. Returns:
+            pd.DataFrame: Mapping of Incident to Incident_Norm and Response_Type. Raises:
+            FileNotFoundError: If the mapping file is not found.
+        """ # Try config path first, then fallback locations
+        possible_paths = []
+
+        # Add config path if available
+        if 'paths' in self.config and 'calltype_categories' in self.config['paths']:
+            possible_paths.append(self.config['paths']['calltype_categories'])
+
+        # Add fallback locations
+        possible_paths.extend([
+            os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'CallType_Categories.csv'),
+            os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config', 'CallType_Categories.csv')
+        ])
+
+        for mapping_path in possible_paths:
+            try:
+                df = pd.read_csv(mapping_path)
+                logger.info(f"Successfully loaded incident mapping from: {mapping_path}")
+                df = df[['Incident', 'Incident_Norm', 'Response_Type']].drop_duplicates()
+                df['Incident'] = df['Incident'].apply(fix_mojibake)
+                df['Incident_Norm'] = df['Incident_Norm'].apply(fix_mojibake)
+                df['Response_Type'] = df['Response_Type'].apply(fix_mojibake)
+                df['Incident_key'] = df['Incident'].apply(normalize_incident_key)
+                return df
+            except FileNotFoundError:
+                continue
+
+        logger.warning("Incident mapping file not found in any expected location. Using empty mapping.") return pd.DataFrame(columns=['Incident', 'Incident_Norm', 'Response_Type', 'Incident_key'])
+
+    def clean_data(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Apply cleaning operations to the DataFrame. Args:
+            df (pd.DataFrame): Input DataFrame to clean. Returns:
+            pd.DataFrame: Cleaned DataFrame with standardized text and addresses.
+        """ if df.empty:
+            logger.warning("Empty DataFrame provided. Returning empty DataFrame.") return df
+        logger.info("Starting data cleaning process...")
+
+        cleaned_df = df.copy()
+        total_modified = 0
+
+        # Apply manual FullAddress2 corrections before generic normalization
+        if 'FullAddress2' in cleaned_df.columns and not self.fulladdress2_corrections.empty:
+            updated_count = self._apply_fulladdress2_corrections(cleaned_df)
+            total_modified += updated_count
+
+        def _normalize_text(value, uppercase: bool = True):
+            if pd.isna(value):
+                return value
+            text = fix_mojibake(str(value)).strip()
+            text = re.sub(r'\s+', ' ', text)
+            return text.upper() if uppercase else text
+        
+        # Clean text fields
+        for col in ['Incident', 'How Reported', 'Response Type', 'Disposition', 'Officer', 'CADNotes']:
+            if col in cleaned_df.columns:
+                original = cleaned_df[col].copy()
+                uppercase = col not in {'Incident'}
+                cleaned_df[col] = cleaned_df[col].apply(lambda v: _normalize_text(v, uppercase=uppercase))
+                total_modified += (cleaned_df[col] != original).sum()
+
+        if 'How Reported' in cleaned_df.columns:
+            original = cleaned_df['How Reported'].copy()
+            cleaned_df['How Reported'] = cleaned_df['How Reported'].apply(normalize_how_reported_value)
+            total_modified += (cleaned_df['How Reported'] != original).sum()
+        
+        # Clean addresses
+        if 'FullAddress2' in cleaned_df.columns:
+            original = cleaned_df['FullAddress2'].copy()
+            abbreviations = self.config.get('address_abbreviations', {})
+            for abbr, full in abbreviations.items():
+                cleaned_df['FullAddress2'] = cleaned_df['FullAddress2'].astype(str).str.replace(abbr, full, case=False, regex=True)
+            cleaned_df['FullAddress2'] = cleaned_df['FullAddress2'].apply(_normalize_text)
+            total_modified += (cleaned_df['FullAddress2'] != original).sum()
+
+        # Backfill zone data from master lookup
+        if 'FullAddress2' in cleaned_df.columns and 'paths' in self.config and 'zone_master' in self.config['paths']:
+            zone_master_path = self.config['paths']['zone_master']
+            if os.path.exists(zone_master_path):
+                logger.info("Backfilling zone/grid data from master lookup...")
+                cleaned_df = merge_zone_data(cleaned_df, zone_master_path)
+            else:
+                logger.warning(f"Zone master file not found: {zone_master_path}")
+
+        # Apply incident mapping
+        if 'Incident' in cleaned_df.columns and not self.incident_mapping.empty:
+            cleaned_df['Incident_key'] = cleaned_df['Incident'].apply(normalize_incident_key)
+            cleaned_df = cleaned_df.merge(
+                self.incident_mapping,
+                on='Incident_key',
+                how='left',
+                suffixes=('', '_mapping')
+            )
+            original_incidents = cleaned_df['Incident'].copy()
+            normalized = cleaned_df['Incident_Norm']
+            unmapped_mask = normalized.isna() & original_incidents.notna()
+            if unmapped_mask.any():
+                self.unmapped_incidents.update(original_incidents.loc[unmapped_mask].dropna().unique().tolist())
+            cleaned_df['Incident'] = normalized.fillna(original_incidents)
+            if 'Response_Type' in cleaned_df.columns:
+                cleaned_df['Response Type'] = cleaned_df['Response_Type'].fillna(cleaned_df.get('Response Type'))
+            if 'Response Type_mapping' in cleaned_df.columns:
+                cleaned_df['Response Type'] = cleaned_df['Response Type_mapping'].fillna(cleaned_df['Response Type'])
+            total_modified += cleaned_df['Incident_Norm'].notna().sum()
+            drop_cols = [c for c in ['Incident_Norm', 'Response_Type', 'Response Type_mapping', 'Incident_key'] if c in cleaned_df.columns]
+            cleaned_df = cleaned_df.drop(columns=drop_cols)
+        
+        logger.info(f"Cleaned {total_modified:,} rows in total.") return self._apply_incident_mapping(cleaned_df)
+
+    def _apply_incident_mapping(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Apply incident normalization and response-type backfill."""

@@ -1,0 +1,107 @@
+### 2. Complete file path structure (important)
+Missing complete directory structure and file naming conventions for all relevant files. ### 3. Integration with other correction types (important)
+Doesn't explain how address corrections interact with disposition, case number, and how_reported corrections, or the order of application. ### 4. Geocoding script configuration (important)
+Missing specific configuration details for the ArcGIS locator and validation requirements. ### 5. Testing strategy (important)
+No specific testing approach before processing 700K records. ### 6. Rollback procedures (important)
+Missing how to rollback if something goes wrong. ## Additional enhancements needed
+
+7. Data type preservation — ensure types aren't corrupted
+8. Encoding requirements — UTF-8 with BOM for ESRI
+9. Natural vs merge duplicates detection — algorithm to distinguish them
+10. Progress reporting — real-time updates for long operations
+11. Verification sample size — how many records to verify manually
+12. Performance benchmarks — expected timing metrics
+
+## Document created
+
+Location: `data/02_reports/PROMPT_REVIEW_AND_ENHANCEMENTS.md`
+
+The document includes:
+- Detailed analysis of each missing element
+- Code examples for fixes
+- Specific file paths and line numbers
+- Recommended prompt structure updates
+- Priority levels (Critical/Important/Nice to Have)
+
+The most critical addition is the Hour field fix investigation, as it may be the source of the duplicate records. Should I create an enhanced version of the Claude Code prompt incorporating these findings? ---
+
+**User**
+
+provide a file name for this chats export file
+
+---
+
+**Cursor**
+
+
+Suggested file name for this chat export:
+
+
+
+Suggested filename for this chat export:
+
+## Recommended filename
+
+**`Claude-Address_Correction_Investigation_and_Prompt_Review.json`**
+
+## Alternative options
+
+1. **`Claude-ESRI_Data_Quality_Investigation_2025-11-24.json`** (includes date)
+2. **`Claude-CAD_Address_Correction_Investigation.json`** (shorter)
+3. **`Claude-Prompt_Review_Address_Corrections.json`** (focuses on prompt review)
+4. **`Claude-Address_Correction_0.9pct_Issue_Investigation.json`** (includes the specific issue)
+
+## Recommended location
+
+Save it in the `doc/` directory to match your existing pattern:
+- `doc/Claude-Address_Correction_Investigation_and_Prompt_Review.json`
+
+This name:
+- Matches your existing naming convention (`Claude-...`)
+- Describes the main topics (investigation + prompt review)
+- Is clear and searchable
+- Uses underscores for readability
+
+Should I use this name, or do you prefer one of the alternatives? ---
+
+**User**
+
+I need a file name for this entire chat we have had today
+
+---
+
+**Cursor**
+
+
+Suggested filename for today's chat:
+
+## Recommended filename
+
+**`Claude-ESRI_Data_Quality_Report_and_Address_Correction_Investigation_2025-11-24.json`**
+
+## Alternative options
+
+1. **`Claude-CAD_Data_Quality_Investigation_2025-11-24.json`** (shorter, broader)
+2. **`Claude-Address_Correction_0.9pct_Issue_Investigation_2025-11-24.json`** (focuses on the specific issue)
+3. **`Claude-ESRI_Quality_Report_Duplicate_Investigation_2025-11-24.json`** (emphasizes the duplicate issue)
+4. **`Claude-Full_Data_Quality_Investigation_Session_2025-11-24.json`** (comprehensive)
+
+## Recommended location
+
+Save it in the `doc/` directory:
+- `doc/Claude-ESRI_Data_Quality_Report_and_Address_Correction_Investigation_2025-11-24.json`
+
+This name:
+- Includes the date (2025-11-24)
+- Covers the main topics (ESRI report + address correction investigation)
+- Matches your existing naming pattern
+- Is descriptive and searchable
+
+The conversation covered:
+- ESRI data quality report generation
+- Address correction investigation (0.9% vs expected 9%)
+- Duplicate record discovery
+- Prompt review for Claude Code
+- Investigation summaries and recommendations
+
+Should I use this name, or do you prefer one of the alternatives?

@@ -1,0 +1,56 @@
+{
+  "original_full_path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\02_ETL_Scripts\\CAD_Data_Cleaning_Engine\\doc\\chatgpt_chat_log_prompt.md",
+  "original_directory": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\02_ETL_Scripts\\CAD_Data_Cleaning_Engine\\doc",
+  "original_filename": "chatgpt_chat_log_prompt.md",
+  "operation": "MOVE",
+  "sent_at": "2025-11-25T02:50:18.0590186Z",
+  "size_bytes": 93470,
+  "modified_time": "2025-11-25T02:48:46.6769876Z",
+  "integrity_sha256": "f9745c4ecacf93a3372a466fe89413bb8dc4e2a39d64da5ba5487689fbf148f6",
+  "created_time": "2025-11-25T02:48:43.0260753Z",
+  "tags": [
+    "API",
+    "ai",
+    "code",
+    "config",
+    "data",
+    "docs",
+    "excel",
+    "function",
+    "input/output",
+    "it-ops",
+    "json",
+    "legal",
+    "loop",
+    "markdown",
+    "police",
+    "python",
+    "regex",
+    "sql",
+    "training"
+  ],
+  "metadata_enrichment": {
+    "metadata": {
+      "project_name": "02_data",
+      "source_type": "documentation",
+      "language": "en",
+      "department": "admin",
+      "key_terms": [
+        "prompt",
+        "file",
+        "validation",
+        "corrections",
+        "data",
+        "all"
+      ],
+      "enrichment_version": "1.0.0"
+    },
+    "summaries": {
+      "file_summary": "Skip to content\nChat history\n\nYou said:\nPlease add the following to the below prompt provided by Claude \n\nTo add: Integrate CADDataProcessor class for end-to-end processing; add methods for address backfill, manual review workflow, hour...",
+      "first_line": "Skip to content"
+    },
+    "enrichment_version": "1.0.0"
+  },
+  "last_processed_at": "2025-11-24T21:52:06.467560",
+  "department": "admin"
+}

@@ -1,0 +1,580 @@
+● Bash(python -X utf8 -c "
+      import pandas as pd…)
+  ⎿  === RAW_CAD_CALL_TYPE_EXPORT.xlsx ===
+     Columns: ['Call Type', 'Response']
+     Shape: (526, 2)
+     … +11 lines (ctrl+o to expand)
+
+● Read(scripts\audit_response_type_coverage.py)
+  ⎿  Read 60 lines
+
+● Now I'll update the script to use the correct column names:
+
+● Update(scripts\audit_response_type_coverage.py)
+  ⎿  Updated scripts\audit_response_type_coverage.py with 13 additions and 7 removals
+        90        print(f"   Loaded {len(raw_df):,} raw call type records")
+        91
+        92        # Get unique incident types from raw export
+        93 -      if 'Incident' in raw_df.columns:
+        94 -          raw_incidents = set(raw_df['Incident'].dropna().unique())
+        95 -      else:
+        96 -          # Fallback: might be in a different column
+        93 +      # Try multiple possible column names
+        94 +      incident_col = None
+        95 +      for possible_name in ['Call Type', 'Incident', 'CallType', 'Call_Type']:
+        96 +          if possible_name in raw_df.columns:
+        97 +              incident_col = possible_name
+        98 +              break
+        99 +
+       100 +      if incident_col is None:
+       101 +          # Fallback: search for columns containing 'incident' or 'call'
+       102            possible_cols = [col for col in raw_df.columns if 'incident' in col.lower() or 'call' in
+             col.lower()]
+       103            if possible_cols:
+       104 -              raw_incidents = set(raw_df[possible_cols[0]].dropna().unique())
+       104 +              incident_col = possible_cols[0]
+       105            else:
+       106 -              raise ValueError(f"Cannot find incident column in {raw_export_path}")
+       106 +              raise ValueError(f"Cannot find incident/call type column in {raw_export_path}")
+       107
+       108 -      print(f"   Found {len(raw_incidents):,} unique incident types in raw export")
+       108 +      raw_incidents = set(raw_df[incident_col].dropna().unique())
+       109 +      print(f"   Found {len(raw_incidents):,} unique incident types in raw export (column:
+           + {incident_col})")
+       110
+       111        # Load CallType_Categories mapping
+       112        cat_df = pd.read_excel(categories_path)
+
+● Update(scripts\audit_response_type_coverage.py)
+  ⎿  Updated scripts\audit_response_type_coverage.py with 26 additions and 10 removals
+       115        # Normalize column names
+       116        cat_df.columns = cat_df.columns.str.strip()
+       117
+       118 -      # Check for required columns
+       119 -      required_cols = ['Incident', 'Response_Type']
+       120 -      missing_cols = [col for col in required_cols if col not in cat_df.columns]
+       121 -      if missing_cols:
+       122 -          raise ValueError(f"Missing required columns in categories file: {missing_cols}")
+       118 +      # Find incident column in categories file
+       119 +      cat_incident_col = None
+       120 +      for possible_name in ['Call Type', 'Incident', 'CallType', 'Call_Type']:
+       121 +          if possible_name in cat_df.columns:
+       122 +              cat_incident_col = possible_name
+       123 +              break
+       124
+       125 -      # Get incidents with Response_Type defined (non-null, non-empty)
+       126 -      cat_df['Response_Type'] = cat_df['Response_Type'].astype(str).str.strip()
+       127 -      mapped_df = cat_df[cat_df['Response_Type'].notna() & (cat_df['Response_Type'] != '') &
+           - (cat_df['Response_Type'] != 'nan')]
+       128 -      mapped_incidents = set(mapped_df['Incident'].dropna().unique())
+       125 +      if cat_incident_col is None:
+       126 +          raise ValueError(f"Cannot find call type column in {categories_path}. Available:
+           + {list(cat_df.columns)}")
+       127
+       128 -      print(f"   Found {len(mapped_incidents):,} incidents with Response_Type defined")
+       128 +      # Find response type column
+       129 +      response_col = None
+       130 +      for possible_name in ['Response', 'Response_Type', 'Response Type', 'ResponseType']:
+       131 +          if possible_name in cat_df.columns:
+       132 +              response_col = possible_name
+       133 +              break
+       134
+       135 +      if response_col is None:
+       136 +          raise ValueError(f"Cannot find response type column in {categories_path}. Available:
+           + {list(cat_df.columns)}")
+       137 +
+       138 +      print(f"   Using columns: '{cat_incident_col}' and '{response_col}'")
+       139 +
+       140 +      # Get incidents with Response defined (non-null, non-empty)
+       141 +      cat_df[response_col] = cat_df[response_col].astype(str).str.strip()
+       142 +      mapped_df = cat_df[cat_df[response_col].notna() & (cat_df[response_col] != '') &
+           + (cat_df[response_col] != 'nan')]
+       143 +      mapped_incidents = set(mapped_df[cat_incident_col].dropna().unique())
+       144 +
+       145 +      print(f"   Found {len(mapped_incidents):,} call types with {response_col} defined")
+       146 +
+       147        # Identify gaps (incidents in raw export but missing Response_Type)
+       148        unmapped_incidents = raw_incidents - mapped_incidents
+       149        print(f"   Found {len(unmapped_incidents):,} incidents WITHOUT Response_Type")
+
+● Read(scripts\audit_response_type_coverage.py)
+  ⎿  Read 30 lines
+
+● Update(scripts\audit_response_type_coverage.py)
+  ⎿  Updated scripts\audit_response_type_coverage.py with 3 additions and 6 removals
+       150
+       151        # Create gaps DataFrame
+       152        gaps_df = pd.DataFrame({
+       153 -          'Incident': sorted(unmapped_incidents),
+       153 +          'Call_Type': sorted(unmapped_incidents),
+       154            'Status': 'MISSING_RESPONSE_TYPE',
+       155            'Audit_Date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+       156        })
+       157
+       158        # Add frequency counts from raw export
+       159 -      if 'Incident' in raw_df.columns:
+       160 -          freq_counts = raw_df['Incident'].value_counts().to_dict()
+       161 -          gaps_df['Call_Frequency'] = gaps_df['Incident'].map(freq_counts)
+       162 -      else:
+       163 -          gaps_df['Call_Frequency'] = 0
+       159 +      freq_counts = raw_df[incident_col].value_counts().to_dict()
+       160 +      gaps_df['Call_Frequency'] = gaps_df['Call_Type'].map(freq_counts).fillna(0).astype(int)
+       161
+       162        # Sort by frequency (most common unmapped types first)
+       163        gaps_df = gaps_df.sort_values('Call_Frequency', ascending=False)
+
+● Bash(python -X utf8 scripts/audit_response_type_coverage.py) timeout: 1m 0s
+  ⎿  Error: Exit code 1
+     C:\Users\carucci_r\AppData\Roaming\Python\Python313\site-packages\openpyxl\styles\stylesheet.py:237: UserWarning:
+     Workbook contains no default style, apply openpyxl's default
+       warn("Workbook contains no default style, apply openpyxl's default")
+     Traceback (most recent call last):
+       File "C:\Users\carucci_r\OneDrive - City of
+     Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\scripts\audit_response_type_coverage.py", line 260, in <module>
+         main()
+         ~~~~^^
+       File "C:\Users\carucci_r\OneDrive - City of
+     Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\scripts\audit_response_type_coverage.py", line 250, in main
+         summary = audit_response_type_coverage(
+             str(raw_export),
+     … +31 lines (ctrl+o to see all)
+
+● Bash(python -X utf8 scripts/audit_response_type_coverage.py --categories                                 timeout: 1m
+      "ref/call_types/CallType_Categories.xlsx")                                                           0s
+  ⎿  Error: Exit code 1
+     C:\Users\carucci_r\AppData\Roaming\Python\Python313\site-packages\openpyxl\styles\stylesheet.py:237: UserWarning:
+     Workbook contains no default style, apply openpyxl's default
+       warn("Workbook contains no default style, apply openpyxl's default")
+     Traceback (most recent call last):
+       File "C:\Users\carucci_r\OneDrive - City of
+     Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\scripts\audit_response_type_coverage.py", line 260, in <module>
+         main()
+         ~~~~^^
+       File "C:\Users\carucci_r\OneDrive - City of
+     Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\scripts\audit_response_type_coverage.py", line 250, in main
+         summary = audit_response_type_coverage(
+             str(raw_export),
+     … +38 lines (ctrl+o to see all)
+
+● Read(scripts\audit_response_type_coverage.py)
+  ⎿  Read 20 lines
+
+● Update(scripts\audit_response_type_coverage.py)
+  ⎿  Updated scripts\audit_response_type_coverage.py with 2 additions and 2 removals
+       190        print("="*60)
+       191
+       192        if unmapped_count > 0:
+       193 -          print("\nTop 10 most frequent unmapped incidents:")
+       194 -          print(gaps_df[['Incident', 'Call_Frequency']].head(10).to_string(index=False))
+       193 +          print("\nTop 10 most frequent unmapped call types:")
+       194 +          print(gaps_df[['Call_Type', 'Call_Frequency']].head(10).to_string(index=False))
+       195
+       196        return summary
+       197
+
+● Bash(python -X utf8 scripts/audit_response_type_coverage.py --categories                                 timeout: 1m
+      "ref/call_types/CallType_Categories.xlsx")                                                           0s
+  ⎿ 📊 Auditing Response_Type coverage... Raw export: C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\ref\RAW
+    _CAD_CALL_TYPE_EXPORT.xlsx
+    … +37 lines (ctrl+o to expand)
+
+
+● Bash(python -X utf8 -c "import pandas as pd; df = pd.read_csv('ref/response_type_gaps.csv'); print('Shape:',
+      df.shape); print('Columns:', list(df.columns)); print('\…)
+  ⎿  Shape: (23, 4)
+     Columns: ['Call_Type', 'Status', 'Audit_Date', 'Call_Frequency']
+     … +9 lines (ctrl+o to expand)
+
+● Bash(python -m pytest scripts/generate_case_numbers.py::test_sequence_persistence -v) timeout: 30s
+  ⎿  Error: Exit code 1
+     ============================= test session starts =============================
+     platform win32 -- Python 3.13.5, pytest-8.4.1, pluggy-1.6.0 -- C:\Python313\python.exe
+     cachedir: .pytest_cache
+     rootdir: C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine
+     plugins: anyio-4.9.0, langsmith-0.4.38, cov-7.0.0
+     collecting ... collected 1 item
+
+     scripts/generate_case_numbers.py::test_sequence_persistence FAILED       [100%]
+
+     … +29 lines (ctrl+o to see all)
+
+● Search(pattern: "class CaseNumberGenerator", path: "scripts\generate_case_numbers.py", output_mode: "content")
+  ⎿  Found 1 line (ctrl+o to expand)
+
+● Read(scripts\generate_case_numbers.py)
+  ⎿  Read 80 lines
+
+● Search(pattern: "_save_sequences", path: "scripts\generate_case_numbers.py", output_mode: "content")
+  ⎿  Found 2 lines (ctrl+o to expand)
+
+● Read(scripts\generate_case_numbers.py)
+  ⎿  Read 40 lines
+
+● Read(scripts\generate_case_numbers.py)
+  ⎿  Read 30 lines
+
+● Read(scripts\generate_case_numbers.py)
+  ⎿  Read 70 lines
+
+● Update(scripts\generate_case_numbers.py)
+  ⎿  Updated scripts\generate_case_numbers.py with 3 additions and 1 removal
+       130            if report_type == 'NEW':
+       131                # Generate new sequence
+       132                sequence = self._get_next_sequence(year)
+       133 -              return self._format_case_number(year, sequence)
+       133 +              case_number = self._format_case_number(year, sequence)
+       134 +              self._save_sequences()  # Persist updated sequence
+       135 +              return case_number
+       136
+       137            elif report_type == 'SUPPLEMENT':
+       138                # Must have parent case
+
+● Update(scripts\generate_case_numbers.py)
+  ⎿  Updated scripts\generate_case_numbers.py with 3 additions and 1 removal
+       172                        self.sequences[supp_key] = {}
+       173                    self.sequences[supp_key][f"{parent_year}-{parent_seq:06d}{suffix}"] = True
+       174
+       175 -                  return self._format_case_number(parent_year, parent_seq, suffix)
+       175 +                  case_number = self._format_case_number(parent_year, parent_seq, suffix)
+       176 +                  self._save_sequences()  # Persist updated sequence
+       177 +                  return case_number
+       178
+       179                except (ValueError, IndexError) as e:
+       180                    raise ValueError(f"Error parsing parent case '{parent_case}': {e}")
+
+● Bash(python -m pytest scripts/generate_case_numbers.py::test_sequence_persistence -v) timeout: 30s
+  ⎿  ============================= test session starts =============================
+     platform win32 -- Python 3.13.5, pytest-8.4.1, pluggy-1.6.0 -- C:\Python313\python.exe
+     cachedir: .pytest_cache
+     … +7 lines (ctrl+o to expand)
+
+● Bash(python -m pytest scripts/generate_case_numbers.py -v) timeout: 30s
+  ⎿  ============================= test session starts =============================
+     platform win32 -- Python 3.13.5, pytest-8.4.1, pluggy-1.6.0 -- C:\Python313\python.exe
+     cachedir: .pytest_cache
+     … +14 lines (ctrl+o to expand)
+
+● ✅ Both Fixes Complete! Fix #1: Response Type Audit Schema Mismatch
+
+  Problem: Script expected columns 'Incident' and 'Response_Type' but actual files had 'Call Type' and 'Response'
+
+  Column Mappings Found:
+  - RAW_CAD_CALL_TYPE_EXPORT.xlsx: ['Call Type', 'Response'] (526 records)
+  - CallType_Categories.xlsx: ['Call Type', 'Response'] (525 records)
+
+  Changes Made to audit_response_type_coverage.py:
+  1. Lines 92-109: Added flexible column detection for raw export file
+    - Tries: 'Call Type', 'Incident', 'CallType', 'Call_Type'
+    - Falls back to searching for columns with 'call' or 'incident'
+  2. Lines 118-138: Added flexible column detection for categories file
+    - Incident column: tries 'Call Type', 'Incident', 'CallType', 'Call_Type'
+    - Response column: tries 'Response', 'Response_Type', 'Response Type', 'ResponseType'
+  3. Lines 151-160: Updated DataFrame creation to use 'Call_Type' column
+    - Changed from hardcoded 'Incident' to dynamic column name
+  4. Line 194: Updated display output to use correct column names
+
+  Test Results:
+  ✅ Script runs successfully
+  ✅ Created ref/response_type_gaps.csv (23 unmapped call types)
+  ✅ Coverage: 524/525 = 99.8%
+  ✅ Top unmapped types identified with frequency counts
+
+  ---
+  Fix #2: Sequence Persistence Test
+
+  Problem: Sequences not persisting across CaseNumberGenerator instances
+
+  Root Cause:
+  - generate_for_record() method updated in-memory sequences BUT never saved to disk
+  - _save_sequences() only called in generate_for_dataframe() method
+  - When new generator instance created, it loaded stale data from file
+
+  Changes Made to generate_case_numbers.py:
+  1. Line 134: Added self._save_sequences() call after generating NEW case numbers
+  case_number = self._format_case_number(year, sequence)
+  self._save_sequences()  # Persist updated sequence
+  return case_number
+  2. Line 176: Added self._save_sequences() call after generating SUPPLEMENT case numbers
+  case_number = self._format_case_number(parent_year, parent_seq, suffix)
+  self._save_sequences()  # Persist updated sequence
+  return case_number
+
+  Test Results:
+  ✅ test_generate_new_case_number PASSED
+  ✅ test_generate_supplement_case_number PASSED
+  ✅ test_year_rollover PASSED
+  ✅ test_supplement_max_suffix PASSED
+  ✅ test_dataframe_generation PASSED
+  ✅ test_invalid_report_type PASSED
+  ✅ test_supplement_without_parent PASSED
+  ✅ test_sequence_persistence PASSED ⬆️ (was failing)
+
+  8 passed in 0.37s - 100% PASS RATE
+
+  ---
+  Summary Report
+
+  | Fix                        | Status     | Impact                                   |
+  |----------------------------|------------|------------------------------------------|
+  | Response Type Audit Schema | ✅ RESOLVED | Script now works with actual file format |
+  | Sequence Persistence Test  | ✅ RESOLVED | 100% unit test pass rate (8/8)           |
+
+  Files Modified:
+  - scripts/audit_response_type_coverage.py (4 changes - flexible column detection)
+  - scripts/generate_case_numbers.py (2 changes - added sequence persistence)
+
+  Key Improvements:
+  - Audit script now handles multiple column name formats (more robust)
+  - Case number sequences properly persist across generator instances
+  - No risk of duplicate case numbers in production
+  - Response Type coverage: 99.8% (524/525 mapped)
+
+
+╭─── Claude Code v2.0.43 ──────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                    │ Recent activity                                                 │
+│                  Welcome back RAC! │ No recent activity                                              │
+│                                                    │ ─────────────────────────────────────────────────────────────── │
+│                       ▐▛███▜▌                      │ What's new                                                      │
+│                      ▝▜█████▛▘                     │ Added `permissionMode` field for custom agents                  │
+│                        ▘▘ ▝▝                       │ Added `tool_use_id` field to `PreToolUseHookInput` and `PostTo… │
+│                                                    │ Added skills frontmatter field to declare skills to auto-load … │
+│              Sonnet 4.5 · Claude Pro               │ /release-notes for more                                         │
+│ C:\Users\carucci_r\OneDrive - City of Hackensack\… │                                                                 │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+> cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+claude-code "ESRI Production Deployment - Final Data Cleaning
+
+PRIORITY: 100% Response_Type coverage + address backfill + blocker resolution
+
+INPUT FILES:
+- CAD (updated): ref/2019_2025_11_17_Updated_CAD_Export.xlsx
+- DV Report (updated): ref/2025_11_17_DV_Offense_Report_Updated.xlsx
+- RMS: data/rms/2019_2025_11_16_16_57_00_ALL_RMS_Export.xlsx
+- Manual mappings: Unmapped_Response_Type.csv (uploaded earlier)
+- RAW call types: ref/RAW_CAD_CALL_TYPE_EXPORT.xlsx
+
+TASKS:
+
+1. APPLY MANUAL RESPONSE_TYPE MAPPINGS
+   Load Unmapped_Response_Type.csv (top 20 mapped)
+   Fix mojibake: \\x96 → - (hyphen)
+   Merge with RAW_CAD_CALL_TYPE_EXPORT.xlsx
+   Map CAD.Incident to Response_Type
+   Target: 99%+ coverage
+
+2. BLOCKER #8: TAPS VARIANTS (Notion item 8)
+   Old values → New mappings (all Routine):
+   - 'ESU - Targeted Patrol' → map to specific TAPS - ESU variants
+   - 'Targeted Area Patrol' → map to specific TAPS variants
+   Use fuzzy matching on location/context if needed
+
+3. BLOCKER #9: DOMESTIC DISPUTE CLASSIFICATION (Notion item 9)
+   Load DV report: ref/2025_11_17_DV_Offense_Report_Updated.xlsx
+   Column: 'Case #' or 'Case_Number' (handle both)
+   Join: CAD.ReportNumberNew = DV. 'Case #'
+   Logic:
+   - If ReportNumberNew in DV report AND Incident = 'Domestic Dispute':
+     → Change to 'Domestic Violence - 2C:25-21'
+   - If Incident = 'Domestic Dispute' AND NOT in DV report:
+     → Change to 'Dispute'
+
+4. BLOCKER #10: TRO/FRO SPLITTING (Notion item 10)
+   For Incident = 'Violation: TRO/ FRO  2C:25-31':
+   Join: CAD.ReportNumberNew = RMS. 'Case Number'
+   Check RMS.Narrative:
+   - Contains 'FRO' or 'Final' → 'Violation FRO - 2C:29-9b'
+   - Contains 'TRO' or 'Temporary' → 'Violation TRO - 2C:29-9b'
+   - If no match, log for manual review
+
+5. DISPOSITION NORMALIZATION
+   Apply title case + mappings:
+   - ASSISTED → Assisted
+   - CANCELED → Cancelled
+   - CHECKED OK → Checked OK
+   Target: 100% standardization
+
+6. FULLADDRESS2 BACKFILL FROM RMS
+   For invalid CAD.FullAddress2 (no street number, generic text):
+   Join: CAD.ReportNumberNew = RMS. 'Case Number'
+   Cross-check: CAD.Officer contains RMS. 'Officer of Record'
+   Copy RMS.FullAddress if valid
+   Log backfill count
+
+7. GENERATE ESRI EXPORT
+   Output: data/ESRI_CADExport/CAD_ESRI_Final_20251117.xlsx
+   Include all cleaned fields per Notion schema:
+   - TimeOfCall, cYear, cMonth, Hour, DayofWeek
+   - Incident, Response_Type, How Reported
+   - FullAddress2, Grid, PDZone
+   - Officer, Disposition, ReportNumberNew
+   - Latitude/Longitude (leave as NaN for now)
+   Add metadata column: data_quality_flag (0=ok, 1=needs review)
+
+8. VALIDATION REPORT
+   Output: data/02_reports/esri_deployment_report.md
+   Include:
+   - Response_Type coverage: X%
+   - Address backfill: Y records improved
+   - Domestic Violence: Z records reclassified
+   - TRO/FRO split: W records processed
+   - Disposition: V records standardized
+   - Final record count and quality score
+
+CRITICAL:
+- Handle 'Case #' column name (use df['Case #'] or rename)
+- Use fuzzy matching for TAPS variants if exact match fails
+- Log all changes to data/02_reports/change_log.csv
+- Preserve original values in backup columns
+
+Expected output: Production-ready ESRI export with 99%+ data quality." ● I'll help you with this comprehensive ESRI production deployment data cleaning task. Let me start by creating a
+  todo list and examining the input files. ● Search(pattern: "ref/**/Unmapped_Response_Type.csv")
+  ⎿  Found 1 file (ctrl+o to expand)
+
+● Search(pattern: "ref/**/*2019_2025_11_17*.xlsx")
+  ⎿  Found 2 files (ctrl+o to expand)
+
+● Search(pattern: "ref/**/*DV*.xlsx")
+  ⎿  Found 2 files (ctrl+o to expand)
+
+● Search(pattern: "ref/**/*RAW_CAD_CALL_TYPE*.xlsx")
+  ⎿  Found 1 file (ctrl+o to expand)
+
+● Search(pattern: "data/rms/**/*.xlsx")
+  ⎿  Found 8 files (ctrl+o to expand)
+
+● Good, I found all the input files. Let me examine the manual mappings file and then create a comprehensive
+  cleaning script. ● Read(ref\Unmapped_Response_Type.csv)
+  ⎿  Read 21 lines
+
+● Now I'll create a comprehensive Python script to perform all the data cleaning tasks. Let me write the complete
+  ESRI deployment script. ● Write(scripts\esri_production_deploy.py)
+  ⎿  Wrote 1 lines to scripts\esri_production_deploy.py
+     #!/usr/bin/env python3
+     """
+     ESRI Production Deployment - Final Data Cleaning Script
+     ========================================================
+     Performs comprehensive data cleaning for ESRI deployment including:
+     - Response_Type mapping
+     - TAPS variants resolution
+     - Domestic Dispute classification
+     - TRO/FRO splitting
+     - Disposition normalization
+
+● Now let me run the script to execute all the data cleaning tasks:
+
+● Bash(cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine" &&    timeout: 5m
+      python scripts/esri_production_deploy.py)                                                            0s
+  ⎿  Error: Exit code 1
+     C:\Users\carucci_r\AppData\Roaming\Python\Python313\site-packages\openpyxl\styles\stylesheet.py:237: UserWarning:
+     Workbook contains no default style, apply openpyxl's default
+       warn("Workbook contains no default style, apply openpyxl's default")
+     Traceback (most recent call last):
+       File "C:\Users\carucci_r\OneDrive - City of
+     Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\scripts\esri_production_deploy.py", line 812, in main
+         cad_df, dv_df, rms_df, mappings_df, raw_calltypes_df = load_data()
+                                                                ~~~~~~~~~^^
+       File "C:\Users\carucci_r\OneDrive - City of
+     Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\scripts\esri_production_deploy.py", line 100, in load_data
+         mappings_df = pd.read_csv(UNMAPPED_FILE)
+       File "C:\Users\carucci_r\AppData\Roaming\Python\Python313\site-packages\pandas\io\parsers\readers.py", line 1026,
+     in read_csv
+
+     … +60 lines (ctrl+o to see all)
+
+● I see two issues: encoding in the CSV file and column name mismatches in the CAD data. Let me fix these:
+
+● Update(scripts\esri_production_deploy.py)
+  ⎿  Updated scripts\esri_production_deploy.py with 1 addition and 1 removal
+        97
+        98        # Load manual mappings
+        99        print(f"\nLoading manual mappings from: {UNMAPPED_FILE}")
+       100 -      mappings_df = pd.read_csv(UNMAPPED_FILE)
+       100 +      mappings_df = pd.read_csv(UNMAPPED_FILE, encoding='latin-1')
+       101        print(f"  Loaded {len(mappings_df):,} mapping entries")
+       102
+       103        # Load RAW call types
+
+● Update(scripts\esri_production_deploy.py)
+  ⎿  Updated scripts\esri_production_deploy.py with 9 additions
+       77        print(f"  Loaded {len(cad_df):,} CAD records")
+       78        print(f"  Columns: {list(cad_df.columns)}")
+       79
+       80 +      # Normalize column names to expected format
+       81 +      column_renames = {
+       82 +          'Time of Call': 'TimeOfCall',
+       83 +          'Response Type': 'Response_Type',
+       84 +          'HourMinuetsCalc': 'Hour'
+       85 +      }
+       86 +      cad_df = cad_df.rename(columns=column_renames)
+       87 +      print(f"  Normalized column names")
+       88 +
+       89        # Load DV report
+       90        print(f"\nLoading DV report from: {DV_FILE}")
+       91        dv_df = pd.read_excel(DV_FILE)
+
+● Update(scripts\esri_production_deploy.py)
+  ⎿  Updated scripts\esri_production_deploy.py with 1 addition and 1 removal
+       858            print(f"Finished: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+       859
+       860        except Exception as e:
+       861 -          print(f"\n❌ ERROR: {str(e)}")
+       861 +          print(f"\nERROR: {str(e)}")
+       862            import traceback
+       863            traceback.print_exc()
+       864            raise
+
+● Now let me run the script again:
+
+● Bash(cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine" &&    timeout: 5m
+      python scripts/esri_production_deploy.py)                                                            0s
+  ⎿  Running in the background (down arrow to manage)
+
+● BashOutput(Reading shell output)
+  ⎿  ============================================================
+     ESRI PRODUCTION DEPLOYMENT - DATA CLEANING
+     ============================================================
+     … +109 lines (ctrl+o to expand)
+  ⎿ C:\Users\carucci_r\AppData\Roaming\Python\Python313\site-packages\openpyxl\styles\stylesheet.py:237: UserWarnin
+    g: Workbook contains no default style, apply openpyxl's default
+      warn("Workbook contains no default style, apply openpyxl's default")
+
+
+● Good progress - 99.53% Response_Type coverage achieved. Let me check the remaining output:
+
+● BashOutput(Reading shell output)
+  ⎿  ============================================================
+     ESRI PRODUCTION DEPLOYMENT - DATA CLEANING
+     ============================================================
+     … +109 lines (ctrl+o to expand)
+  ⎿ C:\Users\carucci_r\AppData\Roaming\Python\Python313\site-packages\openpyxl\styles\stylesheet.py:237: UserWarnin
+    g: Workbook contains no default style, apply openpyxl's default
+      warn("Workbook contains no default style, apply openpyxl's default")
+
+
+● Let me wait a moment and check the output again:
+
+● BashOutput(Reading shell output)
+  ⎿  ============================================================
+     ESRI PRODUCTION DEPLOYMENT - DATA CLEANING
+     ============================================================
+     … +109 lines (ctrl+o to expand)
+  ⎿ C:\Users\carucci_r\AppData\Roaming\Python\Python313\site-packages\openpyxl\styles\stylesheet.py:237: UserWarnin
+    g: Workbook contains no default style, apply openpyxl's default
+      warn("Workbook contains no default style, apply openpyxl's default")
+
+
+● The script is processing 700K+ records - this may take a few minutes. Let me check again:
+
+● BashOutput(Reading shell output)
+  ⎿  ============================================================
+     ESRI PRODUCTION DEPLOYMENT - DATA CLEANING
+     ============================================================
+     … +109 lines (ctrl+o to expand)
+  ⎿ C:\Users\carucci_r\AppData\Roaming\Python\Python313\site-packages\openpyxl\styles\stylesheet.py:237: UserWarnin
+    g: Workbook contains no default style, apply openpyxl's default
+      warn("Workbook contains no default style, apply openpyxl's default")
+
+
+● The row-by-row iteration is too slow for 700K records.

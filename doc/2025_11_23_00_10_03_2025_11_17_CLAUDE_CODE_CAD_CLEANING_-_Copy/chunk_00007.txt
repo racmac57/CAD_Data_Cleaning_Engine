@@ -1,0 +1,405 @@
+7 +
+        8 +  ### Added
+        9 +  - **scripts/esri_production_deploy.py**: Optimized vectorized data cleaning script for production
+          + deployment
+       10 +    - Case-insensitive Response_Type mapping
+       11 +    - TAPS variant resolution based on address keywords
+       12 +    - Domestic Dispute/Violence classification via DV report join
+       13 +    - TRO/FRO splitting via RMS narrative parsing
+       14 +    - Disposition normalization with standard mappings
+       15 +    - Address backfill from RMS data
+       16 +    - Response_Type value cleanup (removes garbage entries)
+       17 +    - Data quality flagging system
+       18 +
+       19 +  ### Output Files
+       20 +  - **data/ESRI_CADExport/CAD_ESRI_Final_20251117.xlsx**: Production-ready export (701,115 records)
+       21 +  - **data/02_reports/esri_deployment_report.md**: Validation report with metrics
+       22 +  - **data/02_reports/tro_fro_manual_review.csv**: 96 TRO/FRO records needing manual review
+       23 +
+       24 +  ### Processing Results
+       25 +  | Task | Records Processed |
+       26 +  |------|-------------------|
+       27 +  | Response_Type Mapped | 160,022 |
+       28 +  | TAPS Variants Resolved (Blocker #8) | 21,201 |
+       29 +  | Domestic Violence Reclassified | 458 |
+       30 +  | Disputes Reclassified | 1,327 |
+       31 +  | TRO/FRO Split (Blocker #10) | 257 |
+       32 +  | Disposition Normalized | 58,604 |
+       33 +  | Address Backfilled from RMS | 2,362 |
+       34 +  | Garbage Response_Type Cleared | 107 |
+       35 +
+       36 +  ### Data Quality
+       37 +  - **Response_Type Coverage**: 99.55% (PASS)
+       38 +  - **Data Quality Score**: 96.91% (PASS)
+       39 +  - **Status**: PRODUCTION READY
+       40 +
+       41 +  ### Response_Type Distribution
+       42 +  - Routine: 425,335 (60.67%)
+       43 +  - Urgent: 239,170 (34.11%)
+       44 +  - Emergency: 33,455 (4.77%)
+       45 +
+       46 +  ### Technical Improvements
+       47 +  - Vectorized pandas operations for 700K+ record processing (5 min vs 30+ min)
+       48 +  - Case-insensitive mapping with lowercase key normalization
+       49 +  - Comprehensive garbage value cleanup for Response_Type field
+       50 +  - Modular function design for maintainability
+       51 +
+       52 +  ### Remaining Items
+       53 +  - 148 unmapped incident types (mostly trailing spaces/naming variations)
+       54 +  - 21,681 records flagged for review (missing address/disposition/Response_Type)
+       55 +  - 96 TRO/FRO records requiring manual narrative review
+       56 +
+       57 +  ---
+       58 +
+       59    ## [2025-11-17] - ESRI Production Deployment Prep
+       60
+       61    ### Summary
+
+● Updated doc/CHANGELOG.md with the new entry [2025-11-17-b] - ESRI Production Deployment Final documenting:
+
+  - Summary of achievements (99.55% coverage, 96.91% quality score)
+  - New script: scripts/esri_production_deploy.py
+  - Output files generated
+  - Processing results table with all record counts
+  - Response_Type distribution (clean Routine/Urgent/Emergency only)
+  - Technical improvements (vectorized operations)
+  - Remaining items for follow-up
+
+> C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\data\reports folder is
+empty
+
+● Let me check the folder structure - the reports were saved to data/02_reports/, not data/reports/:
+
+● Search(pattern: "data/**/esri_deployment_report.md")
+  ⎿  Found 1 file (ctrl+o to expand)
+
+● Search(pattern: "data/02_reports/*")
+  ⎿  Found 3 files (ctrl+o to expand)
+
+● Search(pattern: "data/reports/*")
+  ⎿  Found 0 files
+
+● The reports are in data/02_reports/, not data/reports/:
+
+  Reports location: data/02_reports/
+
+  Contents:
+  - esri_deployment_report.md - Validation report
+  - tro_fro_manual_review.csv - 96 TRO/FRO records for manual review
+  - unmapped_response_type.csv - Unmapped incident types
+
+  ESRI Export location: data/ESRI_CADExport/
+  - CAD_ESRI_Final_20251117.xlsx - Production-ready export (701,115 records)
+
+  Would you like me to copy these reports to data/reports/ instead? ▐▛███▜▌   Claude Code v2.0.43
+▝▜█████▛▘  Sonnet 4.5 · Claude Pro
+  ▘▘ ▝▝    C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine
+
+> cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+claude-code "Final Cleanup - TRO/FRO + Fuzzy Match + RMS Backfill
+
+INPUT:
+- CAD: data/ESRI_CADExport/CAD_ESRI_Final_20251117.xlsx
+- TRO/FRO manual: data/02_reports/tro_fro_manual_review.csv (column: Corrected Incident)
+- Call types: ref/RAW_CAD_CALL_TYPE_EXPORT.xlsx
+- Master mapping: ref/CallType_Master_Mapping.csv
+- RMS: data/rms/2019_2025_11_16_16_57_00_ALL_RMS_Export.xlsx
+
+TASKS:
+
+1. APPLY TRO/FRO CORRECTIONS
+   Join on ReportNumberNew
+   Update Incident with Corrected Incident values
+
+2. FUZZY MATCH UNMAPPED (threshold 70-75%)
+   For blank Response_Type:
+   - First: fuzzy match Incident to RAW_CAD_CALL_TYPE_EXPORT. 'Call Type'
+   - Second: if no match, fuzzy to CallType_Master_Mapping.Incident_Norm
+   - Use thefuzz.fuzz.token_sort_ratio
+   - Log matches 70-75% for review, auto-apply 75+%
+
+3. RMS BACKFILL NULL INCIDENTS
+   For null/blank Incident:
+   - Join CAD.ReportNumberNew = RMS. 'Case Number'
+   - Fill from RMS. 'Incident Type_1'
+   - Then apply fuzzy match to fill Response_Type
+
+4. ORDER: Decide optimal sequence for max coverage
+
+5. FINAL REPORT FOR SUPERVISOR
+   Output: data/02_reports/unmapped_final_report.md
+   Include:
+   - Total unmapped count + %
+   - Breakdown: null_incident, no_fuzzy_match, low_confidence(<75%), other
+   - Top 20 unmapped by frequency with sample ReportNumberNew
+   - Coverage improvement: before/after each step
+   - Records still needing manual review
+
+6. UPDATE ESRI EXPORT
+   Output: data/ESRI_CADExport/CAD_ESRI_Final_20251117_v2.xlsx
+   Include final Response_Type coverage %
+
+Log all fuzzy matches 70-75% to data/02_reports/fuzzy_review.csv for validation." ● I'll help you create a comprehensive cleanup script for the TRO/FRO corrections, fuzzy matching, and RMS backfill. Let me start by examining the input
+   files to understand their structure. ● Bash(python -c "import pandas as pd; df = pd.read_excel(r'C:\Users\carucci_r\OneDrive - City of
+      Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\data\ESRI_CADExpor…)
+  ⎿ CAD ESRI File:
+    Shape: (701115, 17)
+    Columns: ['TimeOfCall', 'cYear', 'cMonth', 'Hour', 'DayofWeek', 'Incident', 'Response_Type', 'How Reported', 'FullAddress2', 'Grid', 'PDZone', 'Off
+    … +8 lines (ctrl+o to expand)
+
+
+● Bash(python -c "import pandas as pd; df = pd.read_csv(r'C:\Users\carucci_r\OneDrive - City of
+      Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\data\02_reports\tro_…)
+  ⎿  TRO/FRO Manual Review:
+     Shape: (96, 3)
+     Columns: ['ReportNumberNew', 'Incident', 'Corrected Incident']
+     … +8 lines (ctrl+o to expand)
+
+● Bash(python -c "import pandas as pd; df = pd.read_excel(r'C:\Users\carucci_r\OneDrive - City of
+      Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\ref\RAW_CAD_CALL_T…)
+  ⎿  RAW CAD Call Type Export:
+     Shape: (526, 2)
+     Columns: ['Call Type', 'Response']
+     … +8 lines (ctrl+o to expand)
+
+● Bash(python -c "import pandas as pd; df = pd.read_csv(r'C:\Users\carucci_r\OneDrive - City of
+      Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\ref\CallType_Master_…)
+  ⎿  Error: Exit code 1
+     Traceback (most recent call last):
+       File "<string>", line 1, in <module>
+         import pandas as pd; df = pd.read_csv(r'C:\Users\carucci_r\OneDrive - City of
+     Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\ref\CallType_Master_Mapping.csv'); print('CallType Master Mapping:'); print(f'Shape: {df.shape}');
+     print(f'Columns: {list(df.columns)}'); print(f'\nSample data:'); print(df.head())
+
+     ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+       File "C:\Users\carucci_r\AppData\Roaming\Python\Python313\site-packages\pandas\io\parsers\readers.py", line 1026, in read_csv
+         return _read(filepath_or_buffer, kwds)
+       File "C:\Users\carucci_r\AppData\Roaming\Python\Python313\site-packages\pandas\io\parsers\readers.py", line 620, in _read
+         parser = TextFileReader(filepath_or_buffer, **kwds)
+       File "C:\Users\carucci_r\AppData\Roaming\Python\Python313\site-packages\pandas\io\parsers\readers.py", line 1620, in __init__
+     … +19 lines (ctrl+o to see all)
+
+● Bash(python -c "import pandas as pd; df = pd.read_excel(r'C:\Users\carucci_r\OneDrive - City of
+      Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\data\rms\2019_2025…)
+  ⎿ RMS Export:
+    Shape: (156036, 31)
+    Columns: ['Case Number', 'Incident Date', 'Incident Time', 'Incident Date_Between', 'Incident Time_Between', 'Report Date', 'Report Time', 'Inciden
+    … +13 lines (ctrl+o to expand)
+
+
+● Let me find the correct location of the CallType_Master_Mapping file:
+
+● Bash(python -c "import pandas as pd; df = pd.read_csv(r'C:\Users\carucci_r\OneDrive - City of
+      Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\ref\call_types\CallT…)
+  ⎿  CallType Master Mapping:
+     Shape: (808, 8)
+     Columns: ['Raw_Value', 'Incident_Norm', 'Category_Type', 'Response_Type', 'Statute', 'Source', 'Status', 'Note']
+     … +10 lines (ctrl+o to expand)
+
+● Now I have all the file structures. Let me update the todo list and create the comprehensive cleanup script:
+
+● Optimal Processing Order:
+  1. RMS Backfill (fill 271 null Incidents first)
+  2. TRO/FRO Corrections (apply 96 manual corrections)
+  3. Fuzzy Match (now all Incidents are populated for matching)
+
+  Now creating the comprehensive cleanup script:
+
+● Write(scripts\final_cleanup_tro_fuzzy_rms.py)
+  ⎿  Wrote 1 lines to scripts\final_cleanup_tro_fuzzy_rms.py
+     #!/usr/bin/env python
+     """
+     Final Cleanup Script - TRO/FRO + Fuzzy Match + RMS Backfill
+     ============================================================
+     Performs comprehensive data cleaning for CAD ESRI export:
+     1. RMS Backfill - Fill null Incidents from RMS data
+     2. TRO/FRO Corrections - Apply manual review corrections
+     3. Fuzzy Match - Match unmapped Incidents to call types
+     Author: Claude Code
+
+● Now running the cleanup script:
+
+● Bash(cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine" && python                                timeout: 10m
+      scripts/final_cleanup_tro_fuzzy_rms.py)                                                                                                 0s
+  ⎿  Error: Exit code 1
+     Traceback (most recent call last):
+       File "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\scripts\final_cleanup_tro_fuzzy_rms.py", line 18, in
+     <module>
+         from thefuzz import fuzz
+     ModuleNotFoundError: No module named 'thefuzz'
+
+● Installing required dependency:
+
+● Bash(pip install thefuzz)
+  ⎿  Defaulting to user installation because normal site-packages is not writeable
+     Collecting thefuzz
+       Downloading thefuzz-0.22.1-py3-none-any.whl.metadata (3.9 kB)
+     … +5 lines (ctrl+o to expand)
+
+● Bash(cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine" && python                                timeout: 10m
+      scripts/final_cleanup_tro_fuzzy_rms.py)                                                                                                 0s
+  ⎿  ============================================================
+     CAD DATA FINAL CLEANUP
+     TRO/FRO + Fuzzy Match + RMS Backfill
+     … +73 lines (ctrl+o to expand)
+
+● Excellent! The script completed successfully. Let me show you the final report:
+
+● Read(data\02_reports\unmapped_final_report.md)
+  ⎿  Read 88 lines
+
+● Read(data\02_reports\fuzzy_review.csv)
+  ⎿  Read 10 lines
+
+● Final Cleanup Complete
+
+  Results Summary
+
+  | Metric                 | Before  | After                 |
+  |------------------------|---------|-----------------------|
+  | Total Records          | 701,115 | 701,115               |
+  | Unmapped Response_Type | 3,155   | 309                   |
+  | Coverage Rate          | 99.55%  | 99.96%                |
+  | Improvement            | -       | 2,846 records (90.2%) |
+
+  Step Breakdown
+
+  1. RMS Backfill: 97 null Incidents filled from RMS data
+  2. TRO/FRO Corrections: 166 corrections applied (some ReportNumbers had multiple entries)
+  3. Fuzzy Matching: 3,001 auto-applied (>=75%), 8 need review (70-75%), 146 no match
+
+  Output Files
+
+  - Updated CAD Export: data/ESRI_CADExport/CAD_ESRI_Final_20251117_v2.xlsx
+  - Fuzzy Review: data/02_reports/fuzzy_review.csv (8 records for manual validation)
+  - Final Report: data/02_reports/unmapped_final_report.md
+
+  Remaining Unmapped (309 records)
+
+  Top issues:
+  - Medical Emergency: 123 records - likely needs to be added to master mapping
+  - Abandoned 9-1-1Emergency (typo): 18 records
+  - Null/blank Incidents: 146 records
+
+  Fuzzy Review Recommendations (8 records)
+
+  All 8 records in fuzzy_review.csv appear to be valid matches:
+  - Burglary-Residential → Emergency (70%)
+  - Community Engagement → Routine (73%)
+  - Handle With Care → Emergency (71%)
+
+  These can likely be approved and added to the master mapping for future runs. > cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+claude-code "Analyze FullAddress2 quality for ESRI standards
+
+INPUT: data/ESRI_CADExport/CAD_ESRI_Final_20251117_v2.xlsx
+
+VALID FORMATS (per Notion):
+- Standard: '[ADDRESS-REDACTED], HACKENSACK, NJ 07601'
+- Intersection: 'MAIN STREET & RIVER AVENUE, HACKENSACK, NJ 07601'
+
+INVALID:
+- No street number (unless intersection)
+- Missing street type (STREET, AVENUE, ROAD, etc)
+- Generic: HOME, VARIOUS, UNKNOWN, PARKING GARAGE, REAR LOT
+- PO BOX entries
+- City/state only
+- Blank/null
+
+TASKS:
+1. Categorize each FullAddress2:
+   - valid_standard (has number + street type + city/state/zip)
+   - valid_intersection (has & with two streets)
+   - missing_street_number
+   - missing_street_type
+   - generic_location
+   - po_box
+   - incomplete (city only, etc)
+   - blank
+
+2. Count by category + percentage
+
+3. Sample 5 records per invalid category
+
+4. Report:
+   Output: data/02_reports/address_quality_report.md
+   - Total records, valid %, invalid breakdown
+   - Geocoding readiness estimate
+   - Recommendations for cleanup
+
+Include record counts for each issue type." ● I'll analyze the FullAddress2 column for ESRI geocoding standards. Let me start by examining the data structure and then create a comprehensive
+  analysis. ● Bash(python -c "
+      import pandas as pd…)
+  ⎿  FullAddress2 Analysis
+     ============================================================
+     Total records: 701,115
+     … +35 lines (ctrl+o to expand)
+
+● Bash(python -c "
+      import pandas as pd…)
+  ⎿  Pattern Analysis
+     ============================================================
+     No leading number: 174,427
+     … +27 lines (ctrl+o to expand)
+
+● Write(scripts\analyze_address_quality.py)
+  ⎿  Wrote 1 lines to scripts\analyze_address_quality.py
+     #!/usr/bin/env python
+     """
+     Address Quality Analysis for ESRI Geocoding Standards
+     ======================================================
+     Analyzes FullAddress2 column for geocoding readiness
+     Author: Claude Code
+     Date: 2025-11-18
+     """
+
+● Bash(cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine" && python                                timeout: 5m
+      scripts/analyze_address_quality.py)                                                                                                     0s
+  ⎿  ============================================================
+     ADDRESS QUALITY ANALYSIS
+     ============================================================
+     … +35 lines (ctrl+o to expand)
+
+● Read(data\02_reports\address_quality_report.md)
+  ⎿  Read 163 lines
+
+● Address Quality Analysis Complete
+
+  Executive Summary
+
+  | Metric            | Count   | Percentage |
+  |-------------------|---------|------------|
+  | Total Records     | 701,115 | 100%       |
+  | Valid Addresses   | 597,480 | 85.22%     |
+  | Invalid Addresses | 103,635 | 14.78%     |
+
+  Category Breakdown
+
+  | Category                | Count   | %      | Geocodable |
+  |-------------------------|---------|--------|------------|
+  | Valid Standard          | 512,993 | 73.17% | Yes        |
+  | Valid Intersection      | 84,487  | 12.05% | Yes        |
+  | Incomplete Intersection | 51,039  | 7.28%  | No         |
+  | Generic Location        | 41,206  | 5.88%  | No         |
+  | Missing Street Type     | 11,352  | 1.62%  | No         |
+  | Missing Street Number   | 36      | 0.01%  | No         |
+  | PO Box                  | 2       | 0.00%  | No         |
+
+  Key Issues
+
+  1. Incomplete Intersections (51,039) - Pattern: "Central Avenue & , Hackensack, NJ, 07601"
+    - CAD system not capturing cross street name
+  2. Generic Locations (41,206) - Pattern: "Home & , Hackensack, NJ, 07601"
+    - Cannot be geocoded; flags HOME, PARK, etc. 3. Missing Street Type (11,352) - Pattern: "85 Midtown Bridge Approach, Hackensack"
+    - Need standardization (Approach -> Avenue?) Geocoding Readiness
+
+  Estimated Success Rate: 85.2%
+
+  - Phase 1: 597,480 addresses ready for immediate geocoding
+  - Phase 2: ~11,352 recoverable with address standardization
+  - Phase 3: 92,245 require manual review or centroid fallback
+
+  Output
+
+  Report saved to: data/02_reports/address_quality_report.md

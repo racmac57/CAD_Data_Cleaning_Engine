@@ -1,0 +1,86 @@
+{
+  "source_file": "Claude-04_Python Time Calculation Functions.md",
+  "source_path": "C:\\_chunker\\02_data\\Claude-04_Python Time Calculation Functions.md",
+  "manifest_path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\KB_Shared\\04_output\\2025_11_23_00_17_53_Claude-04_Python_Time_Calculation_Functions\\2025_11_23_00_17_53_Claude-04_Python_Time_Calculation_Functions.origin.json",
+  "created_at": "2025_11_23_00_17_53",
+  "tags": [
+    "API",
+    "ai",
+    "code",
+    "columns",
+    "data",
+    "docs",
+    "error handling",
+    "function",
+    "json",
+    "logging",
+    "markdown",
+    "police",
+    "python",
+    "sql",
+    "table",
+    "variable"
+  ],
+  "metadata": {
+    "project_name": "02_data",
+    "source_type": "documentation",
+    "language": "en",
+    "department": "admin",
+    "key_terms": [
+      "time",
+      "response",
+      "datetime",
+      "incident_time",
+      "arrival_time",
+      "spent"
+    ],
+    "enrichment_version": "1.0.0"
+  },
+  "summaries": {
+    "file_summary": "# 04_Python Time Calculation Functions\n\n**Created:** 8/29/2025 13:18:42  \n**Updated:** 8/29/2025 18:21:59  \n**Exported:** 10/17/2025 15:24:14  \n**Link:** [https://claude.ai/chat/d69691ed-0a8d-43ae-ac76-dfe9de176aa1](https://claude.ai/cha...",
+    "first_line": "# 04_Python Time Calculation Functions"
+  },
+  "chunks": [
+    {
+      "chunk_id": "2025-11-23T00:17:53+00:00_Claude-04_Python_Time_Calculation_Functions_chunk1",
+      "chunk_index": 1,
+      "file": "chunk_00000.txt",
+      "tags": [
+        "ai",
+        "api",
+        "arrival_time",
+        "code",
+        "columns",
+        "data",
+        "datetime",
+        "docs",
+        "error handling",
+        "function",
+        "incident_time",
+        "json",
+        "logging",
+        "markdown",
+        "police",
+        "python",
+        "response",
+        "spent",
+        "sql",
+        "table",
+        "time",
+        "variable"
+      ],
+      "key_terms": [
+        "time",
+        "response",
+        "datetime",
+        "incident_time",
+        "arrival_time",
+        "spent"
+      ],
+      "summary": "# 04_Python Time Calculation Functions\n\n**Created:** 8/29/2025 13:18:42  \n**Updated:** 8/29/2025 18:21:59  \n**Exported:** 10/17/2025 15:24:14  \n**Link:** [https://claude.ai/chat/d69691ed-0a8d-43ae-ac76-dfe9de176aa1](https://claude.ai/cha...",
+      "char_length": 3671,
+      "byte_length": 3803
+    }
+  ],
+  "enrichment_version": "1.0.0"
+}

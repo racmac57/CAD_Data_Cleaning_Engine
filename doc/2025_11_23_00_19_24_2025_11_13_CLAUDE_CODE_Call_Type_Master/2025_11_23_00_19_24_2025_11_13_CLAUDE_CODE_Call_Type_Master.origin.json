@@ -1,0 +1,52 @@
+{
+  "original_full_path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\02_ETL_Scripts\\CAD_Data_Cleaning_Engine\\2025_11_13_CLAUDE_CODE_Call_Type_Master.md",
+  "original_directory": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\02_ETL_Scripts\\CAD_Data_Cleaning_Engine",
+  "original_filename": "2025_11_13_CLAUDE_CODE_Call_Type_Master.md",
+  "operation": "MOVE",
+  "sent_at": "2025-11-23T05:19:14.4573005Z",
+  "size_bytes": 477182,
+  "modified_time": "2025-11-14T04:59:59.0000000Z",
+  "integrity_sha256": "a6bbedd4676d053aa1ff0872461a3f59a1d744fd2e8b9d7f1e774234dba5b3d0",
+  "created_time": "2025-11-16T00:01:15.8124644Z",
+  "tags": [
+    "ai",
+    "code",
+    "config",
+    "data",
+    "docs",
+    "error handling",
+    "excel",
+    "function",
+    "input/output",
+    "json",
+    "loop",
+    "markdown",
+    "python",
+    "regex",
+    "sql"
+  ],
+  "metadata_enrichment": {
+    "metadata": {
+      "project_name": "02_data",
+      "source_type": "documentation",
+      "language": "en",
+      "department": "admin",
+      "key_terms": [
+        "args",
+        "engine",
+        "path",
+        "xlsx_path",
+        "sheet_name",
+        "file"
+      ],
+      "enrichment_version": "1.0.0"
+    },
+    "summaries": {
+      "file_summary": "∴ Thought for 3s (ctrl+o to show thinking)\n\n· Optimizing export_sheets.py… (esc to interrupt · ctrl+t to show todos)\n  ⎿  Next: Optimize Convert_to_CSV.bat for best performance settings\n\n──────────────────────────────────────────────────...",
+      "first_line": "∴ Thought for 3s (ctrl+o to show thinking)"
+    },
+    "enrichment_version": "1.0.0"
+  },
+  "last_processed_at": "2025-11-23T00:19:24.545637",
+  "department": "admin"
+}

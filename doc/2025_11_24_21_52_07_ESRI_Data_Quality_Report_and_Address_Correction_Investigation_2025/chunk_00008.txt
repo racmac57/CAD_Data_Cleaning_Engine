@@ -1,0 +1,1001 @@
+https://aka.ms/PSWindows
+
+
+
+PS U:\> cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine>
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> git status
+
+On branch main
+
+Changes not staged for commit:
+
+  (use "git add/rm <file>..." to update what will be committed)
+
+  (use "git restore <file>..." to discard changes in working directory)
+
+        modified:   .claude/settings.local.json
+
+        modified:   README.md
+
+        modified:   config/config_enhanced.json
+
+        modified:   doc/CHANGELOG.md
+
+        deleted:    ref/2019_2025_10_Call_Types_Incidents.csv.txt
+
+        deleted:    ref/CallType_Categories_changes.csv
+
+        deleted:    ref/CallType_Categories_clean.csv
+
+        deleted:    ref/CallType_Master_Mapping.csv
+
+        deleted:    ref/call_types/CallType_Categories.csv
+
+        deleted:    ref/clean_calltypes.py
+
+        deleted:    ref/duplicates_review.csv
+
+        deleted:    ref/mapping_changes.csv
+
+        deleted:    ref/suggested_clean_edits.csv
+
+        deleted:    ref/unmapped_incidents.csv
+
+        modified:   scripts/01_validate_and_clean.py
+
+        modified:   scripts/cad_zone_merger.py
+
+
+
+Untracked files:
+
+  (use "git add <file>..." to include in what will be committed)
+
+        .claude/desktop.ini
+
+        1.24.0
+
+        1.3.0
+
+        2.0.0
+
+        2019_cad_validation_report_20251116_232846.json
+
+        2023.5.0
+
+        2025_11_13_CLAUDE_CODE_Call_Type_Master.md
+
+        3.1.0
+
+        5.14.0
+
+        5.9.0
+
+        7.4.0
+
+        99_archive/desktop.ini
+
+        IMPLEMENTATION_SUMMARY.md
+
+        PREPRODUCTION_CHECKLIST_RESULTS.md
+
+        TEST_2019_VALIDATION_REPORT.md
+
+        _ul
+
+        ce8447de-121e-4977-be34-f386cbcec5f8_ExportBlock-bc992ba2-3ef5-4013-a83b-a3303cc341fd.zip
+
+        ce8447de-121e-4977-be34-f386cbcec5f8_ExportBlock-bc992ba2-3ef5-4013-a83b-a3303cc341fd/
+
+        config/desktop.ini
+
+        data/
+
+        desktop.ini
+
+        doc/2025_11_16_CLAUDE_CODE_Priority_Fixes.md
+
+        doc/2025_11_16_CLAUDE_CODE_directory_review_summary.md
+
+        doc/2025_11_17_CLAUDE_CODE_CAD_CLEANING.MD
+
+        doc/CLAUDE_CODE_Call_Type_Mapping.md
+
+        doc/desktop.ini
+
+        ref/Unmapped_Response_Type.csv
+
+        ref/archive/
+
+        ref/call_types/2019_2025_10_Call_Types_Incidents.csv.txt
+
+        ref/call_types/CallType_Master_Mapping.csv
+
+        ref/call_types/archive/CallType_Categories_changes.csv
+
+        ref/call_types/archive/CallType_Categories_clean.csv
+
+        ref/call_types/archive/desktop.ini
+
+        ref/call_types/clean_calltypes.py
+
+        ref/call_types/desktop.ini
+
+        ref/call_types/duplicates_review.csv
+
+        ref/call_types/mapping_changes.csv
+
+        ref/call_types/response_type_update_needed.csv
+
+        ref/call_types/suggested_clean_edits.csv
+
+        ref/call_types/unmapped_incidents.csv
+
+        ref/case_number_sequences.json
+
+        ref/desktop.ini
+
+        ref/response_type_gaps.csv
+
+        requirements.txt
+
+        scripts/analyze_address_quality.py
+
+        scripts/archive/desktop.ini
+
+        scripts/audit_response_type_coverage.py
+
+        scripts/backfill_address_from_rms.py
+
+        scripts/backfill_incidents_from_rms.py
+
+        scripts/classify_burglary_ollama.py
+
+        scripts/desktop.ini
+
+        scripts/esri_production_deploy.py
+
+        scripts/final_cleanup_tro_fuzzy_rms.py
+
+        scripts/generate_case_numbers.py
+
+
+
+no changes added to commit (use "git add" and/or "git commit -a")
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine>
+
+---
+
+**Cursor**
+
+You’re in good shape; you just need to decide **what should be versioned** and then stage/commit. ### 1. Keep only code/config/docs in Git
+
+Given the repo on GitHub (`[racmac57/CAD_Data_Cleaning_Engine](https://github.com/racmac57/CAD_Data_Cleaning_Engine)`) currently tracks code, config, refs, and docs (but not exports/zips/validation JSONs), I’d recommend:
+
+- **Include**: `scripts/`, `config/`, `ref/`, `doc/`, `README.md`, `IMPLEMENTATION_SUMMARY.md`, `requirements.txt`. - **Exclude**: `data/`, `*.xlsx`, `*.zip`, `*_validation_report_*.json`, `desktop.ini`, `_ul`, numeric version dirs (`1.24.0`, `2.0.0`, etc.). If `.claude/settings.local.json` is just local editor config and not something you want in Git, restore it:
+
+```powershell
+git restore .claude/settings.local.json
+```
+
+### 2. Stage the intended changes
+
+From `CAD_Data_Cleaning_Engine`:
+
+```powershell
+# Core code + config
+git add README.md IMPLEMENTATION_SUMMARY.md doc/CHANGELOG.md
+git add config/config_enhanced.json
+git add scripts/01_validate_and_clean.py scripts/cad_zone_merger.py
+git add scripts/*.py
+
+# Reference + metadata (moved call-type files, new gaps/sequence files, etc.) git add ref/ ref/call_types/
+git add doc/*.md
+
+# Dependencies
+git add requirements.txt
+```
+
+Check what’s staged:
+
+```powershell
+git status
+```
+
+If you still see `data/`, zips, or other big artifacts in **Untracked files**, leave them un-added (they won’t be committed). ### 3. Commit and push
+
+```powershell
+git commit -m "Add rule-based FullAddress2 corrections and update documentation"
+git push origin main
+```
+
+After that, refresh `https://github.com/racmac57/CAD_Data_Cleaning_Engine` and you should see the updated `README.md`, `IMPLEMENTATION_SUMMARY.md`, `doc/CHANGELOG.md`, and the new/changed scripts and ref files. ```powershell
+git restore .claude/settings.local.json
+```
+
+```powershell
+# Core code + config
+git add README.md IMPLEMENTATION_SUMMARY.md doc/CHANGELOG.md
+git add config/config_enhanced.json
+git add scripts/01_validate_and_clean.py scripts/cad_zone_merger.py
+git add scripts/*.py
+
+# Reference + metadata (moved call-type files, new gaps/sequence files, etc.) git add ref/ ref/call_types/
+git add doc/*.md
+
+# Dependencies
+git add requirements.txt
+```
+
+```powershell
+git status
+```
+
+```powershell
+git commit -m "Add rule-based FullAddress2 corrections and update documentation"
+git push origin main
+```
+
+---
+
+**User**
+
+Proceed Logically for me please
+
+what's the status? ---
+
+**Cursor**
+
+### Current status
+
+- **Code & docs**:  
+  - `scripts/01_validate_and_clean.py` is updated with the `FullAddress2` correction layer. - `README.md`, `IMPLEMENTATION_SUMMARY.md`, and `doc/CHANGELOG.md` are updated to describe it. - **Git**:  
+  - All of these changes are **still unstaged**; no new commit has been made. - You also have a lot of **untracked files** (reports, data, archives, etc.) and some **deleted old ref files** that have been replaced by the new `ref/call_types` layout. ### Next steps (run these in order)
+
+From `C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine`:
+
+1. **Optionally undo local-only editor config change** (so it doesn’t get committed):
+   ```powershell
+   git restore .claude/settings.local.json
+   ```
+
+2. **Stage just the intentional code/config/doc changes**:
+
+   ```powershell
+   # Core docs describing the new feature
+   git add README.md IMPLEMENTATION_SUMMARY.md doc/CHANGELOG.md
+
+   # Validator and related scripts
+   git add scripts/01_validate_and_clean.py scripts/cad_zone_merger.py
+   git add scripts/audit_response_type_coverage.py
+   git add scripts/generate_case_numbers.py
+   git add scripts/backfill_incidents_from_rms.py
+   git add scripts/classify_burglary_ollama.py
+   git add scripts/esri_production_deploy.py
+   git add scripts/backfill_address_from_rms.py
+   git add scripts/analyze_address_quality.py
+   git add scripts/final_cleanup_tro_fuzzy_rms.py
+
+   # Config and reference/mapping files
+   git add config/config_enhanced.json
+   git add ref/Unmapped_Response_Type.csv
+   git add ref/response_type_gaps.csv
+   git add ref/case_number_sequences.json
+   git add ref/call_types/
+   git add ref/archive/
+   ```
+
+   Then check what’s staged:
+
+   ```powershell
+   git status
+   ```
+
+   - At this point, all the **code + config + mapping** changes should be in “Changes to be committed”. - Large folders like `data/`, exports, `.zip`, `desktop.ini`, etc. should remain **untracked** (not added). 3. **Commit the staged changes**:
+
+   ```powershell
+   git commit -m "Add rule-based FullAddress2 corrections and update documentation"
+   ```
+
+4. **Push to GitHub**:
+
+   ```powershell
+   git push origin main
+   ```
+
+5. **Verify** on GitHub:  
+   - Go to `[https://github.com/racmac57/CAD_Data_Cleaning_Engine](https://github.com/racmac57/CAD_Data_Cleaning_Engine)` and confirm:
+     - `README.md` shows the **2025-11-21** update bullet about `FullAddress2` corrections. - `IMPLEMENTATION_SUMMARY.md` mentions the new correction layer in the Overview. - `doc/CHANGELOG.md` has the new **2025-11-21** entry. - `scripts/01_validate_and_clean.py` includes `_load_fulladdress2_corrections` and `_apply_fulladdress2_corrections`. ```powershell
+   git restore .claude/settings.local.json
+```
+
+```powershell
+   # Core docs describing the new feature
+   git add README.md IMPLEMENTATION_SUMMARY.md doc/CHANGELOG.md
+
+   # Validator and related scripts
+   git add scripts/01_validate_and_clean.py scripts/cad_zone_merger.py
+   git add scripts/audit_response_type_coverage.py
+   git add scripts/generate_case_numbers.py
+   git add scripts/backfill_incidents_from_rms.py
+   git add scripts/classify_burglary_ollama.py
+   git add scripts/esri_production_deploy.py
+   git add scripts/backfill_address_from_rms.py
+   git add scripts/analyze_address_quality.py
+   git add scripts/final_cleanup_tro_fuzzy_rms.py
+
+   # Config and reference/mapping files
+   git add config/config_enhanced.json
+   git add ref/Unmapped_Response_Type.csv
+   git add ref/response_type_gaps.csv
+   git add ref/case_number_sequences.json
+   git add ref/call_types/
+   git add ref/archive/
+```
+
+```powershell
+   git status
+```
+
+```powershell
+   git commit -m "Add rule-based FullAddress2 corrections and update documentation"
+```
+
+```powershell
+   git push origin main
+```
+
+---
+
+**User**
+
+proceed the next steps
+
+---
+
+**Cursor**
+
+Here are the exact next steps to run in PowerShell, in order. ### 1. (Recommended) Drop local-only Claude settings change
+
+```powershell
+cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+git restore .claude/settings.local.json
+```
+
+### 2. Stage the intentional code / config / doc changes
+
+Run these:
+
+```powershell
+# Docs describing the new behavior
+git add README.md IMPLEMENTATION_SUMMARY.md doc/CHANGELOG.md
+
+# Core validator + zone merger
+git add scripts/01_validate_and_clean.py scripts/cad_zone_merger.py
+
+# New/updated helper scripts (from the recent implementation work)
+git add scripts/audit_response_type_coverage.py
+git add scripts/generate_case_numbers.py
+git add scripts/backfill_incidents_from_rms.py
+git add scripts/classify_burglary_ollama.py
+git add scripts/esri_production_deploy.py
+git add scripts/backfill_address_from_rms.py
+git add scripts/analyze_address_quality.py
+git add scripts/final_cleanup_tro_fuzzy_rms.py
+
+# Config
+git add config/config_enhanced.json
+
+# Reference and mapping artifacts (new layout + metadata files)
+git add ref/Unmapped_Response_Type.csv
+git add ref/response_type_gaps.csv
+git add ref/case_number_sequences.json
+git add ref/call_types/
+git add ref/archive/
+```
+
+Now confirm what’s staged:
+
+```powershell
+git status
+```
+
+You should see these files under “Changes to be committed”; `data/`, `*.zip`, `desktop.ini`, etc. should still be untracked. ### 3. Commit
+
+```powershell
+git commit -m "Add rule-based FullAddress2 corrections and update documentation"
+```
+
+### 4. Push to GitHub
+
+```powershell
+git push origin main
+```
+
+After this finishes, your new `FullAddress2` correction layer and the updated README / summary / changelog will be live on `https://github.com/racmac57/CAD_Data_Cleaning_Engine`. ```powershell
+cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+git restore .claude/settings.local.json
+```
+
+```powershell
+# Docs describing the new behavior
+git add README.md IMPLEMENTATION_SUMMARY.md doc/CHANGELOG.md
+
+# Core validator + zone merger
+git add scripts/01_validate_and_clean.py scripts/cad_zone_merger.py
+
+# New/updated helper scripts (from the recent implementation work)
+git add scripts/audit_response_type_coverage.py
+git add scripts/generate_case_numbers.py
+git add scripts/backfill_incidents_from_rms.py
+git add scripts/classify_burglary_ollama.py
+git add scripts/esri_production_deploy.py
+git add scripts/backfill_address_from_rms.py
+git add scripts/analyze_address_quality.py
+git add scripts/final_cleanup_tro_fuzzy_rms.py
+
+# Config
+git add config/config_enhanced.json
+
+# Reference and mapping artifacts (new layout + metadata files)
+git add ref/Unmapped_Response_Type.csv
+git add ref/response_type_gaps.csv
+git add ref/case_number_sequences.json
+git add ref/call_types/
+git add ref/archive/
+```
+
+```powershell
+git status
+```
+
+```powershell
+git commit -m "Add rule-based FullAddress2 corrections and update documentation"
+```
+
+```powershell
+git push origin main
+```
+
+---
+
+**User**
+
+Windows PowerShell
+
+Copyright (C) Microsoft Corporation. All rights reserved. Install the latest PowerShell for new features and improvements! https://aka.ms/PSWindows
+
+
+
+PS U:\> cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine>
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> git status
+
+On branch main
+
+Changes not staged for commit:
+
+  (use "git add/rm <file>..." to update what will be committed)
+
+  (use "git restore <file>..." to discard changes in working directory)
+
+        modified:   .claude/settings.local.json
+
+        modified:   README.md
+
+        modified:   config/config_enhanced.json
+
+        modified:   doc/CHANGELOG.md
+
+        deleted:    ref/2019_2025_10_Call_Types_Incidents.csv.txt
+
+        deleted:    ref/CallType_Categories_changes.csv
+
+        deleted:    ref/CallType_Categories_clean.csv
+
+        deleted:    ref/CallType_Master_Mapping.csv
+
+        deleted:    ref/call_types/CallType_Categories.csv
+
+        deleted:    ref/clean_calltypes.py
+
+        deleted:    ref/duplicates_review.csv
+
+        deleted:    ref/mapping_changes.csv
+
+        deleted:    ref/suggested_clean_edits.csv
+
+        deleted:    ref/unmapped_incidents.csv
+
+        modified:   scripts/01_validate_and_clean.py
+
+        modified:   scripts/cad_zone_merger.py
+
+
+
+Untracked files:
+
+  (use "git add <file>..." to include in what will be committed)
+
+        .claude/desktop.ini
+
+        1.24.0
+
+        1.3.0
+
+        2.0.0
+
+        2019_cad_validation_report_20251116_232846.json
+
+        2023.5.0
+
+        2025_11_13_CLAUDE_CODE_Call_Type_Master.md
+
+        3.1.0
+
+        5.14.0
+
+        5.9.0
+
+        7.4.0
+
+        99_archive/desktop.ini
+
+        IMPLEMENTATION_SUMMARY.md
+
+        PREPRODUCTION_CHECKLIST_RESULTS.md
+
+        TEST_2019_VALIDATION_REPORT.md
+
+        _ul
+
+        ce8447de-121e-4977-be34-f386cbcec5f8_ExportBlock-bc992ba2-3ef5-4013-a83b-a3303cc341fd.zip
+
+        ce8447de-121e-4977-be34-f386cbcec5f8_ExportBlock-bc992ba2-3ef5-4013-a83b-a3303cc341fd/
+
+        config/desktop.ini
+
+        data/
+
+        desktop.ini
+
+        doc/2025_11_16_CLAUDE_CODE_Priority_Fixes.md
+
+        doc/2025_11_16_CLAUDE_CODE_directory_review_summary.md
+
+        doc/2025_11_17_CLAUDE_CODE_CAD_CLEANING.MD
+
+        doc/CLAUDE_CODE_Call_Type_Mapping.md
+
+        doc/desktop.ini
+
+        ref/Unmapped_Response_Type.csv
+
+        ref/archive/
+
+        ref/call_types/2019_2025_10_Call_Types_Incidents.csv.txt
+
+        ref/call_types/CallType_Master_Mapping.csv
+
+        ref/call_types/archive/CallType_Categories_changes.csv
+
+        ref/call_types/archive/CallType_Categories_clean.csv
+
+        ref/call_types/archive/desktop.ini
+
+        ref/call_types/clean_calltypes.py
+
+        ref/call_types/desktop.ini
+
+        ref/call_types/duplicates_review.csv
+
+        ref/call_types/mapping_changes.csv
+
+        ref/call_types/response_type_update_needed.csv
+
+        ref/call_types/suggested_clean_edits.csv
+
+        ref/call_types/unmapped_incidents.csv
+
+        ref/case_number_sequences.json
+
+        ref/desktop.ini
+
+        ref/response_type_gaps.csv
+
+        requirements.txt
+
+        scripts/analyze_address_quality.py
+
+        scripts/archive/desktop.ini
+
+        scripts/audit_response_type_coverage.py
+
+        scripts/backfill_address_from_rms.py
+
+        scripts/backfill_incidents_from_rms.py
+
+        scripts/classify_burglary_ollama.py
+
+        scripts/desktop.ini
+
+        scripts/esri_production_deploy.py
+
+        scripts/final_cleanup_tro_fuzzy_rms.py
+
+        scripts/generate_case_numbers.py
+
+
+
+no changes added to commit (use "git add" and/or "git commit -a")
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine>    git restore .claude/settings.local.json
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine>
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> git restore .claude/settings.local.json
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> # Docs describing the new behavior
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> git add README.md IMPLEMENTATION_SUMMARY.md doc/CHANGELOG.md
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine>
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> # Core validator + zone merger
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> git add scripts/01_validate_and_clean.py scripts/cad_zone_merger.py
+
+warning: in the working copy of 'scripts/01_validate_and_clean.py', LF will be replaced by CRLF the next time Git touches it
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine>
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> # New/updated helper scripts (from the recent implementation work)
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> git add scripts/audit_response_type_coverage.py
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> git add scripts/generate_case_numbers.py
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> git add scripts/backfill_incidents_from_rms.py
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> git add scripts/classify_burglary_ollama.py
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> git add scripts/esri_production_deploy.py
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> git add scripts/backfill_address_from_rms.py
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> git add scripts/analyze_address_quality.py
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> git add scripts/final_cleanup_tro_fuzzy_rms.py
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine>
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> # Config
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> git add config/config_enhanced.json
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine>
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> # Reference and mapping artifacts (new layout + metadata files)
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> git add ref/Unmapped_Response_Type.csv
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> git add ref/response_type_gaps.csv
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> git add ref/case_number_sequences.json
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> git add ref/call_types/
+
+warning: in the working copy of 'ref/call_types/2019_2025_10_Call_Types_Incidents.csv.txt', LF will be replaced by CRLF the next time Git touches it
+
+warning: in the working copy of 'ref/call_types/response_type_update_needed.csv', LF will be replaced by CRLF the next time Git touches it
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> git add ref/archive/
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> git status
+
+On branch main
+
+Changes to be committed:
+
+  (use "git restore --staged <file>..." to unstage)
+
+        new file:   IMPLEMENTATION_SUMMARY.md
+
+        modified:   README.md
+
+        modified:   config/config_enhanced.json
+
+        modified:   doc/CHANGELOG.md
+
+        new file:   ref/Unmapped_Response_Type.csv
+
+        new file:   ref/archive/desktop.ini
+
+        new file:   ref/call_types/2019_2025_10_Call_Types_Incidents.csv.txt
+
+        new file:   ref/call_types/CallType_Master_Mapping.csv
+
+        new file:   ref/call_types/archive/CallType_Categories_changes.csv
+
+        renamed:    ref/call_types/CallType_Categories.csv -> ref/call_types/archive/CallType_Categories_clean.csv
+
+        new file:   ref/call_types/archive/desktop.ini
+
+        new file:   ref/call_types/clean_calltypes.py
+
+        new file:   ref/call_types/desktop.ini
+
+        new file:   ref/call_types/duplicates_review.csv
+
+        new file:   ref/call_types/mapping_changes.csv
+
+        new file:   ref/call_types/response_type_update_needed.csv
+
+        new file:   ref/call_types/suggested_clean_edits.csv
+
+        new file:   ref/call_types/unmapped_incidents.csv
+
+        new file:   ref/case_number_sequences.json
+
+        new file:   ref/response_type_gaps.csv
+
+        modified:   scripts/01_validate_and_clean.py
+
+        new file:   scripts/analyze_address_quality.py
+
+        new file:   scripts/audit_response_type_coverage.py
+
+        new file:   scripts/backfill_address_from_rms.py
+
+        new file:   scripts/backfill_incidents_from_rms.py
+
+        modified:   scripts/cad_zone_merger.py
+
+        new file:   scripts/classify_burglary_ollama.py
+
+        new file:   scripts/esri_production_deploy.py
+
+        new file:   scripts/final_cleanup_tro_fuzzy_rms.py
+
+        new file:   scripts/generate_case_numbers.py
+
+
+
+Changes not staged for commit:
+
+  (use "git add/rm <file>..." to update what will be committed)
+
+  (use "git restore <file>..." to discard changes in working directory)
+
+        deleted:    ref/2019_2025_10_Call_Types_Incidents.csv.txt
+
+        deleted:    ref/CallType_Categories_changes.csv
+
+        deleted:    ref/CallType_Categories_clean.csv
+
+        deleted:    ref/CallType_Master_Mapping.csv
+
+        deleted:    ref/clean_calltypes.py
+
+        deleted:    ref/duplicates_review.csv
+
+        deleted:    ref/mapping_changes.csv
+
+        deleted:    ref/suggested_clean_edits.csv
+
+        deleted:    ref/unmapped_incidents.csv
+
+
+
+Untracked files:
+
+  (use "git add <file>..." to include in what will be committed)
+
+        .claude/desktop.ini
+
+        1.24.0
+
+        1.3.0
+
+        2.0.0
+
+        2019_cad_validation_report_20251116_232846.json
+
+        2023.5.0
+
+        2025_11_13_CLAUDE_CODE_Call_Type_Master.md
+
+        3.1.0
+
+        5.14.0
+
+        5.9.0
+
+        7.4.0
+
+        99_archive/desktop.ini
+
+        PREPRODUCTION_CHECKLIST_RESULTS.md
+
+        TEST_2019_VALIDATION_REPORT.md
+
+        _ul
+
+        ce8447de-121e-4977-be34-f386cbcec5f8_ExportBlock-bc992ba2-3ef5-4013-a83b-a3303cc341fd.zip
+
+        ce8447de-121e-4977-be34-f386cbcec5f8_ExportBlock-bc992ba2-3ef5-4013-a83b-a3303cc341fd/
+
+        config/desktop.ini
+
+        data/
+
+        desktop.ini
+
+        doc/2025_11_16_CLAUDE_CODE_Priority_Fixes.md
+
+        doc/2025_11_16_CLAUDE_CODE_directory_review_summary.md
+
+        doc/2025_11_17_CLAUDE_CODE_CAD_CLEANING.MD
+
+        doc/CLAUDE_CODE_Call_Type_Mapping.md
+
+        doc/desktop.ini
+
+        ref/desktop.ini
+
+        requirements.txt
+
+        scripts/archive/desktop.ini
+
+        scripts/desktop.ini
+
+
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> git commit -m "Add rule-based FullAddress2 corrections and update documentation"
+
+[main 658f4ae] Add rule-based FullAddress2 corrections and update documentation
+
+ 30 files changed, 7163 insertions(+), 82 deletions(-)
+
+ create mode 100644 IMPLEMENTATION_SUMMARY.md
+
+ create mode 100644 ref/Unmapped_Response_Type.csv
+
+ create mode 100644 ref/archive/desktop.ini
+
+ create mode 100644 ref/call_types/2019_2025_10_Call_Types_Incidents.csv.txt
+
+ create mode 100644 ref/call_types/CallType_Master_Mapping.csv
+
+ create mode 100644 ref/call_types/archive/CallType_Categories_changes.csv
+
+ rename ref/call_types/{CallType_Categories.csv => archive/CallType_Categories_clean.csv} (97%)
+
+ create mode 100644 ref/call_types/archive/desktop.ini
+
+ create mode 100644 ref/call_types/clean_calltypes.py
+
+ create mode 100644 ref/call_types/desktop.ini
+
+ create mode 100644 ref/call_types/duplicates_review.csv
+
+ create mode 100644 ref/call_types/mapping_changes.csv
+
+ create mode 100644 ref/call_types/response_type_update_needed.csv
+
+ create mode 100644 ref/call_types/suggested_clean_edits.csv
+
+ create mode 100644 ref/call_types/unmapped_incidents.csv
+
+ create mode 100644 ref/case_number_sequences.json
+
+ create mode 100644 ref/response_type_gaps.csv
+
+ create mode 100644 scripts/analyze_address_quality.py
+
+ create mode 100644 scripts/audit_response_type_coverage.py
+
+ create mode 100644 scripts/backfill_address_from_rms.py
+
+ create mode 100644 scripts/backfill_incidents_from_rms.py
+
+ create mode 100644 scripts/classify_burglary_ollama.py
+
+ create mode 100644 scripts/esri_production_deploy.py
+
+ create mode 100644 scripts/final_cleanup_tro_fuzzy_rms.py
+
+ create mode 100644 scripts/generate_case_numbers.py
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine> git push origin main
+
+Enumerating objects: 41, done. Counting objects: 100% (41/41), done. Delta compression using up to 32 threads
+
+Compressing objects: 100% (26/26), done. Writing objects: 100% (29/29), 68.42 KiB | 3.11 MiB/s, done. Total 29 (delta 7), reused 0 (delta 0), pack-reused 0 (from 0)
+
+remote: Resolving deltas: 100% (7/7), completed with 7 local objects. To https://github.com/racmac57/CAD_Data_Cleaning_Engine.git
+
+   2c13ee5..658f4ae  main -> main
+
+PS C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine>
+
+---
+
+**Cursor**
+
+### Status
+
+- **Commit & push succeeded. **  
+  - New commit: `Add rule-based FullAddress2 corrections and update documentation`  
+  - Branch `main` pushed to GitHub: [`racmac57/CAD_Data_Cleaning_Engine`](https://github.com/racmac57/CAD_Data_Cleaning_Engine). - **What’s now in the repo:**
+  - Updated `README.md`, `IMPLEMENTATION_SUMMARY.md`, and `doc/CHANGELOG.md` describing the **rule-based `FullAddress2` correction layer**. - Updated `scripts/01_validate_and_clean.py` and `scripts/cad_zone_merger.py`. - New helper scripts and reference artifacts under `scripts/` and `ref/` (call-type master, response type gaps, case number sequences, etc.). ### Optional next small cleanups
+
+If/when you’re ready:
+
+- **Ignore data/outputs locally** by adding to `.gitignore` (if not already present), e.g. :
+  - `data/`, `*.zip`, `*_validation_report_*.json`, `desktop.ini`, `_ul`, numeric version dirs (`1.24.0`, `2.0.0`, etc.). - Verify on GitHub that:
+  - `README.md` shows the **2025-11-21** FullAddress2 update. - `doc/CHANGELOG.md` has the new **2025-11-21** entry. - `scripts/01_validate_and_clean.py` contains `_load_fulladdress2_corrections` and `_apply_fulladdress2_corrections`. ---
+
+**User**
+
+what is the command to Ignore data/outputs locally by adding to .gitignore (if not already present), e.g. :
+
+data/, *.zip, *_validation_report_*.json, desktop.ini, _ul, numeric version dirs (1.24.0, 2.0.0, etc.). Verify on GitHub that:
+
+README.md shows the 2025-11-21 FullAddress2 update. doc/CHANGELOG.md has the new 2025-11-21 entry. scripts/01_validate_and_clean.py contains _load_fulladdress2_corrections and _apply_fulladdress2_corrections. ---
+
+**Cursor**
+
+### 1. Add ignores to `.gitignore`
+
+From your repo root in PowerShell:
+
+```powershell
+# Append ignore rules to .gitignore
+@"
+data/
+*_validation_report_*.json
+*.zip
+desktop.ini
+_ul/
+1.24.0/
+1.3.0/
+2.0.0/
+3.1.0/
+5.9.0/
+5.14.0/
+7.4.0/
+"@ | Out-File -FilePath .gitignore -Append -Encoding utf8
+```
+
+Then stage and commit the updated `.gitignore`:
+
+```powershell
+git add .gitignore
+git commit -m "Ignore data and local output artifacts"
+git push origin main
+```
+
+You can confirm the ignores worked with:
+
+```powershell
+git status
+```
+
+— `data/`, zips, validation JSONs, those versioned folders, etc. should disappear from “Untracked files”. ### 2. Verify on GitHub
+
+In your browser, go to `https://github.com/racmac57/CAD_Data_Cleaning_Engine`:
+
+- Open `README.md`:
+  - Confirm the “Recent Updates” section is **2025-11-21** and mentions the **rule-based `FullAddress2` corrections**. - Open `doc/CHANGELOG.md`:
+  - Confirm there is a **`[2025-11-21] - FullAddress2 Manual Corrections Integration`** entry at the top.

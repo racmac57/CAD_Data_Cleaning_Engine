@@ -1,0 +1,77 @@
+{
+  "source_file": "CAD_VALIDATION_QUICK_REFERENCE.md",
+  "source_path": "C:\\_chunker\\02_data\\CAD_VALIDATION_QUICK_REFERENCE.md",
+  "manifest_path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\KB_Shared\\04_output\\2025_11_23_00_17_52_CAD_VALIDATION_QUICK_REFERENCE\\2025_11_23_00_17_52_CAD_VALIDATION_QUICK_REFERENCE.origin.json",
+  "created_at": "2025_11_23_00_17_52",
+  "tags": [
+    "API",
+    "columns",
+    "csv",
+    "data",
+    "docs",
+    "input/output",
+    "logging",
+    "markdown",
+    "police",
+    "python",
+    "steps",
+    "workflow"
+  ],
+  "metadata": {
+    "project_name": "02_data",
+    "source_type": "documentation",
+    "language": "en",
+    "department": "admin",
+    "key_terms": [
+      "test",
+      "csv",
+      "revert",
+      "file",
+      "changes",
+      "cadnotes"
+    ],
+    "enrichment_version": "1.0.0"
+  },
+  "summaries": {
+    "file_summary": "# CAD Validation & Revert - Quick Reference\n\n**Last Updated:** 2025-11-22\n\n---\n\n## 🚀 Quick Commands\n\n### Run Complete Workflow (All 3 Steps)\n```bash\npython scripts/run_cad_validation_workflow.py\n```\n\n### Run Individual Steps\n\n**Step 1 &...",
+    "first_line": "# CAD Validation & Revert - Quick Reference"
+  },
+  "chunks": [
+    {
+      "chunk_id": "2025-11-23T00:17:52+00:00_CAD_VALIDATION_QUICK_REFERENCE_chunk1",
+      "chunk_index": 1,
+      "file": "chunk_00000.txt",
+      "tags": [
+        "api",
+        "cadnotes",
+        "changes",
+        "columns",
+        "csv",
+        "data",
+        "docs",
+        "file",
+        "input/output",
+        "logging",
+        "markdown",
+        "police",
+        "python",
+        "revert",
+        "steps",
+        "test",
+        "workflow"
+      ],
+      "key_terms": [
+        "test",
+        "csv",
+        "revert",
+        "file",
+        "changes",
+        "cadnotes"
+      ],
+      "summary": "# CAD Validation & Revert - Quick Reference\n\n**Last Updated:** 2025-11-22\n\n---\n\n## 🚀 Quick Commands\n\n### Run Complete Workflow (All 3 Steps)\n```bash\npython scripts/run_cad_validation_workflow.py\n```\n\n### Run Individual Steps\n\n**Step 1 &...",
+      "char_length": 2969,
+      "byte_length": 3172
+    }
+  ],
+  "enrichment_version": "1.0.0"
+}

@@ -1,0 +1,53 @@
+{
+  "original_full_path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\02_ETL_Scripts\\CAD_Data_Cleaning_Engine\\doc\\Claude-03_Crime Data Analysis Automation - Copy.md",
+  "original_directory": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\02_ETL_Scripts\\CAD_Data_Cleaning_Engine\\doc",
+  "original_filename": "Claude-03_Crime Data Analysis Automation - Copy.md",
+  "operation": "MOVE",
+  "sent_at": "2025-11-23T05:09:54.2661024Z",
+  "size_bytes": 167234,
+  "modified_time": "2025-10-17T19:24:09.0000000Z",
+  "integrity_sha256": "5e7c77e5a23e6551c0f138b6baf73ae9e9baba2e58d4f845627522e47072df50",
+  "created_time": "2025-11-23T05:09:38.0056702Z",
+  "tags": [
+    "API",
+    "ai",
+    "code",
+    "config",
+    "data",
+    "docs",
+    "function",
+    "input/output",
+    "json",
+    "loop",
+    "markdown",
+    "police",
+    "python",
+    "regex",
+    "sql",
+    "training"
+  ],
+  "metadata_enrichment": {
+    "metadata": {
+      "project_name": "02_data",
+      "source_type": "documentation",
+      "language": "en",
+      "department": "admin",
+      "key_terms": [
+        "data",
+        "return",
+        "strong",
+        "incident",
+        "get",
+        "narrative"
+      ],
+      "enrichment_version": "1.0.0"
+    },
+    "summaries": {
+      "file_summary": "# 03_Crime Data Analysis Automation\n\n**Created:** 8/25/2025 11:28:24  \n**Updated:** 8/29/2025 18:21:35  \n**Exported:** 10/17/2025 15:24:07  \n**Link:** [https://claude.ai/chat/4b0fad7f-107c-4b28-a7e4-1bac5c9722ae](https://claude.ai/chat/4...",
+      "first_line": "# 03_Crime Data Analysis Automation"
+    },
+    "enrichment_version": "1.0.0"
+  },
+  "last_processed_at": "2025-11-23T00:10:01.547644",
+  "department": "admin"
+}

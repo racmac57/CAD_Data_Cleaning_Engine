@@ -1,0 +1,49 @@
+{
+  "original_full_path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\02_ETL_Scripts\\CAD_Data_Cleaning_Engine\\doc\\CAD_VALIDATION_QUICK_REFERENCE.md",
+  "original_directory": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\02_ETL_Scripts\\CAD_Data_Cleaning_Engine\\doc",
+  "original_filename": "CAD_VALIDATION_QUICK_REFERENCE.md",
+  "operation": "MOVE",
+  "sent_at": "2025-11-23T05:17:48.8807983Z",
+  "size_bytes": 3173,
+  "modified_time": "2025-11-22T07:43:36.9159317Z",
+  "integrity_sha256": "f31532681eb65312132a99d5dc40880a87cc746928834138559d3c3e6e47534e",
+  "created_time": "2025-11-22T07:43:36.9159317Z",
+  "tags": [
+    "API",
+    "columns",
+    "csv",
+    "data",
+    "docs",
+    "input/output",
+    "logging",
+    "markdown",
+    "police",
+    "python",
+    "steps",
+    "workflow"
+  ],
+  "metadata_enrichment": {
+    "metadata": {
+      "project_name": "02_data",
+      "source_type": "documentation",
+      "language": "en",
+      "department": "admin",
+      "key_terms": [
+        "test",
+        "csv",
+        "revert",
+        "file",
+        "changes",
+        "cadnotes"
+      ],
+      "enrichment_version": "1.0.0"
+    },
+    "summaries": {
+      "file_summary": "# CAD Validation & Revert - Quick Reference\n\n**Last Updated:** 2025-11-22\n\n---\n\n## 🚀 Quick Commands\n\n### Run Complete Workflow (All 3 Steps)\n```bash\npython scripts/run_cad_validation_workflow.py\n```\n\n### Run Individual Steps\n\n**Step 1 &...",
+      "first_line": "# CAD Validation & Revert - Quick Reference"
+    },
+    "enrichment_version": "1.0.0"
+  },
+  "last_processed_at": "2025-11-23T00:17:52.618184",
+  "department": "admin"
+}

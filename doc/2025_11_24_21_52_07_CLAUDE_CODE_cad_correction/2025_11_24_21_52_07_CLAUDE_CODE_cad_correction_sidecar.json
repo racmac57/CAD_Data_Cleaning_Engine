@@ -1,0 +1,133 @@
+{
+  "source_file": "CLAUDE_CODE_cad_correction.md",
+  "source_path": "C:\\_chunker\\02_data\\CLAUDE_CODE_cad_correction.md",
+  "manifest_path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\KB_Shared\\04_output\\2025_11_24_21_52_07_CLAUDE_CODE_cad_correction\\2025_11_24_21_52_07_CLAUDE_CODE_cad_correction.origin.json",
+  "created_at": "2025_11_24_21_52_07",
+  "tags": [
+    "API",
+    "ai",
+    "code",
+    "config",
+    "data",
+    "docs",
+    "error handling",
+    "excel",
+    "function",
+    "input/output",
+    "it-ops",
+    "json",
+    "legal",
+    "markdown",
+    "police",
+    "python",
+    "sql",
+    "training",
+    "variable"
+  ],
+  "metadata": {
+    "project_name": "02_data",
+    "source_type": "documentation",
+    "language": "en",
+    "department": "admin",
+    "key_terms": [
+      "data",
+      "lines",
+      "config",
+      "framework",
+      "file",
+      "correction"
+    ],
+    "enrichment_version": "1.0.0"
+  },
+  "summaries": {
+    "file_summary": "▐▛███▜▌   Claude Code v2.0.50\n▝▜█████▛▘  Sonnet 4.5 · Claude Pro\n  ▘▘ ▝▝    ~\\OneDrive - City of Hackensack\\02_ETL_Scripts\\CAD_Data_Cleaning_Engine\n\n> ## 🧠 Prompt Goal:\n\n> Claude, your task is to **build a fully modular and fault-toleran...",
+    "first_line": "▐▛███▜▌   Claude Code v2.0.50"
+  },
+  "chunks": [
+    {
+      "chunk_id": "2025-11-24T21:52:07+00:00_CLAUDE_CODE_cad_correction_chunk1",
+      "chunk_index": 1,
+      "file": "chunk_00000.txt",
+      "tags": [
+        "ai",
+        "api",
+        "code",
+        "config",
+        "correction",
+        "data",
+        "docs",
+        "error handling",
+        "excel",
+        "file",
+        "framework",
+        "function",
+        "input/output",
+        "it-ops",
+        "json",
+        "legal",
+        "markdown",
+        "police",
+        "python",
+        "sql",
+        "training",
+        "variable",
+        "workflow"
+      ],
+      "key_terms": [
+        "data",
+        "config",
+        "correction",
+        "cad",
+        "framework",
+        "file"
+      ],
+      "summary": "▐▛███▜▌   Claude Code v2.0.50\n▝▜█████▛▘  Sonnet 4.5 · Claude Pro\n  ▘▘ ▝▝    ~\\OneDrive - City of Hackensack\\02_ETL_Scripts\\CAD_Data_Cleaning_Engine\n\n> ## 🧠 Prompt Goal:\n\n> Claude, your task is to **build a fully modular and fault-toleran...",
+      "char_length": 26980,
+      "byte_length": 29381
+    },
+    {
+      "chunk_id": "2025-11-24T21:52:07+00:00_CLAUDE_CODE_cad_correction_chunk2",
+      "chunk_index": 2,
+      "file": "chunk_00001.txt",
+      "tags": [
+        "ai",
+        "api",
+        "code",
+        "complete",
+        "config",
+        "data",
+        "docs",
+        "error handling",
+        "excel",
+        "files",
+        "framework",
+        "function",
+        "input/output",
+        "it-ops",
+        "json",
+        "legal",
+        "lines",
+        "markdown",
+        "police",
+        "prompt",
+        "python",
+        "sql",
+        "training",
+        "variable",
+        "workflow"
+      ],
+      "key_terms": [
+        "prompt",
+        "lines",
+        "framework",
+        "files",
+        "complete",
+        "python"
+      ],
+      "summary": "Here's what you have:\n\n  ---\n  📦 What Was Built (18 Files, 3,500+ Lines)\n\n  7 Core Modules (2,650 lines)\n\n  ✅ processors/cad_data_processor.py      (550 lines) - Main orchestrator\n  ✅ validators/validation_harness.py      (400 lines) - P...",
+      "char_length": 16985,
+      "byte_length": 18782
+    }
+  ],
+  "enrichment_version": "1.0.0"
+}

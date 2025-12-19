@@ -1,0 +1,818 @@
+Skip to content
+Chat history
+
+You said:
+Please add the following to the below prompt provided by Claude 
+
+To add: Integrate CADDataProcessor class for end-to-end processing; add methods for address backfill, manual review workflow, hour extraction, call-type mapping, and extended reporting. Include duplicate detection in quality scoring. Claude Code Prompt:
+
+# FINAL ENHANCED Claude Code Prompt (Incorporating Cursor AI Review)
+
+markdown
+# CAD Address Correction & Geocoding - Emergency Data Integrity Recovery
+
+## 🚨 CRITICAL SITUATION SUMMARY
+
+**Data Integrity Crisis Identified**:
+- Production file: 955,759 records (expected: 728,593) = **227,166 duplicates**
+- Address corrections: Only **53% applied** (896/1,688)
+- Root cause: Merge operation creating **Cartesian product**
+- Secondary issue: **Hour field fix may be duplicating rows**
+- Wrong file updated: Timestamped backup instead of production file
+
+**Repository**: https://github.com/racmac57/CAD_Data_Cleaning_Engine.git  
+**Documentation**: See attached investigation summaries
+
+---
+
+## PHASE 0: PRE-FLIGHT CHECKS (MANDATORY BEFORE ANY PROCESSING)
+
+### Task 0.1: Create Environment Validation Script
+**New File**: `scripts/validate_environment.py`
+python
+"""
+Validate environment before processing 700K records. Prevents failures mid-process.
+""" def validate_environment():
+    checks = {
+        'python_version': sys.version_info >= (3, 9),
+        'pandas_installed': check_package('pandas', '2.0.0'),
+        'openpyxl_installed': check_package('openpyxl', '3.1.0'),
+        'tqdm_installed': check_package('tqdm'),
+        'arcpy_available': check_package('arcpy') if GEOCODING_ENABLED else True,
+        'disk_space': get_free_space() > 5_000_000_000,  # 5GB
+        'memory_available': get_available_memory() > 16_000_000_000,  # 16GB
+        'locator_exists': Path(LOCATOR_PATH).exists() if GEOCODING_ENABLED else True,
+        'production_file_exists': Path(ESRI_FILE).exists(),
+        'corrections_exist': Path(ADDRESS_CSV).exists(),
+        'rms_exists': Path(RMS_INPUT).exists(),
+    }
+    
+    failed = [k for k, v in checks.items() if not v]
+    if failed:
+        raise EnvironmentError(f"Pre-flight checks failed: {failed}")
+    
+    return True
+### Task 0.2: Create File Integrity Diagnostic
+
+**New File**: `scripts/diagnose_file_integrity.py`
+
+**CRITICAL**: Must detect both natural duplicates (OK) and merge artifacts (BAD)
+python
+def detect_duplicate_types(df):
+    """
+    Distinguish natural CAD duplicates from merge artifacts. Natural duplicates: Same ReportNumberNew, DIFFERENT data
+        - Multiple CAD entries for same case
+        - Example: 19-088646 appears 3x with different TimeOfCall
+        - Expected: ~187,135 records
+    
+    Merge artifacts: Same ReportNumberNew, IDENTICAL data
+        - Created by merge operation Cartesian product
+        - Example: All fields identical (TimeOfCall, Incident, Officer, FullAddress2)
+        - Expected: 0 (these are corruption)
+    """
+    
+    # Check for exact duplicates (merge artifacts - BAD)
+    exact_dupes = df.duplicated(
+        subset=['ReportNumberNew', 'TimeOfCall', 'Incident', 'Officer', 'FullAddress2'],
+        keep=False
+    ).sum()
+    
+    # Check for natural duplicates (same case, different data - OK)
+    case_dupes = len(df) - df['ReportNumberNew'].nunique()
+    natural_dupes = case_dupes - exact_dupes
+    
+    is_corrupted = exact_dupes > 100  # Allow tiny margin for legitimate exact matches
+    
+    return {
+        'total_records': len(df),
+        'unique_cases': df['ReportNumberNew'].nunique(),
+        'total_duplicates': case_dupes,
+        'natural_duplicates': natural_dupes,
+        'merge_artifacts': exact_dupes,
+        'is_corrupted': is_corrupted,
+        'corruption_severity': 'CRITICAL' if exact_dupes > 10000 else 'WARNING' if exact_dupes > 100 else 'OK'
+    }
+
+def diagnose_all_files():
+    """Check all candidate files for cleanest baseline.""" files_to_check = {
+        'production_v2': 'data/ESRI_CADExport/CAD_ESRI_Final_20251117_v2.xlsx',
+        'backup_v3': 'data/ESRI_CADExport/CAD_ESRI_Final_20251117_v3.xlsx',
+        'archive_pre_rebuild': 'data/ESRI_CADExport/archive/CAD_ESRI_Final_20251117_v2_pre_full_rebuild.xlsx',
+        'corrupted_20251124': 'data/ESRI_CADExport/CAD_ESRI_Final_20251124_corrected.xlsx',
+    }
+    
+    results = {}
+    for name, path in files_to_check.items():
+        if Path(path).exists():
+            df = pd.read_excel(path, dtype=str)
+            results[name] = detect_duplicate_types(df)
+    
+    # Identify cleanest file
+    cleanest = min(
+        results.items(),
+        key=lambda x: (x[1]['merge_artifacts'], abs(x[1]['total_records'] - 728593))
+    )
+    
+    return results, cleanest
+### Task 0.3: Create Backup & Rollback System
+
+**New File**: `scripts/create_backup.py`
+python
+import shutil
+import hashlib
+from datetime import datetime
+
+def create_full_backup(source_file, backup_dir='data/ESRI_CADExport/backups'):
+    """
+    Create timestamped backup with integrity verification.
+    """ timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    backup_file = Path(backup_dir) / f"{source_file.stem}_BACKUP_{timestamp}{source_file.suffix}"
+    
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Copy file
+    shutil.copy2(source_file, backup_file)
+    
+    # Verify integrity
+    assert backup_file.stat().st_size == source_file.stat().st_size
+    assert calculate_hash(backup_file) == calculate_hash(source_file)
+    
+    # Document state
+    df = pd.read_excel(backup_file)
+    metadata = {
+        'backup_file': str(backup_file),
+        'backup_timestamp': timestamp,
+        'source_file': str(source_file),
+        'record_count': len(df),
+        'unique_cases': df['ReportNumberNew'].nunique(),
+        'file_hash': calculate_hash(backup_file),
+    }
+    
+    # Save metadata
+    metadata_file = backup_file.with_suffix('.json')
+    with open(metadata_file, 'w') as f:
+        json.dump(metadata, f, indent=2)
+    
+    return backup_file, metadata
+
+def calculate_hash(filepath):
+    """Calculate SHA256 hash for integrity verification.""" sha256 = hashlib.sha256()
+    with open(filepath, 'rb') as f:
+        for chunk in iter(lambda: f.read(8192), b''):
+            sha256.update(chunk)
+    return sha256.hexdigest()
+-----
+
+## PHASE 1: DAMAGE ASSESSMENT & RESTORATION
+
+### Task 1.1: Run File Integrity Diagnosis
+bash
+python scripts/diagnose_file_integrity.py
+**Expected Output**:
+
+FILE INTEGRITY DIAGNOSIS
+========================
+
+production_v2 (CAD_ESRI_Final_20251117_v2.xlsx):
+  Total Records: 955,759
+  Unique Cases: 541,458
+  Natural Duplicates: 187,135 (OK)
+  Merge Artifacts: 227,166 (⚠️  CRITICAL CORRUPTION)
+  Status: CORRUPTED
+
+backup_v3 (CAD_ESRI_Final_20251117_v3.xlsx):
+  Total Records: 728,593
+  Unique Cases: 541,458
+  Natural Duplicates: 187,135 (OK)
+  Merge Artifacts: 0
+  Status: ✅ CLEAN
+
+RECOMMENDATION: Use 'backup_v3' as baseline
+### Task 1.2: Restore Clean Baseline
+bash
+python scripts/restore_clean_baseline.py --source backup_v3 --verify
+**Must**:
+
+1. Create backup of corrupted file (for forensics)
+1. Copy clean file to production location
+1. Verify record count = 728,593
+1. Verify merge artifacts = 0
+1. Document restoration in log
+
+-----
+
+## PHASE 2: FIX APPLY_MANUAL_CORRECTIONS.PY (CRITICAL)
+
+### Task 2.1: Fix Address Correction Function
+
+**File**: `scripts/apply_manual_corrections.py`  
+**Function**: `apply_address_corrections()` (lines 106-139)
+
+**REPLACE merge operation with dictionary mapping**:
+python
+def apply_address_corrections(df, corrections_file):
+    """
+    Apply FullAddress2 corrections WITHOUT creating duplicates. CRITICAL: Uses dictionary mapping instead of merge.
+    """ # Pre-check: Save original count
+    original_count = len(df)
+    original_unique = df['ReportNumberNew'].nunique()
+    
+    if not corrections_file.exists():
+        return df, 0
+    
+    corrections = pd.read_csv(corrections_file, dtype=str).fillna('')
+    corrections = corrections[corrections['Corrected_Value'].astype(str).str.strip() != '']
+    
+    if len(corrections) == 0:
+        return df, 0
+    
+    # CRITICAL: Deduplicate corrections BEFORE mapping
+    corrections = corrections.drop_duplicates(subset=['ReportNumberNew'], keep='first')
+    print(f"  Unique corrections to apply: {len(corrections):,}")
+    
+    # Create dictionary mapping (NOT merge - prevents cartesian product)
+    correction_map = dict(zip(
+        corrections['ReportNumberNew'].astype(str).str.strip(),
+        corrections['Corrected_Value'].astype(str).str.strip()
+    ))
+    
+    # Apply using map (1-to-1, preserves row count)
+    df['ReportNumberNew_stripped'] = df['ReportNumberNew'].astype(str).str.strip()
+    df['FullAddress2_new'] = df['ReportNumberNew_stripped'].map(correction_map)
+    
+    # Update where correction exists
+    mask = df['FullAddress2_new'].notna() & (df['FullAddress2_new'] != '')
+    count = mask.sum()
+    df.loc[mask, 'FullAddress2'] = df.loc[mask, 'FullAddress2_new']
+    
+    # Cleanup temp columns
+    df = df.drop(columns=['FullAddress2_new', 'ReportNumberNew_stripped'])
+    
+    # POST-CHECK: Verify no duplicates created
+    assert len(df) == original_count, f"ERROR: Record count changed! {original_count} → {len(df)}"
+    assert df['ReportNumberNew'].nunique() == original_unique, f"ERROR: Unique cases changed!" return df, count
+### Task 2.2: Fix Hour Field Function (CRITICAL DUPLICATE RISK)
+
+**File**: `scripts/apply_manual_corrections.py`  
+**Function**: `fix_hour_field()` (lines 141-184)
+
+**ISSUE**: Current implementation may create duplicates via apply()
+
+**REPLACE with vectorized operation**:
+python
+def fix_hour_field(df):
+    """
+    Extract HH:mm from TimeOfCall - VECTORIZED to prevent duplicates. CRITICAL: Original apply() may have created duplicates.
+    """ # Pre-check
+    original_count = len(df)
+    original_unique = df['ReportNumberNew'].nunique()
+    
+    print("\n  Fixing Hour field format...")
+    
+    if 'TimeOfCall' not in df.columns:
+        print("  WARNING: TimeOfCall column not found. Skipping.") return df, 0
+    
+    if 'Hour' not in df.columns:
+        df['Hour'] = ''
+    
+    # VECTORIZED extraction (safe, no duplication risk)
+    # Try parsing as datetime first
+    dt_series = pd.to_datetime(df['TimeOfCall'], errors='coerce')
+    df['Hour'] = dt_series.dt.strftime('%H:%M').fillna('')
+    
+    # For records that failed datetime parsing, try regex
+    mask_empty = df['Hour'] == ''
+    if mask_empty.any():
+        time_pattern = df.loc[mask_empty, 'TimeOfCall'].str.extract(r'(\d{1,2}):(\d{2})', expand=True)
+        df.loc[mask_empty, 'Hour'] = (
+            time_pattern[0].str.zfill(2) + ':' + time_pattern[1]
+        ).fillna('')
+    
+    count = (df['Hour'] != '').sum()
+    
+    # POST-CHECK
+    assert len(df) == original_count, f"ERROR: Hour field fix created duplicates! {original_count} → {len(df)}"
+    assert df['ReportNumberNew'].nunique() == original_unique, f"ERROR: Unique cases changed!" return df, count
+### Task 2.3: Add Per-Correction-Type Validation
+
+**File**: `scripts/apply_manual_corrections.py`  
+**Function**: `main()`
+
+**ADD after EACH correction type**:
+python
+def main():
+    # ... load data ...
+    ORIGINAL_COUNT = len(df)
+    ORIGINAL_UNIQUE = df['ReportNumberNew'].nunique()
+    
+    total_corrections = 0
+    
+    # 1. How Reported
+    print("\n1. How Reported corrections:")
+    df, count = apply_how_reported_corrections(df, ...)
+    validate_no_duplicates(df, ORIGINAL_COUNT, ORIGINAL_UNIQUE, "How Reported")
+    total_corrections += count
+    
+    # 2. Disposition
+    print("\n2. Disposition corrections:")
+    df, count = apply_disposition_corrections(df, ...)
+    validate_no_duplicates(df, ORIGINAL_COUNT, ORIGINAL_UNIQUE, "Disposition")
+    total_corrections += count
+    
+    # 3. Case Numbers
+    print("\n3. Case Number corrections:")
+    df, count = apply_case_number_corrections(df, ...)
+    validate_no_duplicates(df, ORIGINAL_COUNT, ORIGINAL_UNIQUE, "Case Numbers")
+    total_corrections += count
+    
+    # 4. Addresses
+    print("\n4. Address corrections:")
+    df, count = apply_address_corrections(df, ...)
+    validate_no_duplicates(df, ORIGINAL_COUNT, ORIGINAL_UNIQUE, "Addresses")
+    total_corrections += count
+    
+    # 5. Hour Field (CRITICAL RISK)
+    print("\n5. Hour field format fix:")
+    df, count = fix_hour_field(df)
+    validate_no_duplicates(df, ORIGINAL_COUNT, ORIGINAL_UNIQUE, "Hour Field")
+    total_corrections += count
+
+def validate_no_duplicates(df, expected_count, expected_unique, stage_name):
+    """Validate no duplicates created during correction stage.""" actual_count = len(df)
+    actual_unique = df['ReportNumberNew'].nunique()
+    
+    if actual_count != expected_count:
+        raise ValueError(
+            f"CRITICAL: {stage_name} created duplicates!\n"
+            f"  Expected: {expected_count:,}\n"
+            f"  Actual: {actual_count:,}\n"
+            f"  Extra records: {actual_count - expected_count:,}"
+        )
+    
+    if actual_unique != expected_unique:
+        raise ValueError(
+            f"CRITICAL: {stage_name} changed unique case count!\n"
+            f"  Expected: {expected_unique:,}\n"
+            f"  Actual: {actual_unique:,}"
+        )
+    
+    print(f"  ✅ Validation passed: {actual_count:,} records, {actual_unique:,} unique cases")
+### Task 2.4: Fix File Output Logic
+
+**CRITICAL**: Must update production file, not create new timestamped file
+python
+# At end of main():
+
+# Create timestamped BACKUP first
+backup_file = OUTPUT_DIR / f"CAD_ESRI_Final_{timestamp}_pre_corrections_backup.xlsx"
+print(f"\nCreating backup: {backup_file.name}")
+df.to_excel(backup_file, index=False, engine='openpyxl')
+
+# Update PRODUCTION file directly
+print(f"Updating production file: {ESRI_FILE.name}")
+df.to_excel(ESRI_FILE, index=False, engine='openpyxl')
+
+# VERIFY update successful
+df_verify = pd.read_excel(ESRI_FILE)
+assert len(df_verify) == ORIGINAL_COUNT, "ERROR: Production file update failed!" print(f"✅ Production file updated successfully")
+-----
+
+## PHASE 3: TESTING STRATEGY (BEFORE FULL 700K RUN)
+
+### Task 3.1: Create Test Sample
+
+**New File**: `scripts/create_test_sample.py`
+python
+def create_stratified_sample(df, sample_size=10000):
+    """
+    Create representative sample for testing.
+    """ # Stratify by year
+    df['Year'] = df['ReportNumberNew'].str[:2]
+    year_counts = df['Year'].value_counts()
+    samples_per_year = (year_counts / year_counts.sum() * sample_size).astype(int)
+    
+    sample_dfs = []
+    for year, count in samples_per_year.items():
+        year_df = df[df['Year'] == year].sample(n=min(count, len(df[df['Year'] == year])))
+        sample_dfs.append(year_df)
+    
+    sample = pd.concat(sample_dfs).sample(frac=1)  # Shuffle
+    
+    # Ensure we have:
+    # - Records with corrections (from address_corrections.csv)
+    # - Records without corrections
+    # - Natural duplicates
+    # - Various address quality levels
+    
+    return sample
+### Task 3.2: Run Full Pipeline on Sample
+bash
+# Create 10K sample
+python scripts/create_test_sample.py --output test_sample_10k.xlsx
+
+# Test corrections on sample
+python scripts/apply_manual_corrections.py --input test_sample_10k.xlsx --output test_sample_corrected.xlsx
+
+# Verify results
+python scripts/validate_full_pipeline.py --file test_sample_corrected.xlsx
+**Must verify**:
+
+- ✅ Record count unchanged (10,000)
+- ✅ No merge artifact duplicates
+- ✅ Natural duplicates preserved
+- ✅ All corrections applied
+- ✅ No data type corruption
+- ✅ Processing time < 2 minutes
+
+### Task 3.3: Performance Benchmarking
+python
+import time
+import tracemalloc
+
+def benchmark_operation(func, *args, **kwargs):
+    """Measure time and memory for operation.""" tracemalloc.start()
+    start_time = time.time()
+    
+    result = func(*args, **kwargs)
+    
+    current, peak = tracemalloc.get_traced_memory()
+    elapsed = time.time() - start_time
+    tracemalloc.stop()
+    
+    print(f"  Time: {elapsed:.2f}s")
+    print(f"  Peak memory: {peak / 1024 / 1024:.1f} MB")
+    
+    return result, elapsed, peak
+
+# Estimate full run time
+records_per_second = 10000 / elapsed
+full_run_estimate = 728593 / records_per_second
+print(f"Estimated full run time: {full_run_estimate / 60:.1f} minutes")
+**ONLY proceed to full run if**:
+
+- ✅ All 10K tests pass
+- ✅ Estimated run time < 2 hours (without geocoding)
+- ✅ Peak memory < 8GB
+- ✅ No errors or warnings
+
+-----
+
+## PHASE 4: OPTIMIZE BACKFILL SCRIPT (GEOCODING)
+
+### Task 4.1: Add Geocoding Configuration Validation
+
+**File**: `backfill_address_from_rms_with_geocode_validation.py`
+
+**ADD at start of main()**:
+python
+def validate_geocoding_environment():
+    """Pre-flight checks for geocoding.""" if not Path(LOCATOR_PATH).exists():
+        raise FileNotFoundError(f"Locator not found: {LOCATOR_PATH}")
+    
+    # Test locator with sample address
+    test_address = "1 Main Street, Hackensack, NJ 07601"
+    try:
+        arcpy.env.overwriteOutput = True
+        # ... minimal test geocode ...
+        print("✅ Locator validated")
+    except Exception as e:
+        raise RuntimeError(f"Locator test failed: {e}")
+### Task 4.2: Implement Chunked Geocoding
+
+**REPLACE** `batch_geocode_with_metrics()` with chunked version:
+python
+def batch_geocode_chunked(unique_addrs: pd.Series, chunk_size=2000):
+    """
+    Geocode in chunks to prevent memory issues.
+    """ total = len(unique_addrs)
+    all_results = []
+    
+    with tqdm(total=total, desc="Geocoding") as pbar:
+        for i in range(0, total, chunk_size):
+            chunk = unique_addrs[i:i+chunk_size]
+            
+            try:
+                result, metrics = batch_geocode_with_metrics(chunk)
+                all_results.append(result)
+                pbar.update(len(chunk))
+                
+            except Exception as e:
+                print(f"  WARNING: Chunk {i}-{i+chunk_size} failed: {e}")
+                # Log failed addresses
+                failed_addrs = chunk.tolist()
+                with open('failed_geocoding.log', 'a') as f:
+                    f.write(f"\n{datetime.now()}: {len(failed_addrs)} addresses failed\n")
+                    f.write('\n'.join(failed_addrs))
+                continue
+    
+    # Combine results
+    if all_results:
+        return pd.concat(all_results), aggregate_metrics(all_results)
+    else:
+        return pd.Series(), {}
+### Task 4.3: Add Progress Reporting
+python
+from tqdm import tqdm
+
+# Wrap long operations
+print("Batch geocoding RMS candidates...")
+with tqdm(total=len(candidates), desc="Validating addresses") as pbar:
+    cad_df['RMS_Geocode_OK'], geocode_metrics = batch_geocode_chunked(
+        candidates, 
+        chunk_size=2000,
+        progress_callback=lambda n: pbar.update(n)
+    )
+-----
+
+## PHASE 5: END-TO-END VALIDATION PIPELINE
+
+### Task 5.1: Create Master Validation Script
+
+**New File**: `scripts/validate_full_pipeline.py`
+python
+def validate_full_pipeline(production_file):
+    """
+    Comprehensive validation of entire correction pipeline.
+    """ print("="*80)
+    print("FULL PIPELINE VALIDATION")
+    print("="*80)
+    
+    df = pd.read_excel(production_file)
+    
+    # 1. File Integrity
+    print("\n1. File Integrity:")
+    assert len(df) == 728593, f"Record count wrong: {len(df)}"
+    assert df['ReportNumberNew'].nunique() == 541458, f"Unique cases wrong"
+    duplicates = detect_duplicate_types(df)
+    assert duplicates['merge_artifacts'] < 100, "Merge artifacts detected!" print("  ✅ File integrity OK")
+    
+    # 2. Address Corrections Applied
+    print("\n2. Address Corrections:")
+    corrections = pd.read_csv('manual_corrections/address_corrections.csv', dtype=str)
+    corrections = corrections[corrections['Corrected_Value'].str.strip() != '']
+    
+    verified = 0
+    not_applied = 0
+    
+    for _, corr in corrections.iterrows():
+        case = corr['ReportNumberNew'].strip()
+        expected = corr['Corrected_Value'].strip()
+        
+        matching = df[df['ReportNumberNew'].str.strip() == case]
+        if matching.empty:
+            not_applied += 1
+            continue
+        
+        if (matching['FullAddress2'].str.strip() == expected).all():
+            verified += 1
+        else:
+            not_applied += 1
+    
+    assert verified == len(corrections), f"Only {verified}/{len(corrections)} corrections applied!" print(f"  ✅ {verified} corrections verified")
+    
+    # 3. Address Quality Improvement
+    print("\n3. Address Quality:")
+    invalid_before = 102717  # From baseline
+    invalid_after = count_invalid_addresses(df)
+    improvement = invalid_before - invalid_after
+    
+    assert improvement >= 7000, f"Insufficient improvement: {improvement}"
+    assert improvement <= 10000, f"Suspiciously high improvement: {improvement}"
+    print(f"  ✅ Improvement: {improvement:,} addresses ({improvement/invalid_before*100:.1f}%)")
+    
+    # 4. Data Type Integrity
+    print("\n4. Data Types:")
+    assert df['ReportNumberNew'].dtype == 'object'
+    assert df['TimeOfCall'].dtype == 'object'  # Will be datetime after processing
+    print("  ✅ Data types preserved")
+    
+    # 5. Encoding
+    print("\n5. Encoding:")
+    # Check file has UTF-8 BOM
+    with open(production_file, 'rb') as f:
+        bom = f.read(3)
+    assert bom == b'\xef\xbb\xbf', "Missing UTF-8 BOM!" print("  ✅ UTF-8 with BOM")
+    
+    print("\n" + "="*80)
+    print("ALL VALIDATIONS PASSED")
+    print("="*80)
+    
+    return True
+-----
+
+## PHASE 6: GENERATE CORRECTED REPORTS
+
+### Task 6.1: Generate True Baseline Report
+
+**Run on CLEAN file BEFORE corrections**:
+bash
+python scripts/generate_true_baseline_report.py --file backup_v3.xlsx
+### Task 6.2: Update Quality Report
+
+**Run on production file AFTER corrections**:
+bash
+python scripts/generate_esri_quality_report.py
+**Must include**:
+
+- True baseline metrics (before)
+- True final metrics (after)
+- Exact improvement numbers
+- Sample verification (20 random cases)
+- Audit trail summary
+
+-----
+
+## EXECUTION CHECKLIST
+
+### Pre-Processing
+
+- [ ] Run `validate_environment.py` - all checks pass
+- [ ] Run `diagnose_file_integrity.py` - identify clean baseline
+- [ ] Run `create_backup.py` - full backup created and verified
+- [ ] Document current state (record count, hash, etc.) ### Restoration
+
+- [ ] Run `restore_clean_baseline.py` - production file restored to 728,593 records
+- [ ] Verify no merge artifact duplicates
+- [ ] Verify natural duplicates preserved (~187,135)
+
+### Testing
+
+- [ ] Create 10K test sample
+- [ ] Run corrections on sample
+- [ ] Validate sample results - all tests pass
+- [ ] Benchmark performance - acceptable run time
+
+### Production Run
+
+- [ ] Run `apply_manual_corrections.py` on full dataset
+- [ ] Monitor progress - no errors
+- [ ] Verify record count unchanged
+- [ ] Verify corrections applied - 100%
+
+### Validation
+
+- [ ] Run `validate_full_pipeline.py` - all checks pass
+- [ ] Run `check_address_corrections_applied.py` - 100% applied
+- [ ] Manual verification - 20 random samples
+- [ ] Generate updated quality report
+
+### Geocoding (Optional)
+
+- [ ] Validate geocoding environment
+- [ ] Run backfill script with geocoding
+- [ ] Verify no duplicates created
+- [ ] Review geocoding quality metrics
+
+-----
+
+## SUCCESS CRITERIA
+
+✅ Production file: 728,593 records (unchanged)
+✅ Unique cases: 541,458 (unchanged)
+✅ Merge artifacts: 0 (no corruption)
+✅ Natural duplicates: ~187,135 (preserved)
+✅ Address corrections: 1,688 applied (100%)
+✅ Records updated: 3,649+ (all matching ReportNumberNew)
+✅ Address quality improvement: 7,000-9,000 addresses corrected
+✅ Invalid addresses: 102,717 → ~93,000-95,000 (verified)
+✅ Sample verification: 20/20 corrections match (100%)
+✅ Audit trail: Complete tracking of all changes
+✅ Quality report: Accurate metrics matching actual data
+✅ Processing time: < 30 minutes (without geocoding)
+✅ No errors or warnings logged
+-----
+
+## DELIVERABLES
+
+### Scripts (Priority Order)
+
+1. `scripts/validate_environment.py`
+1. `scripts/diagnose_file_integrity.py`
+1. `scripts/restore_clean_baseline.py`
+1. `scripts/create_backup.py`
+1. Fixed `scripts/apply_manual_corrections.py`
+1. `scripts/create_test_sample.py`
+1. `scripts/validate_full_pipeline.py`
+1. `scripts/generate_true_baseline_report.py`
+1. Optimized `backfill_address_from_rms_with_geocode_validation.py`
+1. Updated `scripts/generate_esri_quality_report.py`
+
+### Documentation
+
+1. Updated README with correct workflow
+1. Troubleshooting guide
+1. Error recovery procedures
+1. Performance benchmarks
+
+-----
+
+## QUESTIONS FOR CLAUDE CODE
+
+1. **Duplicate Root Cause**: Can you analyze the exact code path that created 227K duplicates? Was it the merge in address corrections, Hour field fix, or both? 1. **Optimal Chunking**: For 100K+ unique addresses with ArcGIS Pro geocoder:
+
+- Recommended chunk size: 2000? 5000? - Memory management strategy? - Retry logic for failed chunks? 1. **Testing Sample Size**: Is 10K sufficient for testing, or should we use 50K? 1. **Data Type Optimization**: Should we convert categorical fields (Incident, Disposition) to category dtype for memory efficiency? 1. **Checkpoint Strategy**: Where should checkpoints be placed for resume capability? Please provide all scripts with complete error handling, progress reporting, and validation logic. ---
+
+## Summary of Enhancements from Cursor Review
+
+### Critical Additions (Implemented)
+1. ✅ **Phase 0**: Pre-flight checks (environment validation)
+2. ✅ **Hour field fix**: Vectorized to prevent duplicates
+3. ✅ **Duplicate detection**: Algorithm to distinguish natural vs merge artifacts
+4. ✅ **Testing strategy**: 10K sample before full run
+5. ✅ **Per-stage validation**: Check for duplicates after each correction type
+6. ✅ **Rollback procedures**: Full backup and recovery system
+7. ✅ **Progress reporting**: tqdm integration
+8. ✅ **Data type preservation**: Verify dtypes maintained
+9. ✅ **Performance benchmarks**: Expected run times
+10. ✅ **Complete file structure**: All paths documented
+
+### Key Improvements
+- **Systematic approach**: Phase 0 → Phase 6 with clear checkpoints
+- **Safety first**: Validate before each operation, backup before changes
+- **Testable**: 10K sample testing before 700K production run
+- **Recoverable**: Checkpoints and rollback at every stage
+- **Verifiable**: 100% validation of corrections + manual sampling
+- **Observable**: Progress bars and detailed logging throughout
+
+This enhanced prompt gives Claude Code everything needed to execute a safe, systematic recovery of the corrupted data and implement a robust correction pipeline for the 700K+ record dataset.​​​​​​​​​​​​​​​​
+Prompt Engineer said:
+Here is the updated enhanced prompt that integrates your new requirements into the Claude Code prompt. The additions have been merged under a new phase (PHASE 7) and reflected in relevant sections like validation and deliverables. ✅ ENHANCED CLAUDE CODE PROMPT (With CADDataProcessor Integration)
+🔄 PHASE 7: INTEGRATE CADDataProcessor CLASS FOR END-TO-END CORRECTION PIPELINE
+Task 7.1: Create CADDataProcessor Class
+File: scripts/cad_data_processor.py
+
+class CADDataProcessor:
+    """
+    Centralized class for full CAD correction pipeline. Manages loading, validation, corrections, scoring, and export.
+    """ def __init__(self, input_path, corrections_paths, locator_path=None):
+        self.input_path = Path(input_path)
+        self.corrections_paths = corrections_paths
+        self.locator_path = locator_path
+        self.df = pd.read_excel(self.input_path, dtype=str)
+        self.original_count = len(self.df)
+        self.original_unique = self.df['ReportNumberNew'].nunique()
+    
+    def run_all_corrections(self):
+        self.apply_address_corrections()
+        self.fix_hour_field()
+        self.map_call_types()
+        self.backfill_addresses()
+        self.validate_all()
+        self.score_data_quality()
+    
+    def apply_address_corrections(self):
+        # Use dictionary mapping to apply address corrections safely
+        ...
+    
+    def fix_hour_field(self):
+        # Vectorized HH:mm extraction from TimeOfCall
+        ...
+    
+    def map_call_types(self):
+        # Map call types to standardized categories (police/fire/medical/etc.) ...
+    
+    def backfill_addresses(self):
+        # Optional geocoding or RMS-based backfill
+        ...
+    
+    def send_to_manual_review(self, filter_criteria):
+        """
+        Flag records needing manual review and export them to a separate file.
+        """ review_df = self.df.query(filter_criteria)
+        review_df.to_excel('manual_review_pending.xlsx', index=False)
+        print(f"⚠️ {len(review_df)} records flagged for manual review")
+    
+    def score_data_quality(self):
+        """
+        Add quality_score column based on rules:
+        - Valid address
+        - Geocoded successfully
+        - Non-empty disposition
+        - Call type classified
+        - No duplicates
+        """
+        ...
+    
+    def detect_and_flag_duplicates(self):
+        # Leverages existing logic from diagnose_file_integrity.py
+        stats = detect_duplicate_types(self.df)
+        self.df['Is_Merge_Artifact'] = self.df.duplicated(
+            subset=['ReportNumberNew', 'TimeOfCall', 'Incident', 'Officer', 'FullAddress2'],
+            keep=False
+        )
+        print(f"🚫 Merge artifacts detected: {stats['merge_artifacts']}")
+    
+    def validate_all(self):
+        assert len(self.df) == self.original_count
+        assert self.df['ReportNumberNew'].nunique() == self.original_unique
+        print("✅ All validations passed - no duplicates created")
+    
+    def export_corrected_data(self, output_path):
+        self.df.to_excel(output_path, index=False)
+        print(f"✅ Exported corrected dataset: {output_path}")
+🔍 Additions to PHASE 2: Address Corrections
+Update Task 2.1 - 2.3 to use methods from CADDataProcessor. This modularizes and future-proofs the correction pipeline. 🔍 Additions to PHASE 5: VALIDATION
+Task 5.2: Validate Quality Scoring and Duplicate Detection
+Update validate_full_pipeline.py:
+
+print("\n6.

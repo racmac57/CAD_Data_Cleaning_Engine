@@ -1,0 +1,99 @@
+Please review the following Python scripts for a CAD/RMS data cleaning and ETL pipeline. Focus on correctness, efficiency, and parallel processing/multi-core utilization.
+
+**Scripts to Review:**
+1. scripts/geocode_nj_geocoder.py - NJ Geocoder service integration for latitude/longitude backfill
+2. scripts/unified_rms_backfill.py - RMS data backfill processor  
+3. scripts/generate_esri_output.py - ESRI output generator with strict column ordering
+4. scripts/master_pipeline.py - Master pipeline orchestrator
+
+**Review Criteria:**
+
+### 1. Correctness
+- Logic errors or bugs
+- Edge cases not handled
+- Data type handling (especially pandas/numpy)
+- Error handling completeness
+- Input validation
+- Output validation
+- Memory leaks or resource cleanup
+- Thread safety (if applicable)
+
+### 2. Efficiency
+- Unnecessary data copying
+- Inefficient pandas operations (should use vectorized operations where possible)
+- Redundant computations
+- Memory usage optimization
+- I/O operations (file reading/writing efficiency)
+- Algorithm complexity
+- Caching opportunities
+
+### 3. Parallel Processing & Multi-Core Usage
+- Opportunities for parallelization that are currently sequential
+- Proper use of multiprocessing/threading/concurrent.futures
+- CPU core utilization (should leverage all available cores where beneficial)
+- Thread/process pool sizing
+- Data parallelism opportunities (e.g., processing DataFrame chunks in parallel)
+- I/O-bound vs CPU-bound operations (use appropriate concurrency model)
+- Race conditions or synchronization issues
+- Overhead vs benefit of parallelization
+
+### 4. Specific Areas of Focus
+
+**For geocode_nj_geocoder.py:**
+- Is the batch geocoding implementation efficient?
+- Are there opportunities to parallelize the geocoding requests better?
+- Is the retry logic correct and efficient?
+- Can we use async/await for I/O-bound geocoding requests instead of ThreadPoolExecutor?
+- Is the unique address deduplication optimal?
+
+**For unified_rms_backfill.py:**
+- Is the merge operation efficient for large datasets?
+- Can the field backfill loop be vectorized?
+- Are there opportunities to parallelize the RMS file loading?
+- Is the deduplication logic optimal?
+- Can we use pandas merge more efficiently?
+
+**For generate_esri_output.py:**
+- Are the column operations vectorized?
+- Is the ZoneCalc calculation efficient?
+- Can the How Reported normalization be vectorized?
+- Are there unnecessary DataFrame copies?
+
+**For master_pipeline.py:**
+- Is the pipeline orchestration efficient?
+- Can multiple steps run in parallel where data dependencies allow?
+- Is memory usage optimized between steps?
+- Are there opportunities for streaming/chunked processing for large datasets?
+
+### 5. Code Quality
+- Code organization and structure
+- Documentation completeness
+- Type hints usage
+- Consistent error handling patterns
+- Logging appropriateness
+
+### 6. Performance Recommendations
+- Specific optimizations to suggest
+- Performance bottlenecks identified
+- Scalability concerns for large datasets (1M+ records)
+- Memory-efficient alternatives
+
+**Expected Output:**
+Please provide:
+1. A summary of findings (correctness issues, efficiency improvements, parallelization opportunities)
+2. Specific code suggestions with examples
+3. Performance impact estimates where possible
+4. Priority ranking of recommendations (high/medium/low)
+
+**Context:**
+- Datasets can be 700K-1.5M records
+- Scripts should handle large datasets efficiently
+- Python 3.8+ environment
+- Standard libraries: pandas, numpy, requests, concurrent.futures
+- Windows environment (multiprocessing considerations)
+
+---
+
+**Instructions:**
+After this prompt, I will provide the script contents. Please review each script and provide comprehensive feedback following the criteria above.
+

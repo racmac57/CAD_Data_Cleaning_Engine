@@ -1,0 +1,58 @@
+{
+  "original_full_path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\02_ETL_Scripts\\CAD_Data_Cleaning_Engine\\doc\\Claude-01_Python Script Claude API Integration - Copy.md",
+  "original_directory": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\02_ETL_Scripts\\CAD_Data_Cleaning_Engine\\doc",
+  "original_filename": "Claude-01_Python Script Claude API Integration - Copy.md",
+  "operation": "MOVE",
+  "sent_at": "2025-11-23T05:09:54.3197475Z",
+  "size_bytes": 303608,
+  "modified_time": "2025-10-17T19:23:52.0000000Z",
+  "integrity_sha256": "5c031e986c3ce833a86ce80dd2f086998c5ca059e3bd4fd1bc86d284435ec9fd",
+  "created_time": "2025-11-23T05:09:37.9616738Z",
+  "tags": [
+    "API",
+    "ai",
+    "ai-chat",
+    "code",
+    "config",
+    "conversation",
+    "data",
+    "docs",
+    "finance",
+    "function",
+    "input/output",
+    "it-ops",
+    "json",
+    "legal",
+    "loop",
+    "markdown",
+    "police",
+    "python",
+    "regex",
+    "sql",
+    "training"
+  ],
+  "metadata_enrichment": {
+    "metadata": {
+      "project_name": "02_data",
+      "source_type": "documentation",
+      "language": "en",
+      "department": "admin",
+      "key_terms": [
+        "files",
+        "your",
+        "claude",
+        "code",
+        "api",
+        "kb_builder"
+      ],
+      "enrichment_version": "1.0.0"
+    },
+    "summaries": {
+      "file_summary": "# 01_Python Script Claude API Integration\n\n**Created:** 8/22/2025 20:07:10  \n**Updated:** 8/24/2025 20:43:33  \n**Exported:** 10/17/2025 15:23:51  \n**Link:** [https://claude.ai/chat/5110a36b-5f35-45f6-930c-83c72415daad](https://claude.ai/...",
+      "first_line": "# 01_Python Script Claude API Integration"
+    },
+    "enrichment_version": "1.0.0"
+  },
+  "last_processed_at": "2025-11-23T00:10:21.482296",
+  "department": "admin"
+}

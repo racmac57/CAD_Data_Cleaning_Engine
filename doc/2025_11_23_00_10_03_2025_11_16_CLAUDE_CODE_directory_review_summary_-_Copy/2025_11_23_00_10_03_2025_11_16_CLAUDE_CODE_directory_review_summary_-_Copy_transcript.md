@@ -1,0 +1,3794 @@
+# 2025 11 16 Claude Code Directory Review Summary - Copy
+
+**Processing Date:** 2025-11-23 00:10:09
+**Source File:** 2025_11_16_CLAUDE_CODE_directory_review_summary - Copy.md
+**Total Chunks:** 6
+
+---
+
+
+╭─── Claude Code v2.0.37 ──────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting started                                        │
+│                  Welcome back RAC! │ Run /init to create a CLAUDE.md file with instructions for Cla… │
+│                                                    │ ─────────────────────────────────────────────────────────────── │
+│                       ▐▛███▜▌                      │ Recent activity                                                 │
+│                      ▝▜█████▛▘                     │ No recent activity                                              │
+│                        ▘▘ ▝▝                       │                                                                 │
+│                                                    │                                                                 │
+│              Sonnet 4.5 · Claude Pro               │                                                                 │
+│ C:\Users\carucci_r\OneDrive - City of Hackensack\… │                                                                 │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+> cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+# Then use Claude Code:
+claude-code "Review this CAD data cleaning project. 1. List the directory tree for /scripts, /config, /ref, and /data directories
+2. Summarize the purpose of each Python script in /scripts
+3. Show the structure of any config files (JSON, YAML, etc.) 4. Identify which scripts handle:
+   - Call type normalization
+   - Response type mapping
+   - Address cleaning
+   - Officer field parsing
+   - ReportNumberNew generation
+5. Note any hardcoded file paths
+6. Report missing components based on the Notion project plan"
+
+● I'll review your CAD data cleaning project systematically. Let me create a todo list to track this analysis. ● Bash(tree /F /A scripts)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A config)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A ref)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A data)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Search(pattern: "scripts/**/*")
+  ⎿  Found 73 files (ctrl+o to expand)
+
+● Search(pattern: "config/**/*")
+  ⎿  Found 1 file (ctrl+o to expand)
+
+● Search(pattern: "ref/**/*")
+  ⎿  Found 33 files (ctrl+o to expand)
+
+● Search(pattern: "data/**/*")
+  ⎿  Found 58 files (ctrl+o to expand)
+
+● Read(scripts\01_validate_and_clean.py)
+  ⎿  Read 1575 lines
+
+● Read(scripts\cad_zone_merger.py)
+  ⎿  Read 69 lines
+
+● Read(scripts\list_unmapped_incidents.py)
+  ⎿  Read 27 lines
+
+● Read(scripts\audit_post_fix.py)
+  ⎿  Read 103 lines
+
+● Read(scripts\build_calltype_master.py)
+  ⎿  Read 365 lines
+
+● Read(config\config_enhanced.json)
+  ⎿  Read 15 lines
+
+● Now let me create a comprehensive summary of this CAD data cleaning project. ● CAD Data Cleaning Engine - Project Review
+
+  1. Directory Structure
+
+  Scripts Directory (/scripts):
+  /scripts
+  ├── 01_validate_and_clean.py           (Main validation & cleaning script)
+  ├── cad_zone_merger.py                  (Zone/Grid backfill utility)
+  ├── list_unmapped_incidents.py          (Incident mapping diagnostics)
+  ├── audit_post_fix.py                   (Post-processing quality checks)
+  ├── build_calltype_master.py            (Call type master mapping builder)
+  ├── 01_validate_and_clean_backup_20251106.py (Backup)
+  └── /archive                            (13 archived versions)
+      └── Various old versions of validate_and_clean
+
+  Config Directory (/config):
+  /config
+  └── config_enhanced.json                (Single JSON config file)
+
+  Reference Directory (/ref):
+  /ref
+  ├── call_types/
+  │   ├── CallType_Categories.xlsx        (Primary call type mapping)
+  │   ├── CallType_Master_Mapping.csv     (Master mapping output)
+  │   ├── unmapped_incidents.csv          (Incidents needing mapping)
+  │   ├── duplicates_review.csv           (Duplicate incident review)
+  │   ├── mapping_changes.csv             (Mapping change log)
+  │   ├── suggested_clean_edits.csv       (Suggested edits)
+  │   └── /archive                        (Historical call type files)
+  ├── cad_call_source_acceptables.csv
+  ├── cad_call_source_map.csv
+  ├── cad_disposition_acceptables.csv
+  ├── cad_disposition_map.csv
+  ├── cad_how_reported_map.csv
+  ├── cad_incident_type_map.csv
+  ├── cad_pd_zone_map.csv
+  ├── cad_priority_map.csv
+  ├── facility_aliases.csv
+  ├── anomalies.csv
+  └── RAW_CAD_CALL_TYPE_EXPORT.xlsx
+
+  Data Directory (/data):
+  /data
+  ├── 01_raw/
+  │   ├── 2019_ALL_CAD.xlsx
+  │   ├── 2020_ALL_CAD.xlsx
+  │   ├── 2021_ALL_CAD.xlsx
+  │   ├── 2022_CAD_ALL.xlsx
+  │   ├── 2023_CAD_ALL.xlsx
+  │   ├── 2024_CAD_ALL.xlsx
+  │   ├── 25_01_10_All_CAD.xlsx
+  │   ├── CAD_Data_Sample.xlsx
+  │   ├── 2019_2025_11_14_cad.xlsx
+  │   └── /sample                         (1000-row samples for testing)
+  ├── 02_reports/
+  │   └── cad_validation/                 (Timestamped validation reports)
+  ├── /rms                                (RMS export files)
+  └── /ESRI_CADExport
+      └── ESRI_CADExport.xlsx
+
+  2. Python Script Summaries
+
+  01_validate_and_clean.py (Main Script - 1575 lines)
+
+  Purpose: Comprehensive CAD data validation, cleaning, and quality assessment engine
+
+  Key Functions:
+  - Data cleaning (mojibake fixes, text normalization, address standardization)
+  - Incident mapping using CallType_Categories.csv
+  - "How Reported" normalization (handles 9-1-1 Excel date bug)
+  - Stratified/systematic/random sampling for validation
+  - Validation rules (critical/important/optional severity levels)
+  - ESRI export format generation
+  - JSON validation reports with quality scoring
+  - Comprehensive unit tests (pytest)
+
+  Class: CADDataValidator
+  - Validates 13 rules across 3 severity levels
+  - Tracks unmapped incidents and address issues
+  - Generates quality score and recommendations
+
+  cad_zone_merger.py (69 lines)
+
+  Purpose: Backfills PD Zone and Grid values using address lookup table
+
+  Key Functions:
+  - Normalizes addresses (street suffix standardization)
+  - Merges zone/grid from master lookup table
+  - Processes all CAD exports recursively
+  - Outputs *_zoned.xlsx files
+
+  list_unmapped_incidents.py (27 lines)
+
+  Purpose: Identifies incidents missing Response Type mapping
+
+  Key Functions:
+  - Scans sample CSVs for blank Response Type
+  - Generates frequency report of unmapped incidents
+  - Creates seed CSV for manual mapping (missing_CallTypes_seed.csv)
+
+  audit_post_fix.py (103 lines)
+
+  Purpose: Post-processing quality assurance checks
+
+  Key Functions:
+  - Validates "How Reported" normalization (9-1-1 variants, Excel date bug)
+  - Scans for mojibake in text fields
+  - Checks incident mapping coverage (Incident_Norm presence)
+  - Verifies Response Type backfill
+  - Schema validation (column count)
+  - Exits with error code on failures
+
+  build_calltype_master.py (364 lines)
+
+  Purpose: Builds master call type mapping and audit reports
+
+  Key Functions:
+  - Unicode normalization (NFKC, control character removal)
+  - Smart title-casing (preserves acronyms like DWI, EMS, ABC)
+  - Statute extraction (e.g., "2C:39-5" from incident descriptions)
+  - Merges cleaned CallType_Categories with historical incidents
+  - Generates 6 audit reports:
+    - CallType_Master_Mapping.csv (approved + historical)
+    - duplicates_review.csv (multiple raw values → same normalized)
+    - anomalies.csv (normalizer non-idempotent cases)
+    - unmapped_incidents.csv (historical values needing review)
+    - mapping_changes.csv (proposed normalization changes)
+    - suggested_clean_edits.csv (recommended edits)
+
+  3. Config File Structure (config_enhanced.json)
+
+  {
+    "address_abbreviations": {
+      " ST ": " STREET ",
+      " AVE ": " AVENUE ",
+      " BLVD ": " BOULEVARD "
+    },
+    "validation_lists": {
+      "valid_dispositions": ["COMPLETE", "ADVISED", "ARREST", ...],
+      "valid_zones": ["5", "6", "7", "8", "9"],
+      "emergency_incidents": ["ROBBERY", "ASSAULT", "BURGLARY", ...],
+      "non_emergency_incidents": ["NOISE COMPLAINT", "PARKING VIOLATION", ...],
+      "how_reported": ["9-1-1", "WALK-IN", "PHONE", ...]
+    },
+    "min_stratum_size": 50
+  }
+
+  Usage: Loaded by CADDataValidator class with Pydantic schema validation
+
+  4. Script Responsibilities by Task
+
+  | Task                       | Primary Script           | Supporting Scripts                                   |
+  Location               |
+  |----------------------------|--------------------------|------------------------------------------------------|--
+  ----------------------|
+  | Call Type Normalization    | 01_validate_and_clean.py | build_calltype_master.py, list_unmapped_incidents.py |
+  Lines 303-427, 135-136 |
+  | Response Type Mapping      | 01_validate_and_clean.py | build_calltype_master.py                             |
+  Lines 361-384, 419-425 |
+  | Address Cleaning           | 01_validate_and_clean.py | cad_zone_merger.py                                   |
+  Lines 352-358, 28-35   |
+  | Officer Field Parsing      | 01_validate_and_clean.py | None                                                 |
+  Lines 339, 874-889     |
+  | ReportNumberNew Generation | MISSING                  | None                                                 |
+  N/A                    |
+
+  Details:
+
+  Call Type Normalization:
+  - 01_validate_and_clean.py:303-312 - Loads CallType_Categories.csv from 3 possible paths
+  - 01_validate_and_clean.py:361-384 - Applies incident mapping with mojibake fixes
+  - 01_validate_and_clean.py:386-427 - _apply_incident_mapping() merges normalized values
+  - build_calltype_master.py:93-113 - normalise_call_type() with smart title-casing
+
+  Response Type Mapping:
+  - 01_validate_and_clean.py:376-378 - Backfills Response Type from mapping table
+  - 01_validate_and_clean.py:419-425 - Fills blank Response Type with mapped values
+  - build_calltype_master.py:154-158 - Detects Response_Type column variants
+
+  Address Cleaning:
+  - 01_validate_and_clean.py:352-358 - Applies abbreviation expansion + uppercase
+  - 01_validate_and_clean.py:821-872 - Validates address completeness (house number, suffix, city/state/zip)
+  - cad_zone_merger.py:28-35 - Normalizes addresses for zone lookup
+
+  Officer Field Parsing:
+  - 01_validate_and_clean.py:339 - Normalizes to uppercase, strips whitespace
+  - 01_validate_and_clean.py:874-889 - Validates officer assignment for dispatched calls
+  - No parsing logic (e.g., extracting badge numbers, splitting multi-officer fields)
+
+  ReportNumberNew Generation:
+  - NOT IMPLEMENTED - No script generates case numbers
+  - Validation exists (01_validate_and_clean.py:755-769) for format YY-XXXXXX[A-Z]? 5. Hardcoded File Paths
+
+  Critical Paths (will break in different environments):
+
+  01_validate_and_clean.py:
+  - Line 293: r"C:\Users\carucci_r\OneDrive - City of
+  Hackensack\09_Reference\Classifications\CallTypes\CallType_Categories.csv"
+  - Line 1533: r"C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Pipeline\data\01_raw"
+
+  cad_zone_merger.py:
+  - Line 8: EXPORT_ROOT = r"C:\Users\carucci_r\OneDrive - City of Hackensack\05_EXPORTS\_CAD"
+  - Line 11: ZONE_MASTER = r"C:\TEMP\zone_grid_master.xlsx"
+
+  list_unmapped_incidents.py:
+  - Line 5: r"C:\Users\carucci_r\OneDrive - City of
+  Hackensack\02_ETL_Scripts\CAD_Data_Pipeline\data\01_raw\sample\2024_CAD_ALL_SAMPLE_1000.csv"
+  - Line 6: r"C:\Users\carucci_r\OneDrive - City of
+  Hackensack\02_ETL_Scripts\CAD_Data_Pipeline\data\02_reports\cad_validation"
+
+  audit_post_fix.py:
+  - Line 8-10: SAMPLE_DIR = Path(r"C:\Users\carucci_r\OneDrive - City of
+  Hackensack\02_ETL_Scripts\CAD_Data_Pipeline\data\01_raw\sample")
+
+  build_calltype_master.py:
+  - Line 314: Default ref/CallType_Categories_clean.xlsx (relative path - OK)
+  - Line 320: Default ref/2019_2025_10_Call_Types_Incidents.csv.txt (relative path - OK)
+
+  Recommendation: Move all hardcoded paths to config_enhanced.json or use environment variables. 6. Missing Components (Based on Typical ETL Pipeline)
+
+● Missing/Incomplete Components:
+
+  1. ReportNumberNew Generation Script
+    - Validation exists but no generation logic
+    - Need: Script to create case numbers in YY-XXXXXX format with sequence tracking
+    - Need: Supplement suffix logic (YY-XXXXXXA, YY-XXXXXXB, etc.) 2. Officer Field Parser
+    - Currently only normalizes/validates, doesn't parse
+    - Missing: Badge number extraction
+    - Missing: Multi-officer field splitting
+    - Missing: Officer roster validation lookup
+  3. Zone/Grid Backfill Integration
+    - cad_zone_merger.py exists but runs separately
+    - Should integrate into main 01_validate_and_clean.py pipeline
+    - Need: Fallback logic when address lookup fails
+  4. RMS Data Integration
+    - RMS files exist in /data/rms but no integration script
+    - Missing: CAD-RMS join logic
+    - Missing: Address backfill from RMS when CAD address is poor quality
+  5. Geocoding Module
+    - No geocoding script found
+    - Missing: Latitude/longitude population (currently hardcoded as NaN in line 574-575)
+    - Need: ESRI/Google Maps API integration or local geocoder
+  6. Automated Pipeline Orchestration
+    - Missing: Master script to run all components in sequence
+    - Missing: Dependency management between scripts
+    - Recommendation: Add main_pipeline.py or use workflow tool (Airflow, Prefect)
+  7. Error Recovery & Logging
+    - Logging exists but no centralized error handler
+    - Missing: Failed record quarantine system
+    - Missing: Retry logic for transient failures
+  8. Configuration Management
+    - Only one config file (config_enhanced.json)
+    - Missing configs for:
+        - File paths (currently hardcoded)
+      - Database connections (if applicable)
+      - API credentials for geocoding
+      - Email notifications for validation failures
+  9. Data Quality Dashboard
+    - JSON reports generated but no visualization
+    - Recommendation: Add HTML/PDF report generation
+    - Recommendation: Plotly/Dash dashboard for quality trends over time
+  10. Documentation
+    - No README.md in scripts directory
+    - Missing: Data dictionary
+    - Missing: Field mapping documentation
+    - Found: Some markdown docs in project root (based on git status)
+  11. Testing Infrastructure
+    - Unit tests exist in 01_validate_and_clean.py (lines 1356-1521)
+    - Missing: Integration tests
+    - Missing: End-to-end pipeline tests
+    - Missing: Test fixtures/sample data in dedicated /tests directory
+  12. Version Control & Deployment
+    - Multiple backup files suggest manual versioning
+    - Recommendation: Remove archive files from active directory
+    - Recommendation: Use git tags for releases
+    - Missing: requirements.txt or pyproject.toml
+
+● Summary & Recommendations
+
+  Strengths:
+  - Robust validation framework with 13 rules across 3 severity levels
+  - Comprehensive mojibake handling for encoding issues
+  - Smart incident normalization with statute extraction
+  - Well-documented validation reports (JSON with metadata)
+  - Stratified sampling for large datasets
+  - Unit test coverage for core validation functions
+  - Post-processing audit scripts for quality assurance
+
+  Critical Issues:
+  1. Hardcoded paths throughout codebase - breaks portability
+  2. No ReportNumberNew generation - only validation exists
+  3. Scattered reference files - multiple mapping CSVs need consolidation
+  4. Manual geocoding - lat/lon hardcoded as NaN
+  5. Separate zone backfill - should integrate into main pipeline
+
+  Immediate Action Items:
+  1. Create centralized path configuration in config_enhanced.json
+  2. Move all hardcoded paths to config or use relative paths from project root
+  3. Build ReportNumberNew generation script with sequence tracking
+  4. Create master pipeline orchestrator (main_pipeline.py)
+  5. Add requirements.txt for dependency management
+  6. Document field mapping in /doc directory
+
+  Code Quality Notes:
+  - 01_validate_and_clean.py is 1575 lines - consider breaking into modules
+  - Archive folder in /scripts should be moved outside active codebase
+  - Consider replacing Dask (imported but not used) with pandas for simplicity
+  - Many validation report JSONs in /scripts - should output to /data/02_reports
+
+  All analysis complete! The project has a solid foundation but needs better configuration management, pipeline
+  integration, and missing components implementation. ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+> 
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ? for shortcuts
+
+╭─── Claude Code v2.0.37 ──────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting started                                        │
+│                  Welcome back RAC! │ Run /init to create a CLAUDE.md file with instructions for Cla… │
+│                                                    │ ─────────────────────────────────────────────────────────────── │
+│                       ▐▛███▜▌                      │ Recent activity                                                 │
+│                      ▝▜█████▛▘                     │ No recent activity                                              │
+│                        ▘▘ ▝▝                       │                                                                 │
+│                                                    │                                                                 │
+│              Sonnet 4.5 · Claude Pro               │                                                                 │
+│ C:\Users\carucci_r\OneDrive - City of Hackensack\… │                                                                 │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+> cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+# Then use Claude Code:
+claude-code "Review this CAD data cleaning project. 1. List the directory tree for /scripts, /config, /ref, and /data directories
+2. Summarize the purpose of each Python script in /scripts
+3. Show the structure of any config files (JSON, YAML, etc.) 4. Identify which scripts handle:
+   - Call type normalization
+   - Response type mapping
+   - Address cleaning
+   - Officer field parsing
+   - ReportNumberNew generation
+5. Note any hardcoded file paths
+6. Report missing components based on the Notion project plan"
+
+● I'll review your CAD data cleaning project systematically. Let me create a todo list to track this analysis. ● Bash(tree /F /A scripts)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A config)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A ref)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A data)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Search(pattern: "scripts/**/*")
+  ⎿  Found 73 files (ctrl+o to expand)
+
+● Search(pattern: "config/**/*")
+  ⎿  Found 1 file (ctrl+o to expand)
+
+● Search(pattern: "ref/**/*")
+  ⎿  Found 33 files (ctrl+o to expand)
+
+● Search(pattern: "data/**/*")
+  ⎿  Found 58 files (ctrl+o to expand)
+
+● Read(scripts\01_validate_and_clean.py)
+  ⎿  Read 1575 lines
+
+● Read(scripts\cad_zone_merger.py)
+  ⎿  Read 69 lines
+
+● Read(scripts\list_unmapped_incidents.py)
+  ⎿  Read 27 lines
+
+● Read(scripts\audit_post_fix.py)
+  ⎿  Read 103 lines
+
+● Read(scripts\build_calltype_master.py)
+  ⎿  Read 365 lines
+
+● Read(config\config_enhanced.json)
+  ⎿  Read 15 lines
+
+● Now let me create a comprehensive summary of this CAD data cleaning project. ╭─── Claude Code v2.0.37 ──────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting started                                        │
+│                  Welcome back RAC! │ Run /init to create a CLAUDE.md file with instructions for Cla… │
+│                                                    │ ─────────────────────────────────────────────────────────────── │
+│                       ▐▛███▜▌                      │ Recent activity                                                 │
+│                      ▝▜█████▛▘                     │ No recent activity                                              │
+│                        ▘▘ ▝▝                       │                                                                 │
+│                                                    │                                                                 │
+│              Sonnet 4.5 · Claude Pro               │                                                                 │
+│ C:\Users\carucci_r\OneDrive - City of Hackensack\… │                                                                 │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+────────────────────────────────────────── Ctrl+E to show 36 previous messages ─────────────────────────────────────────
+
+● Read(file_path: "C:\Users\carucci_r\OneDrive - City of
+      Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\scripts\build_calltype_master.py")
+  ⎿  Read 365 lines
+
+● Read(file_path: "C:\Users\carucci_r\OneDrive - City of
+      Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\config\config_enhanced.json")
+  ⎿  Read 15 lines
+
+∴ Thinking…
+
+  Great! Now I have all the key files read. Let me now update the todo list and provide the analysis. Let me mark the
+  second todo as completed and move to the third. ● Now let me create a comprehensive summary of this CAD data cleaning       06:50 PM  claude-sonnet-4-5-20250929
+  project. ╭─── Claude Code v2.0.37 ──────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting started                                        │
+│                  Welcome back RAC! │ Run /init to create a CLAUDE.md file with instructions for Cla… │
+│                                                    │ ─────────────────────────────────────────────────────────────── │
+│                       ▐▛███▜▌                      │ Recent activity                                                 │
+│                      ▝▜█████▛▘                     │ No recent activity                                              │
+│                        ▘▘ ▝▝                       │                                                                 │
+│                                                    │                                                                 │
+│              Sonnet 4.5 · Claude Pro               │                                                                 │
+│ C:\Users\carucci_r\OneDrive - City of Hackensack\… │                                                                 │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+> cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+# Then use Claude Code:
+claude-code "Review this CAD data cleaning project. 1. List the directory tree for /scripts, /config, /ref, and /data directories
+2. Summarize the purpose of each Python script in /scripts
+3. Show the structure of any config files (JSON, YAML, etc.) 4. Identify which scripts handle:
+   - Call type normalization
+   - Response type mapping
+   - Address cleaning
+   - Officer field parsing
+   - ReportNumberNew generation
+5. Note any hardcoded file paths
+6. Report missing components based on the Notion project plan"
+
+● I'll review your CAD data cleaning project systematically. Let me create a todo list to track this analysis. ● Bash(tree /F /A scripts)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A config)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A ref)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A data)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Search(pattern: "scripts/**/*")
+  ⎿  Found 73 files (ctrl+o to expand)
+
+● Search(pattern: "config/**/*")
+  ⎿  Found 1 file (ctrl+o to expand)
+
+● Search(pattern: "ref/**/*")
+  ⎿  Found 33 files (ctrl+o to expand)
+
+● Search(pattern: "data/**/*")
+  ⎿  Found 58 files (ctrl+o to expand)
+
+● Read(scripts\01_validate_and_clean.py)
+  ⎿  Read 1575 lines
+
+● Read(scripts\cad_zone_merger.py)
+  ⎿  Read 69 lines
+
+● Read(scripts\list_unmapped_incidents.py)
+  ⎿  Read 27 lines
+
+● Read(scripts\audit_post_fix.py)
+  ⎿  Read 103 lines
+
+● Read(scripts\build_calltype_master.py)
+  ⎿  Read 365 lines
+
+● Read(config\config_enhanced.json)
+  ⎿  Read 15 lines
+
+● Now let me create a comprehensive summary of this CAD data cleaning project. ● CAD Data Cleaning Engine - Project Review
+
+  1. Directory Structure
+
+  Scripts Directory (/scripts):
+  /scripts
+  ├── 01_validate_and_clean.py           (Main validation & cleaning script)
+  ├── cad_zone_merger.py                  (Zone/Grid backfill utility)
+  ├── list_unmapped_incidents.py          (Incident mapping diagnostics)
+  ├── audit_post_fix.py                   (Post-processing quality checks)
+  ├── build_calltype_master.py            (Call type master mapping builder)
+  ├── 01_validate_and_clean_backup_20251106.py (Backup)
+  └── /archive                            (13 archived versions)
+      └── Various old versions of validate_and_clean
+
+  Config Directory (/config):
+  /config
+  └── config_enhanced.json                (Single JSON config file)
+
+  Reference Directory (/ref):
+  /ref
+  ├── call_types/
+  │   ├── CallType_Categories.xlsx        (Primary call type mapping)
+  │   ├── CallType_Master_Mapping.csv     (Master mapping output)
+  │   ├── unmapped_incidents.csv          (Incidents needing mapping)
+  │   ├── duplicates_review.csv           (Duplicate incident review)
+  │   ├── mapping_changes.csv             (Mapping change log)
+  │   ├── suggested_clean_edits.csv       (Suggested edits)
+  │   └── /archive                        (Historical call type files)
+  ├── cad_call_source_acceptables.csv
+  ├── cad_call_source_map.csv
+  ├── cad_disposition_acceptables.csv
+  ├── cad_disposition_map.csv
+  ├── cad_how_reported_map.csv
+  ├── cad_incident_type_map.csv
+  ├── cad_pd_zone_map.csv
+  ├── cad_priority_map.csv
+  ├── facility_aliases.csv
+  ├── anomalies.csv
+  └── RAW_CAD_CALL_TYPE_EXPORT.xlsx
+
+  Data Directory (/data):
+  /data
+  ├── 01_raw/
+  │   ├── 2019_ALL_CAD.xlsx
+  │   ├── 2020_ALL_CAD.xlsx
+  │   ├── 2021_ALL_CAD.xlsx
+  │   ├── 2022_CAD_ALL.xlsx
+  │   ├── 2023_CAD_ALL.xlsx
+  │   ├── 2024_CAD_ALL.xlsx
+  │   ├── 25_01_10_All_CAD.xlsx
+  │   ├── CAD_Data_Sample.xlsx
+  │   ├── 2019_2025_11_14_cad.xlsx
+  │   └── /sample                         (1000-row samples for testing)
+  ├── 02_reports/
+  │   └── cad_validation/                 (Timestamped validation reports)
+  ├── /rms                                (RMS export files)
+  └── /ESRI_CADExport
+      └── ESRI_CADExport.xlsx
+
+  2.
+
+Python Script Summaries
+
+  01_validate_and_clean.py (Main Script - 1575 lines)
+
+  Purpose: Comprehensive CAD data validation, cleaning, and quality assessment engine
+
+  Key Functions:
+  - Data cleaning (mojibake fixes, text normalization, address standardization)
+  - Incident mapping using CallType_Categories.csv
+  - "How Reported" normalization (handles 9-1-1 Excel date bug)
+  - Stratified/systematic/random sampling for validation
+  - Validation rules (critical/important/optional severity levels)
+  - ESRI export format generation
+  - JSON validation reports with quality scoring
+  - Comprehensive unit tests (pytest)
+
+  Class: CADDataValidator
+  - Validates 13 rules across 3 severity levels
+  - Tracks unmapped incidents and address issues
+  - Generates quality score and recommendations
+
+  cad_zone_merger.py (69 lines)
+
+  Purpose: Backfills PD Zone and Grid values using address lookup table
+
+  Key Functions:
+  - Normalizes addresses (street suffix standardization)
+  - Merges zone/grid from master lookup table
+  - Processes all CAD exports recursively
+  - Outputs *_zoned.xlsx files
+
+  list_unmapped_incidents.py (27 lines)
+
+  Purpose: Identifies incidents missing Response Type mapping
+
+  Key Functions:
+  - Scans sample CSVs for blank Response Type
+  - Generates frequency report of unmapped incidents
+  - Creates seed CSV for manual mapping (missing_CallTypes_seed.csv)
+
+  audit_post_fix.py (103 lines)
+
+  Purpose: Post-processing quality assurance checks
+
+  Key Functions:
+  - Validates "How Reported" normalization (9-1-1 variants, Excel date bug)
+  - Scans for mojibake in text fields
+  - Checks incident mapping coverage (Incident_Norm presence)
+  - Verifies Response Type backfill
+  - Schema validation (column count)
+  - Exits with error code on failures
+
+  build_calltype_master.py (364 lines)
+
+  Purpose: Builds master call type mapping and audit reports
+
+  Key Functions:
+  - Unicode normalization (NFKC, control character removal)
+  - Smart title-casing (preserves acronyms like DWI, EMS, ABC)
+  - Statute extraction (e.g., "2C:39-5" from incident descriptions)
+  - Merges cleaned CallType_Categories with historical incidents
+  - Generates 6 audit reports:
+    - CallType_Master_Mapping.csv (approved + historical)
+    - duplicates_review.csv (multiple raw values → same normalized)
+    - anomalies.csv (normalizer non-idempotent cases)
+    - unmapped_incidents.csv (historical values needing review)
+    - mapping_changes.csv (proposed normalization changes)
+    - suggested_clean_edits.csv (recommended edits)
+
+  3. Config File Structure (config_enhanced.json)
+
+  {
+    "address_abbreviations": {
+      " ST ": " STREET ",
+      " AVE ": " AVENUE ",
+      " BLVD ": " BOULEVARD "
+    },
+    "validation_lists": {
+      "valid_dispositions": ["COMPLETE", "ADVISED", "ARREST", ...],
+      "valid_zones": ["5", "6", "7", "8", "9"],
+      "emergency_incidents": ["ROBBERY", "ASSAULT", "BURGLARY", ...],
+      "non_emergency_incidents": ["NOISE COMPLAINT", "PARKING VIOLATION", ...],
+      "how_reported": ["9-1-1", "WALK-IN", "PHONE", ...]
+    },
+    "min_stratum_size": 50
+  }
+
+  Usage: Loaded by CADDataValidator class with Pydantic schema validation
+
+  4. Script Responsibilities by Task
+
+  | Task                       | Primary Script           | Supporting Scripts                                   |
+  Location               |
+  |----------------------------|--------------------------|------------------------------------------------------|--
+  ----------------------|
+  | Call Type Normalization    | 01_validate_and_clean.py | build_calltype_master.py, list_unmapped_incidents.py |
+  Lines 303-427, 135-136 |
+  | Response Type Mapping      | 01_validate_and_clean.py | build_calltype_master.py                             |
+  Lines 361-384, 419-425 |
+  | Address Cleaning           | 01_validate_and_clean.py | cad_zone_merger.py                                   |
+  Lines 352-358, 28-35   |
+  | Officer Field Parsing      | 01_validate_and_clean.py | None                                                 |
+  Lines 339, 874-889     |
+  | ReportNumberNew Generation | MISSING                  | None                                                 |
+  N/A                    |
+
+  Details:
+
+  Call Type Normalization:
+  - 01_validate_and_clean.py:303-312 - Loads CallType_Categories.csv from 3 possible paths
+  - 01_validate_and_clean.py:361-384 - Applies incident mapping with mojibake fixes
+  - 01_validate_and_clean.py:386-427 - _apply_incident_mapping() merges normalized values
+  - build_calltype_master.py:93-113 - normalise_call_type() with smart title-casing
+
+  Response Type Mapping:
+  - 01_validate_and_clean.py:376-378 - Backfills Response Type from mapping table
+  - 01_validate_and_clean.py:419-425 - Fills blank Response Type with mapped values
+  - build_calltype_master.py:154-158 - Detects Response_Type column variants
+
+  Address Cleaning:
+  - 01_validate_and_clean.py:352-358 - Applies abbreviation expansion + uppercase
+  - 01_validate_and_clean.py:821-872 - Validates address completeness (house number, suffix, city/state/zip)
+  - cad_zone_merger.py:28-35 - Normalizes addresses for zone lookup
+
+  Officer Field Parsing:
+  - 01_validate_and_clean.py:339 - Normalizes to uppercase, strips whitespace
+  - 01_validate_and_clean.py:874-889 - Validates officer assignment for dispatched calls
+  - No parsing logic (e.g., extracting badge numbers, splitting multi-officer fields)
+
+  ReportNumberNew Generation:
+  - NOT IMPLEMENTED - No script generates case numbers
+  - Validation exists (01_validate_and_clean.py:755-769) for format YY-XXXXXX[A-Z]? 5. Hardcoded File Paths
+
+  Critical Paths (will break in different environments):
+
+  01_validate_and_clean.py:
+  - Line 293: r"C:\Users\carucci_r\OneDrive - City of
+  Hackensack\09_Reference\Classifications\CallTypes\CallType_Categories.csv"
+  - Line 1533: r"C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Pipeline\data\01_raw"
+
+  cad_zone_merger.py:
+  - Line 8: EXPORT_ROOT = r"C:\Users\carucci_r\OneDrive - City of Hackensack\05_EXPORTS\_CAD"
+  - Line 11: ZONE_MASTER = r"C:\TEMP\zone_grid_master.xlsx"
+
+  list_unmapped_incidents.py:
+  - Line 5: r"C:\Users\carucci_r\OneDrive - City of
+  Hackensack\02_ETL_Scripts\CAD_Data_Pipeline\data\01_raw\sample\2024_CAD_ALL_SAMPLE_1000.csv"
+  - Line 6: r"C:\Users\carucci_r\OneDrive - City of
+  Hackensack\02_ETL_Scripts\CAD_Data_Pipeline\data\02_reports\cad_validation"
+
+  audit_post_fix.py:
+  - Line 8-10: SAMPLE_DIR = Path(r"C:\Users\carucci_r\OneDrive - City of
+  Hackensack\02_ETL_Scripts\CAD_Data_Pipeline\data\01_raw\sample")
+
+  build_calltype_master.py:
+  - Line 314: Default ref/CallType_Categories_clean.xlsx (relative path - OK)
+  - Line 320: Default ref/2019_2025_10_Call_Types_Incidents.csv.txt (relative path - OK)
+
+  Recommendation: Move all hardcoded paths to config_enhanced.json or use environment variables. 6. Missing Components (Based on Typical ETL Pipeline)
+
+● Missing/Incomplete Components:
+
+  1. ReportNumberNew Generation Script
+    - Validation exists but no generation logic
+    - Need: Script to create case numbers in YY-XXXXXX format with sequence tracking
+    - Need: Supplement suffix logic (YY-XXXXXXA, YY-XXXXXXB, etc.) 2. Officer Field Parser
+    - Currently only normalizes/validates, doesn't parse
+    - Missing: Badge number extraction
+    - Missing: Multi-officer field splitting
+    - Missing: Officer roster validation lookup
+  3. Zone/Grid Backfill Integration
+    - cad_zone_merger.py exists but runs separately
+    - Should integrate into main 01_validate_and_clean.py pipeline
+    - Need: Fallback logic when address lookup fails
+  4. RMS Data Integration
+    - RMS files exist in /data/rms but no integration script
+    - Missing: CAD-RMS join logic
+    - Missing: Address backfill from RMS when CAD address is poor quality
+  5. Geocoding Module
+    - No geocoding script found
+    - Missing: Latitude/longitude population (currently hardcoded as NaN in line 574-575)
+    - Need: ESRI/Google Maps API integration or local geocoder
+  6. Automated Pipeline Orchestration
+    - Missing: Master script to run all components in sequence
+    - Missing: Dependency management between scripts
+    - Recommendation: Add main_pipeline.py or use workflow tool (Airflow, Prefect)
+  7. Error Recovery & Logging
+    - Logging exists but no centralized error handler
+    - Missing: Failed record quarantine system
+    - Missing: Retry logic for transient failures
+  8. Configuration Management
+    - Only one config file (config_enhanced.json)
+    - Missing configs for:
+        - File paths (currently hardcoded)
+      - Database connections (if applicable)
+      - API credentials for geocoding
+      - Email notifications for validation failures
+  9. Data Quality Dashboard
+    - JSON reports generated but no visualization
+    - Recommendation: Add HTML/PDF report generation
+    - Recommendation: Plotly/Dash dashboard for quality trends over time
+  10. Documentation
+    - No README.md in scripts directory
+    - Missing: Data dictionary
+    - Missing: Field mapping documentation
+    - Found: Some markdown docs in project root (based on git status)
+  11. Testing Infrastructure
+    - Unit tests exist in 01_validate_and_clean.py (lines 1356-1521)
+    - Missing: Integration tests
+    - Missing: End-to-end pipeline tests
+    - Missing: Test fixtures/sample data in dedicated /tests directory
+  12. Version Control & Deployment
+    - Multiple backup files suggest manual versioning
+    - Recommendation: Remove archive files from active directory
+    - Recommendation: Use git tags for releases
+    - Missing: requirements.txt or pyproject.toml
+
+● Summary & Recommendations
+
+  Strengths:
+  - Robust validation framework with 13 rules across 3 severity levels
+  - Comprehensive mojibake handling for encoding issues
+  - Smart incident normalization with statute extraction
+  - Well-documented validation reports (JSON with metadata)
+  - Stratified sampling for large datasets
+  - Unit test coverage for core validation functions
+  - Post-processing audit scripts for quality assurance
+
+  Critical Issues:
+  1. Hardcoded paths throughout codebase - breaks portability
+  2. No ReportNumberNew generation - only validation exists
+  3. Scattered reference files - multiple mapping CSVs need consolidation
+  4. Manual geocoding - lat/lon hardcoded as NaN
+  5. Separate zone backfill - should integrate into main pipeline
+
+  Immediate Action Items:
+  1. Create centralized path configuration in config_enhanced.json
+  2. Move all hardcoded paths to config or use relative paths from project root
+  3. Build ReportNumberNew generation script with sequence tracking
+  4. Create master pipeline orchestrator (main_pipeline.py)
+  5. Add requirements.txt for dependency management
+  6. Document field mapping in /doc directory
+
+  Code Quality Notes:
+  - 01_validate_and_clean.py is 1575 lines - consider breaking into modules
+  - Archive folder in /scripts should be moved outside active codebase
+  - Consider replacing Dask (imported but not used) with pandas for simplicity
+  - Many validation report JSONs in /scripts - should output to /data/02_reports
+
+  All analysis complete! The project has a solid foundation but needs better configuration management, pipeline
+  integration, and missing components implementation. ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+> 
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ? for shortcuts
+
+╭─── Claude Code v2.0.37 ──────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting started                                        │
+│                  Welcome back RAC! │ Run /init to create a CLAUDE.md file with instructions for Cla… │
+│                                                    │ ─────────────────────────────────────────────────────────────── │
+│                       ▐▛███▜▌                      │ Recent activity                                                 │
+│                      ▝▜█████▛▘                     │ No recent activity                                              │
+│                        ▘▘ ▝▝                       │                                                                 │
+│                                                    │                                                                 │
+│              Sonnet 4.5 · Claude Pro               │                                                                 │
+│ C:\Users\carucci_r\OneDrive - City of Hackensack\… │                                                                 │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+> cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+# Then use Claude Code:
+claude-code "Review this CAD data cleaning project. 1. List the directory tree for /scripts, /config, /ref, and /data directories
+2. Summarize the purpose of each Python script in /scripts
+3. Show the structure of any config files (JSON, YAML, etc.) 4. Identify which scripts handle:
+   - Call type normalization
+   - Response type mapping
+   - Address cleaning
+   - Officer field parsing
+   - ReportNumberNew generation
+5. Note any hardcoded file paths
+6. Report missing components based on the Notion project plan"
+
+● I'll review your CAD data cleaning project systematically. Let me create a todo list to track this analysis. ● Bash(tree /F /A scripts)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A config)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A ref)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A data)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Search(pattern: "scripts/**/*")
+  ⎿  Found 73 files (ctrl+o to expand)
+
+● Search(pattern: "config/**/*")
+  ⎿  Found 1 file (ctrl+o to expand)
+
+● Search(pattern: "ref/**/*")
+  ⎿  Found 33 files (ctrl+o to expand)
+
+● Search(pattern: "data/**/*")
+  ⎿  Found 58 files (ctrl+o to expand)
+
+● Read(scripts\01_validate_and_clean.py)
+  ⎿  Read 1575 lines
+
+● Read(scripts\cad_zone_merger.py)
+  ⎿  Read 69 lines
+
+● Read(scripts\list_unmapped_incidents.py)
+  ⎿  Read 27 lines
+
+● Read(scripts\audit_post_fix.py)
+  ⎿  Read 103 lines
+
+● Read(scripts\build_calltype_master.py)
+  ⎿  Read 365 lines
+
+● Read(config\config_enhanced.json)
+  ⎿  Read 15 lines
+
+● Now let me create a comprehensive summary of this CAD data cleaning project. ╭─── Claude Code v2.0.37 ──────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting started                                        │
+│                  Welcome back RAC! │ Run /init to create a CLAUDE.md file with instructions for Cla… │
+│                                                    │ ─────────────────────────────────────────────────────────────── │
+│                       ▐▛███▜▌                      │ Recent activity                                                 │
+│                      ▝▜█████▛▘                     │ No recent activity                                              │
+│                        ▘▘ ▝▝                       │                                                                 │
+│                                                    │                                                                 │
+│              Sonnet 4.5 · Claude Pro               │                                                                 │
+│ C:\Users\carucci_r\OneDrive - City of Hackensack\… │                                                                 │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+────────────────────────────────────────── Ctrl+E to show 36 previous messages ─────────────────────────────────────────
+
+● Read(file_path: "C:\Users\carucci_r\OneDrive - City of
+      Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\scripts\build_calltype_master.py")
+  ⎿  Read 365 lines
+
+● Read(file_path: "C:\Users\carucci_r\OneDrive - City of
+      Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\config\config_enhanced.json")
+  ⎿  Read 15 lines
+
+∴ Thinking…
+
+  Great! Now I have all the key files read. Let me now update the todo list and provide the analysis. Let me mark the
+  second todo as completed and move to the third. ● Now let me create a comprehensive summary of this CAD data cleaning       06:50 PM  claude-sonnet-4-5-20250929
+  project. ╭─── Claude Code v2.0.37 ──────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting started                                        │
+│                  Welcome back RAC! │ Run /init to create a CLAUDE.md file with instructions for Cla… │
+│                                                    │ ─────────────────────────────────────────────────────────────── │
+│                       ▐▛███▜▌                      │ Recent activity                                                 │
+│                      ▝▜█████▛▘                     │ No recent activity                                              │
+│                        ▘▘ ▝▝                       │                                                                 │
+│                                                    │                                                                 │
+│              Sonnet 4.5 · Claude Pro               │                                                                 │
+│ C:\Users\carucci_r\OneDrive - City of Hackensack\… │                                                                 │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+> cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+# Then use Claude Code:
+claude-code "Review this CAD data cleaning project. 1. List the directory tree for /scripts, /config, /ref, and /data directories
+2. Summarize the purpose of each Python script in /scripts
+3. Show the structure of any config files (JSON, YAML, etc.) 4. Identify which scripts handle:
+   - Call type normalization
+   - Response type mapping
+   - Address cleaning
+   - Officer field parsing
+   - ReportNumberNew generation
+5. Note any hardcoded file paths
+6. Report missing components based on the Notion project plan"
+
+● I'll review your CAD data cleaning project systematically. Let me create a todo list to track this analysis. ● Bash(tree /F /A scripts)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A config)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A ref)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A data)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Search(pattern: "scripts/**/*")
+  ⎿  Found 73 files (ctrl+o to expand)
+
+● Search(pattern: "config/**/*")
+  ⎿  Found 1 file (ctrl+o to expand)
+
+● Search(pattern: "ref/**/*")
+  ⎿  Found 33 files (ctrl+o to expand)
+
+● Search(pattern: "data/**/*")
+  ⎿  Found 58 files (ctrl+o to expand)
+
+● Read(scripts\01_validate_and_clean.py)
+  ⎿  Read 1575 lines
+
+● Read(scripts\cad_zone_merger.py)
+  ⎿  Read 69 lines
+
+● Read(scripts\list_unmapped_incidents.py)
+  ⎿  Read 27 lines
+
+● Read(scripts\audit_post_fix.py)
+  ⎿  Read 103 lines
+
+● Read(scripts\build_calltype_master.py)
+  ⎿  Read 365 lines
+
+● Read(config\config_enhanced.json)
+  ⎿  Read 15 lines
+
+● Now let me create a comprehensive summary of this CAD data cleaning project. ● CAD Data Cleaning Engine - Project Review
+
+  1. Directory Structure
+
+  Scripts Directory (/scripts):
+  /scripts
+  ├── 01_validate_and_clean.py           (Main validation & cleaning script)
+  ├── cad_zone_merger.py                  (Zone/Grid backfill utility)
+  ├── list_unmapped_incidents.py          (Incident mapping diagnostics)
+  ├── audit_post_fix.py                   (Post-processing quality checks)
+  ├── build_calltype_master.py            (Call type master mapping builder)
+  ├── 01_validate_and_clean_backup_20251106.py (Backup)
+  └── /archive                            (13 archived versions)
+      └── Various old versions of validate_and_clean
+
+  Config Directory (/config):
+  /config
+  └── config_enhanced.json                (Single JSON config file)
+
+  Reference Directory (/ref):
+  /ref
+  ├── call_types/
+  │   ├── CallType_Categories.xlsx        (Primary call type mapping)
+  │   ├── CallType_Master_Mapping.csv     (Master mapping output)
+  │   ├── unmapped_incidents.csv          (Incidents needing mapping)
+  │   ├── duplicates_review.csv           (Duplicate incident review)
+  │   ├── mapping_changes.csv             (Mapping change log)
+  │   ├── suggested_clean_edits.csv       (Suggested edits)
+  │   └── /archive                        (Historical call type files)
+  ├── cad_call_source_acceptables.csv
+  ├── cad_call_source_map.csv
+  ├── cad_disposition_acceptables.csv
+  ├── cad_disposition_map.csv
+  ├── cad_how_reported_map.csv
+  ├── cad_incident_type_map.csv
+  ├── cad_pd_zone_map.csv
+  ├── cad_priority_map.csv
+  ├── facility_aliases.csv
+  ├── anomalies.csv
+  └── RAW_CAD_CALL_TYPE_EXPORT.xlsx
+
+  Data Directory (/data):
+  /data
+  ├── 01_raw/
+  │   ├── 2019_ALL_CAD.xlsx
+  │   ├── 2020_ALL_CAD.xlsx
+  │   ├── 2021_ALL_CAD.xlsx
+  │   ├── 2022_CAD_ALL.xlsx
+  │   ├── 2023_CAD_ALL.xlsx
+  │   ├── 2024_CAD_ALL.xlsx
+  │   ├── 25_01_10_All_CAD.xlsx
+  │   ├── CAD_Data_Sample.xlsx
+  │   ├── 2019_2025_11_14_cad.xlsx
+  │   └── /sample                         (1000-row samples for testing)
+  ├── 02_reports/
+  │   └── cad_validation/                 (Timestamped validation reports)
+  ├── /rms                                (RMS export files)
+  └── /ESRI_CADExport
+      └── ESRI_CADExport.xlsx
+
+  2. Python Script Summaries
+
+  01_validate_and_clean.py (Main Script - 1575 lines)
+
+  Purpose: Comprehensive CAD data validation, cleaning, and quality assessment engine
+
+  Key Functions:
+  - Data cleaning (mojibake fixes, text normalization, address standardization)
+  - Incident mapping using CallType_Categories.csv
+  - "How Reported" normalization (handles 9-1-1 Excel date bug)
+  - Stratified/systematic/random sampling for validation
+  - Validation rules (critical/important/optional severity levels)
+  - ESRI export format generation
+  - JSON validation reports with quality scoring
+  - Comprehensive unit tests (pytest)
+
+  Class: CADDataValidator
+  - Validates 13 rules across 3 severity levels
+  - Tracks unmapped incidents and address issues
+  - Generates quality score and recommendations
+
+  cad_zone_merger.py (69 lines)
+
+  Purpose: Backfills PD Zone and Grid values using address lookup table
+
+  Key Functions:
+  - Normalizes addresses (street suffix standardization)
+  - Merges zone/grid from master lookup table
+  - Processes all CAD exports recursively
+  - Outputs *_zoned.xlsx files
+
+  list_unmapped_incidents.py (27 lines)
+
+  Purpose: Identifies incidents missing Response Type mapping
+
+  Key Functions:
+  - Scans sample CSVs for blank Response Type
+  - Generates frequency report of unmapped incidents
+  - Creates seed CSV for manual mapping (missing_CallTypes_seed.csv)
+
+  audit_post_fix.py (103 lines)
+
+  Purpose: Post-processing quality assurance checks
+
+  Key Functions:
+  - Validates "How Reported" normalization (9-1-1 variants, Excel date bug)
+  - Scans for mojibake in text fields
+  - Checks incident mapping coverage (Incident_Norm presence)
+  - Verifies Response Type backfill
+  - Schema validation (column count)
+  - Exits with error code on failures
+
+  build_calltype_master.py (364 lines)
+
+  Purpose: Builds master call type mapping and audit reports
+
+  Key Functions:
+  - Unicode normalization (NFKC, control character removal)
+  - Smart title-casing (preserves acronyms like DWI, EMS, ABC)
+  - Statute extraction (e.g., "2C:39-5" from incident descriptions)
+  - Merges cleaned CallType_Categories with historical incidents
+  - Generates 6 audit reports:
+    - CallType_Master_Mapping.csv (approved + historical)
+    - duplicates_review.csv (multiple raw values → same normalized)
+    - anomalies.csv (normalizer non-idempotent cases)
+    - unmapped_incidents.csv (historical values needing review)
+    - mapping_changes.csv (proposed normalization changes)
+    - suggested_clean_edits.csv (recommended edits)
+
+  3. Config File Structure (config_enhanced.json)
+
+  {
+    "address_abbreviations": {
+      " ST ": " STREET ",
+      " AVE ": " AVENUE ",
+      " BLVD ": " BOULEVARD "
+    },
+    "validation_lists": {
+      "valid_dispositions": ["COMPLETE", "ADVISED", "ARREST", ...],
+      "valid_zones": ["5", "6", "7", "8", "9"],
+      "emergency_incidents": ["ROBBERY", "ASSAULT", "BURGLARY", ...],
+      "non_emergency_incidents": ["NOISE COMPLAINT", "PARKING VIOLATION", ...],
+      "how_reported": ["9-1-1", "WALK-IN", "PHONE", ...]
+    },
+    "min_stratum_size": 50
+  }
+
+  Usage: Loaded by CADDataValidator class with Pydantic schema validation
+
+  4. Script Responsibilities by Task
+
+  | Task                       | Primary Script           | Supporting Scripts                                   |
+  Location               |
+  |----------------------------|--------------------------|------------------------------------------------------|--
+  ----------------------|
+  | Call Type Normalization    | 01_validate_and_clean.py | build_calltype_master.py, list_unmapped_incidents.py |
+  Lines 303-427, 135-136 |
+  | Response Type Mapping      | 01_validate_and_clean.py | build_calltype_master.py                             |
+  Lines 361-384, 419-425 |
+  | Address Cleaning           | 01_validate_and_clean.py | cad_zone_merger.py                                   |
+  Lines 352-358, 28-35   |
+  | Officer Field Parsing      | 01_validate_and_clean.py | None                                                 |
+  Lines 339, 874-889     |
+  | ReportNumberNew Generation | MISSING                  | None                                                 |
+  N/A                    |
+
+  Details:
+
+  Call Type Normalization:
+  - 01_validate_and_clean.py:303-312 - Loads CallType_Categories.csv from 3 possible paths
+  - 01_validate_and_clean.py:361-384 - Applies incident mapping with mojibake fixes
+  - 01_validate_and_clean.py:386-427 - _apply_incident_mapping() merges normalized values
+  - build_calltype_master.py:93-113 - normalise_call_type() with smart title-casing
+
+  Response Type Mapping:
+  - 01_validate_and_clean.py:376-378 - Backfills Response Type from mapping table
+  - 01_validate_and_clean.py:419-425 - Fills blank Response Type with mapped values
+  - build_calltype_master.py:154-158 - Detects Response_Type column variants
+
+  Address Cleaning:
+  - 01_validate_and_clean.py:352-358 - Applies abbreviation expansion + uppercase
+  - 01_validate_and_clean.py:821-872 - Validates address completeness (house number, suffix, city/state/zip)
+  - cad_zone_merger.py:28-35 - Normalizes addresses for zone lookup
+
+  Officer Field Parsing:
+  - 01_validate_and_clean.py:339 - Normalizes to uppercase, strips whitespace
+  - 01_validate_and_clean.py:874-889 - Validates officer assignment for dispatched calls
+  - No parsing logic (e.g., extracting badge numbers, splitting multi-officer fields)
+
+  ReportNumberNew Generation:
+  - NOT IMPLEMENTED - No script generates case numbers
+  - Validation exists (01_validate_and_clean.py:755-769) for format YY-XXXXXX[A-Z]? 5. Hardcoded File Paths
+
+  Critical Paths (will break in different environments):
+
+  01_validate_and_clean.py:
+  - Line 293: r"C:\Users\carucci_r\OneDrive - City of
+  Hackensack\09_Reference\Classifications\CallTypes\CallType_Categories.csv"
+  - Line 1533: r"C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Pipeline\data\01_raw"
+
+  cad_zone_merger.py:
+  - Line 8: EXPORT_ROOT = r"C:\Users\carucci_r\OneDrive - City of Hackensack\05_EXPORTS\_CAD"
+  - Line 11: ZONE_MASTER = r"C:\TEMP\zone_grid_master.xlsx"
+
+  list_unmapped_incidents.py:
+  - Line 5: r"C:\Users\carucci_r\OneDrive - City of
+  Hackensack\02_ETL_Scripts\CAD_Data_Pipeline\data\01_raw\sample\2024_CAD_ALL_SAMPLE_1000.csv"
+  - Line 6: r"C:\Users\carucci_r\OneDrive - City of
+  Hackensack\02_ETL_Scripts\CAD_Data_Pipeline\data\02_reports\cad_validation"
+
+  audit_post_fix.py:
+  - Line 8-10: SAMPLE_DIR = Path(r"C:\Users\carucci_r\OneDrive - City of
+  Hackensack\02_ETL_Scripts\CAD_Data_Pipeline\data\01_raw\sample")
+
+  build_calltype_master.py:
+  - Line 314: Default ref/CallType_Categories_clean.xlsx (relative path - OK)
+  - Line 320: Default ref/2019_2025_10_Call_Types_Incidents.csv.txt (relative path - OK)
+
+  Recommendation: Move all hardcoded paths to config_enhanced.json or use environment variables. 6. Missing Components (Based on Typical ETL Pipeline)
+
+● Missing/Incomplete Components:
+
+  1. ReportNumberNew Generation Script
+    - Validation exists but no generation logic
+    - Need: Script to create case numbers in YY-XXXXXX format with sequence tracking
+    - Need: Supplement suffix logic (YY-XXXXXXA, YY-XXXXXXB, etc.) 2. Officer Field Parser
+    - Currently only normalizes/validates, doesn't parse
+    - Missing: Badge number extraction
+    - Missing: Multi-officer field splitting
+    - Missing: Officer roster validation lookup
+  3. Zone/Grid Backfill Integration
+    - cad_zone_merger.py exists but runs separately
+    - Should integrate into main 01_validate_and_clean.py pipeline
+    - Need: Fallback logic when address lookup fails
+  4.
+
+RMS Data Integration
+    - RMS files exist in /data/rms but no integration script
+    - Missing: CAD-RMS join logic
+    - Missing: Address backfill from RMS when CAD address is poor quality
+  5. Geocoding Module
+    - No geocoding script found
+    - Missing: Latitude/longitude population (currently hardcoded as NaN in line 574-575)
+    - Need: ESRI/Google Maps API integration or local geocoder
+  6. Automated Pipeline Orchestration
+    - Missing: Master script to run all components in sequence
+    - Missing: Dependency management between scripts
+    - Recommendation: Add main_pipeline.py or use workflow tool (Airflow, Prefect)
+  7. Error Recovery & Logging
+    - Logging exists but no centralized error handler
+    - Missing: Failed record quarantine system
+    - Missing: Retry logic for transient failures
+  8. Configuration Management
+    - Only one config file (config_enhanced.json)
+    - Missing configs for:
+        - File paths (currently hardcoded)
+      - Database connections (if applicable)
+      - API credentials for geocoding
+      - Email notifications for validation failures
+  9. Data Quality Dashboard
+    - JSON reports generated but no visualization
+    - Recommendation: Add HTML/PDF report generation
+    - Recommendation: Plotly/Dash dashboard for quality trends over time
+  10. Documentation
+    - No README.md in scripts directory
+    - Missing: Data dictionary
+    - Missing: Field mapping documentation
+    - Found: Some markdown docs in project root (based on git status)
+  11. Testing Infrastructure
+    - Unit tests exist in 01_validate_and_clean.py (lines 1356-1521)
+    - Missing: Integration tests
+    - Missing: End-to-end pipeline tests
+    - Missing: Test fixtures/sample data in dedicated /tests directory
+  12. Version Control & Deployment
+    - Multiple backup files suggest manual versioning
+    - Recommendation: Remove archive files from active directory
+    - Recommendation: Use git tags for releases
+    - Missing: requirements.txt or pyproject.toml
+
+● Summary & Recommendations
+
+  Strengths:
+  - Robust validation framework with 13 rules across 3 severity levels
+  - Comprehensive mojibake handling for encoding issues
+  - Smart incident normalization with statute extraction
+  - Well-documented validation reports (JSON with metadata)
+  - Stratified sampling for large datasets
+  - Unit test coverage for core validation functions
+  - Post-processing audit scripts for quality assurance
+
+  Critical Issues:
+  1. Hardcoded paths throughout codebase - breaks portability
+  2. No ReportNumberNew generation - only validation exists
+  3. Scattered reference files - multiple mapping CSVs need consolidation
+  4. Manual geocoding - lat/lon hardcoded as NaN
+  5. Separate zone backfill - should integrate into main pipeline
+
+  Immediate Action Items:
+  1. Create centralized path configuration in config_enhanced.json
+  2. Move all hardcoded paths to config or use relative paths from project root
+  3. Build ReportNumberNew generation script with sequence tracking
+  4. Create master pipeline orchestrator (main_pipeline.py)
+  5. Add requirements.txt for dependency management
+  6. Document field mapping in /doc directory
+
+  Code Quality Notes:
+  - 01_validate_and_clean.py is 1575 lines - consider breaking into modules
+  - Archive folder in /scripts should be moved outside active codebase
+  - Consider replacing Dask (imported but not used) with pandas for simplicity
+  - Many validation report JSONs in /scripts - should output to /data/02_reports
+
+  All analysis complete! The project has a solid foundation but needs better configuration management, pipeline
+  integration, and missing components implementation. ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+> 
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ? for shortcuts
+
+╭─── Claude Code v2.0.37 ──────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting started                                        │
+│                  Welcome back RAC! │ Run /init to create a CLAUDE.md file with instructions for Cla… │
+│                                                    │ ─────────────────────────────────────────────────────────────── │
+│                       ▐▛███▜▌                      │ Recent activity                                                 │
+│                      ▝▜█████▛▘                     │ No recent activity                                              │
+│                        ▘▘ ▝▝                       │                                                                 │
+│                                                    │                                                                 │
+│              Sonnet 4.5 · Claude Pro               │                                                                 │
+│ C:\Users\carucci_r\OneDrive - City of Hackensack\… │                                                                 │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+> cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+# Then use Claude Code:
+claude-code "Review this CAD data cleaning project. 1. List the directory tree for /scripts, /config, /ref, and /data directories
+2. Summarize the purpose of each Python script in /scripts
+3. Show the structure of any config files (JSON, YAML, etc.) 4. Identify which scripts handle:
+   - Call type normalization
+   - Response type mapping
+   - Address cleaning
+   - Officer field parsing
+   - ReportNumberNew generation
+5. Note any hardcoded file paths
+6. Report missing components based on the Notion project plan"
+
+● I'll review your CAD data cleaning project systematically. Let me create a todo list to track this analysis. ● Bash(tree /F /A scripts)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A config)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A ref)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A data)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Search(pattern: "scripts/**/*")
+  ⎿  Found 73 files (ctrl+o to expand)
+
+● Search(pattern: "config/**/*")
+  ⎿  Found 1 file (ctrl+o to expand)
+
+● Search(pattern: "ref/**/*")
+  ⎿  Found 33 files (ctrl+o to expand)
+
+● Search(pattern: "data/**/*")
+  ⎿  Found 58 files (ctrl+o to expand)
+
+● Read(scripts\01_validate_and_clean.py)
+  ⎿  Read 1575 lines
+
+● Read(scripts\cad_zone_merger.py)
+  ⎿  Read 69 lines
+
+● Read(scripts\list_unmapped_incidents.py)
+  ⎿  Read 27 lines
+
+● Read(scripts\audit_post_fix.py)
+  ⎿  Read 103 lines
+
+● Read(scripts\build_calltype_master.py)
+  ⎿  Read 365 lines
+
+● Read(config\config_enhanced.json)
+  ⎿  Read 15 lines
+
+● Now let me create a comprehensive summary of this CAD data cleaning project. ╭─── Claude Code v2.0.37 ──────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting started                                        │
+│                  Welcome back RAC! │ Run /init to create a CLAUDE.md file with instructions for Cla… │
+│                                                    │ ─────────────────────────────────────────────────────────────── │
+│                       ▐▛███▜▌                      │ Recent activity                                                 │
+│                      ▝▜█████▛▘                     │ No recent activity                                              │
+│                        ▘▘ ▝▝                       │                                                                 │
+│                                                    │                                                                 │
+│              Sonnet 4.5 · Claude Pro               │                                                                 │
+│ C:\Users\carucci_r\OneDrive - City of Hackensack\… │                                                                 │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+────────────────────────────────────────── Ctrl+E to show 36 previous messages ─────────────────────────────────────────
+
+● Read(file_path: "C:\Users\carucci_r\OneDrive - City of
+      Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\scripts\build_calltype_master.py")
+  ⎿  Read 365 lines
+
+● Read(file_path: "C:\Users\carucci_r\OneDrive - City of
+      Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\config\config_enhanced.json")
+  ⎿  Read 15 lines
+
+∴ Thinking…
+
+  Great! Now I have all the key files read. Let me now update the todo list and provide the analysis. Let me mark the
+  second todo as completed and move to the third. ● Now let me create a comprehensive summary of this CAD data cleaning       06:50 PM  claude-sonnet-4-5-20250929
+  project. ╭─── Claude Code v2.0.37 ──────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting started                                        │
+│                  Welcome back RAC! │ Run /init to create a CLAUDE.md file with instructions for Cla… │
+│                                                    │ ─────────────────────────────────────────────────────────────── │
+│                       ▐▛███▜▌                      │ Recent activity                                                 │
+│                      ▝▜█████▛▘                     │ No recent activity                                              │
+│                        ▘▘ ▝▝                       │                                                                 │
+│                                                    │                                                                 │
+│              Sonnet 4.5 · Claude Pro               │                                                                 │
+│ C:\Users\carucci_r\OneDrive - City of Hackensack\… │                                                                 │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+> cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+# Then use Claude Code:
+claude-code "Review this CAD data cleaning project. 1. List the directory tree for /scripts, /config, /ref, and /data directories
+2. Summarize the purpose of each Python script in /scripts
+3. Show the structure of any config files (JSON, YAML, etc.) 4. Identify which scripts handle:
+   - Call type normalization
+   - Response type mapping
+   - Address cleaning
+   - Officer field parsing
+   - ReportNumberNew generation
+5. Note any hardcoded file paths
+6. Report missing components based on the Notion project plan"
+
+● I'll review your CAD data cleaning project systematically. Let me create a todo list to track this analysis. ● Bash(tree /F /A scripts)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A config)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A ref)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A data)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Search(pattern: "scripts/**/*")
+  ⎿  Found 73 files (ctrl+o to expand)
+
+● Search(pattern: "config/**/*")
+  ⎿  Found 1 file (ctrl+o to expand)
+
+● Search(pattern: "ref/**/*")
+  ⎿  Found 33 files (ctrl+o to expand)
+
+● Search(pattern: "data/**/*")
+  ⎿  Found 58 files (ctrl+o to expand)
+
+● Read(scripts\01_validate_and_clean.py)
+  ⎿  Read 1575 lines
+
+● Read(scripts\cad_zone_merger.py)
+  ⎿  Read 69 lines
+
+● Read(scripts\list_unmapped_incidents.py)
+  ⎿  Read 27 lines
+
+● Read(scripts\audit_post_fix.py)
+  ⎿  Read 103 lines
+
+● Read(scripts\build_calltype_master.py)
+  ⎿  Read 365 lines
+
+● Read(config\config_enhanced.json)
+  ⎿  Read 15 lines
+
+● Now let me create a comprehensive summary of this CAD data cleaning project. ● CAD Data Cleaning Engine - Project Review
+
+  1. Directory Structure
+
+  Scripts Directory (/scripts):
+  /scripts
+  ├── 01_validate_and_clean.py           (Main validation & cleaning script)
+  ├── cad_zone_merger.py                  (Zone/Grid backfill utility)
+  ├── list_unmapped_incidents.py          (Incident mapping diagnostics)
+  ├── audit_post_fix.py                   (Post-processing quality checks)
+  ├── build_calltype_master.py            (Call type master mapping builder)
+  ├── 01_validate_and_clean_backup_20251106.py (Backup)
+  └── /archive                            (13 archived versions)
+      └── Various old versions of validate_and_clean
+
+  Config Directory (/config):
+  /config
+  └── config_enhanced.json                (Single JSON config file)
+
+  Reference Directory (/ref):
+  /ref
+  ├── call_types/
+  │   ├── CallType_Categories.xlsx        (Primary call type mapping)
+  │   ├── CallType_Master_Mapping.csv     (Master mapping output)
+  │   ├── unmapped_incidents.csv          (Incidents needing mapping)
+  │   ├── duplicates_review.csv           (Duplicate incident review)
+  │   ├── mapping_changes.csv             (Mapping change log)
+  │   ├── suggested_clean_edits.csv       (Suggested edits)
+  │   └── /archive                        (Historical call type files)
+  ├── cad_call_source_acceptables.csv
+  ├── cad_call_source_map.csv
+  ├── cad_disposition_acceptables.csv
+  ├── cad_disposition_map.csv
+  ├── cad_how_reported_map.csv
+  ├── cad_incident_type_map.csv
+  ├── cad_pd_zone_map.csv
+  ├── cad_priority_map.csv
+  ├── facility_aliases.csv
+  ├── anomalies.csv
+  └── RAW_CAD_CALL_TYPE_EXPORT.xlsx
+
+  Data Directory (/data):
+  /data
+  ├── 01_raw/
+  │   ├── 2019_ALL_CAD.xlsx
+  │   ├── 2020_ALL_CAD.xlsx
+  │   ├── 2021_ALL_CAD.xlsx
+  │   ├── 2022_CAD_ALL.xlsx
+  │   ├── 2023_CAD_ALL.xlsx
+  │   ├── 2024_CAD_ALL.xlsx
+  │   ├── 25_01_10_All_CAD.xlsx
+  │   ├── CAD_Data_Sample.xlsx
+  │   ├── 2019_2025_11_14_cad.xlsx
+  │   └── /sample                         (1000-row samples for testing)
+  ├── 02_reports/
+  │   └── cad_validation/                 (Timestamped validation reports)
+  ├── /rms                                (RMS export files)
+  └── /ESRI_CADExport
+      └── ESRI_CADExport.xlsx
+
+  2. Python Script Summaries
+
+  01_validate_and_clean.py (Main Script - 1575 lines)
+
+  Purpose: Comprehensive CAD data validation, cleaning, and quality assessment engine
+
+  Key Functions:
+  - Data cleaning (mojibake fixes, text normalization, address standardization)
+  - Incident mapping using CallType_Categories.csv
+  - "How Reported" normalization (handles 9-1-1 Excel date bug)
+  - Stratified/systematic/random sampling for validation
+  - Validation rules (critical/important/optional severity levels)
+  - ESRI export format generation
+  - JSON validation reports with quality scoring
+  - Comprehensive unit tests (pytest)
+
+  Class: CADDataValidator
+  - Validates 13 rules across 3 severity levels
+  - Tracks unmapped incidents and address issues
+  - Generates quality score and recommendations
+
+  cad_zone_merger.py (69 lines)
+
+  Purpose: Backfills PD Zone and Grid values using address lookup table
+
+  Key Functions:
+  - Normalizes addresses (street suffix standardization)
+  - Merges zone/grid from master lookup table
+  - Processes all CAD exports recursively
+  - Outputs *_zoned.xlsx files
+
+  list_unmapped_incidents.py (27 lines)
+
+  Purpose: Identifies incidents missing Response Type mapping
+
+  Key Functions:
+  - Scans sample CSVs for blank Response Type
+  - Generates frequency report of unmapped incidents
+  - Creates seed CSV for manual mapping (missing_CallTypes_seed.csv)
+
+  audit_post_fix.py (103 lines)
+
+  Purpose: Post-processing quality assurance checks
+
+  Key Functions:
+  - Validates "How Reported" normalization (9-1-1 variants, Excel date bug)
+  - Scans for mojibake in text fields
+  - Checks incident mapping coverage (Incident_Norm presence)
+  - Verifies Response Type backfill
+  - Schema validation (column count)
+  - Exits with error code on failures
+
+  build_calltype_master.py (364 lines)
+
+  Purpose: Builds master call type mapping and audit reports
+
+  Key Functions:
+  - Unicode normalization (NFKC, control character removal)
+  - Smart title-casing (preserves acronyms like DWI, EMS, ABC)
+  - Statute extraction (e.g., "2C:39-5" from incident descriptions)
+  - Merges cleaned CallType_Categories with historical incidents
+  - Generates 6 audit reports:
+    - CallType_Master_Mapping.csv (approved + historical)
+    - duplicates_review.csv (multiple raw values → same normalized)
+    - anomalies.csv (normalizer non-idempotent cases)
+    - unmapped_incidents.csv (historical values needing review)
+    - mapping_changes.csv (proposed normalization changes)
+    - suggested_clean_edits.csv (recommended edits)
+
+  3. Config File Structure (config_enhanced.json)
+
+  {
+    "address_abbreviations": {
+      " ST ": " STREET ",
+      " AVE ": " AVENUE ",
+      " BLVD ": " BOULEVARD "
+    },
+    "validation_lists": {
+      "valid_dispositions": ["COMPLETE", "ADVISED", "ARREST", ...],
+      "valid_zones": ["5", "6", "7", "8", "9"],
+      "emergency_incidents": ["ROBBERY", "ASSAULT", "BURGLARY", ...],
+      "non_emergency_incidents": ["NOISE COMPLAINT", "PARKING VIOLATION", ...],
+      "how_reported": ["9-1-1", "WALK-IN", "PHONE", ...]
+    },
+    "min_stratum_size": 50
+  }
+
+  Usage: Loaded by CADDataValidator class with Pydantic schema validation
+
+  4. Script Responsibilities by Task
+
+  | Task                       | Primary Script           | Supporting Scripts                                   |
+  Location               |
+  |----------------------------|--------------------------|------------------------------------------------------|--
+  ----------------------|
+  | Call Type Normalization    | 01_validate_and_clean.py | build_calltype_master.py, list_unmapped_incidents.py |
+  Lines 303-427, 135-136 |
+  | Response Type Mapping      | 01_validate_and_clean.py | build_calltype_master.py                             |
+  Lines 361-384, 419-425 |
+  | Address Cleaning           | 01_validate_and_clean.py | cad_zone_merger.py                                   |
+  Lines 352-358, 28-35   |
+  | Officer Field Parsing      | 01_validate_and_clean.py | None                                                 |
+  Lines 339, 874-889     |
+  | ReportNumberNew Generation | MISSING                  | None                                                 |
+  N/A                    |
+
+  Details:
+
+  Call Type Normalization:
+  - 01_validate_and_clean.py:303-312 - Loads CallType_Categories.csv from 3 possible paths
+  - 01_validate_and_clean.py:361-384 - Applies incident mapping with mojibake fixes
+  - 01_validate_and_clean.py:386-427 - _apply_incident_mapping() merges normalized values
+  - build_calltype_master.py:93-113 - normalise_call_type() with smart title-casing
+
+  Response Type Mapping:
+  - 01_validate_and_clean.py:376-378 - Backfills Response Type from mapping table
+  - 01_validate_and_clean.py:419-425 - Fills blank Response Type with mapped values
+  - build_calltype_master.py:154-158 - Detects Response_Type column variants
+
+  Address Cleaning:
+  - 01_validate_and_clean.py:352-358 - Applies abbreviation expansion + uppercase
+  - 01_validate_and_clean.py:821-872 - Validates address completeness (house number, suffix, city/state/zip)
+  - cad_zone_merger.py:28-35 - Normalizes addresses for zone lookup
+
+  Officer Field Parsing:
+  - 01_validate_and_clean.py:339 - Normalizes to uppercase, strips whitespace
+  - 01_validate_and_clean.py:874-889 - Validates officer assignment for dispatched calls
+  - No parsing logic (e.g., extracting badge numbers, splitting multi-officer fields)
+
+  ReportNumberNew Generation:
+  - NOT IMPLEMENTED - No script generates case numbers
+  - Validation exists (01_validate_and_clean.py:755-769) for format YY-XXXXXX[A-Z]? 5. Hardcoded File Paths
+
+  Critical Paths (will break in different environments):
+
+  01_validate_and_clean.py:
+  - Line 293: r"C:\Users\carucci_r\OneDrive - City of
+  Hackensack\09_Reference\Classifications\CallTypes\CallType_Categories.csv"
+  - Line 1533: r"C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Pipeline\data\01_raw"
+
+  cad_zone_merger.py:
+  - Line 8: EXPORT_ROOT = r"C:\Users\carucci_r\OneDrive - City of Hackensack\05_EXPORTS\_CAD"
+  - Line 11: ZONE_MASTER = r"C:\TEMP\zone_grid_master.xlsx"
+
+  list_unmapped_incidents.py:
+  - Line 5: r"C:\Users\carucci_r\OneDrive - City of
+  Hackensack\02_ETL_Scripts\CAD_Data_Pipeline\data\01_raw\sample\2024_CAD_ALL_SAMPLE_1000.csv"
+  - Line 6: r"C:\Users\carucci_r\OneDrive - City of
+  Hackensack\02_ETL_Scripts\CAD_Data_Pipeline\data\02_reports\cad_validation"
+
+  audit_post_fix.py:
+  - Line 8-10: SAMPLE_DIR = Path(r"C:\Users\carucci_r\OneDrive - City of
+  Hackensack\02_ETL_Scripts\CAD_Data_Pipeline\data\01_raw\sample")
+
+  build_calltype_master.py:
+  - Line 314: Default ref/CallType_Categories_clean.xlsx (relative path - OK)
+  - Line 320: Default ref/2019_2025_10_Call_Types_Incidents.csv.txt (relative path - OK)
+
+  Recommendation: Move all hardcoded paths to config_enhanced.json or use environment variables. 6. Missing Components (Based on Typical ETL Pipeline)
+
+● Missing/Incomplete Components:
+
+  1. ReportNumberNew Generation Script
+    - Validation exists but no generation logic
+    - Need: Script to create case numbers in YY-XXXXXX format with sequence tracking
+    - Need: Supplement suffix logic (YY-XXXXXXA, YY-XXXXXXB, etc.) 2. Officer Field Parser
+    - Currently only normalizes/validates, doesn't parse
+    - Missing: Badge number extraction
+    - Missing: Multi-officer field splitting
+    - Missing: Officer roster validation lookup
+  3. Zone/Grid Backfill Integration
+    - cad_zone_merger.py exists but runs separately
+    - Should integrate into main 01_validate_and_clean.py pipeline
+    - Need: Fallback logic when address lookup fails
+  4. RMS Data Integration
+    - RMS files exist in /data/rms but no integration script
+    - Missing: CAD-RMS join logic
+    - Missing: Address backfill from RMS when CAD address is poor quality
+  5. Geocoding Module
+    - No geocoding script found
+    - Missing: Latitude/longitude population (currently hardcoded as NaN in line 574-575)
+    - Need: ESRI/Google Maps API integration or local geocoder
+  6. Automated Pipeline Orchestration
+    - Missing: Master script to run all components in sequence
+    - Missing: Dependency management between scripts
+    - Recommendation: Add main_pipeline.py or use workflow tool (Airflow, Prefect)
+  7. Error Recovery & Logging
+    - Logging exists but no centralized error handler
+    - Missing: Failed record quarantine system
+    - Missing: Retry logic for transient failures
+  8. Configuration Management
+    - Only one config file (config_enhanced.json)
+    - Missing configs for:
+        - File paths (currently hardcoded)
+      - Database connections (if applicable)
+      - API credentials for geocoding
+      - Email notifications for validation failures
+  9. Data Quality Dashboard
+    - JSON reports generated but no visualization
+    - Recommendation: Add HTML/PDF report generation
+    - Recommendation: Plotly/Dash dashboard for quality trends over time
+  10. Documentation
+    - No README.md in scripts directory
+    - Missing: Data dictionary
+    - Missing: Field mapping documentation
+    - Found: Some markdown docs in project root (based on git status)
+  11. Testing Infrastructure
+    - Unit tests exist in 01_validate_and_clean.py (lines 1356-1521)
+    - Missing: Integration tests
+    - Missing: End-to-end pipeline tests
+    - Missing: Test fixtures/sample data in dedicated /tests directory
+  12. Version Control & Deployment
+    - Multiple backup files suggest manual versioning
+    - Recommendation: Remove archive files from active directory
+    - Recommendation: Use git tags for releases
+    - Missing: requirements.txt or pyproject.toml
+
+● Summary & Recommendations
+
+  Strengths:
+  - Robust validation framework with 13 rules across 3 severity levels
+  - Comprehensive mojibake handling for encoding issues
+  - Smart incident normalization with statute extraction
+  - Well-documented validation reports (JSON with metadata)
+  - Stratified sampling for large datasets
+  - Unit test coverage for core validation functions
+  - Post-processing audit scripts for quality assurance
+
+  Critical Issues:
+  1. Hardcoded paths throughout codebase - breaks portability
+  2. No ReportNumberNew generation - only validation exists
+  3. Scattered reference files - multiple mapping CSVs need consolidation
+  4. Manual geocoding - lat/lon hardcoded as NaN
+  5. Separate zone backfill - should integrate into main pipeline
+
+  Immediate Action Items:
+  1. Create centralized path configuration in config_enhanced.json
+  2. Move all hardcoded paths to config or use relative paths from project root
+  3. Build ReportNumberNew generation script with sequence tracking
+  4. Create master pipeline orchestrator (main_pipeline.py)
+  5. Add requirements.txt for dependency management
+  6. Document field mapping in /doc directory
+
+  Code Quality Notes:
+  - 01_validate_and_clean.py is 1575 lines - consider breaking into modules
+  - Archive folder in /scripts should be moved outside active codebase
+  - Consider replacing Dask (imported but not used) with pandas for simplicity
+  - Many validation report JSONs in /scripts - should output to /data/02_reports
+
+  All analysis complete! The project has a solid foundation but needs better configuration management, pipeline
+  integration, and missing components implementation. ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+> 
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ? for shortcuts
+
+╭─── Claude Code v2.0.37 ──────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting started                                        │
+│                  Welcome back RAC! │ Run /init to create a CLAUDE.md file with instructions for Cla… │
+│                                                    │ ─────────────────────────────────────────────────────────────── │
+│                       ▐▛███▜▌                      │ Recent activity                                                 │
+│                      ▝▜█████▛▘                     │ No recent activity                                              │
+│                        ▘▘ ▝▝                       │                                                                 │
+│                                                    │                                                                 │
+│              Sonnet 4.5 · Claude Pro               │                                                                 │
+│ C:\Users\carucci_r\OneDrive - City of Hackensack\… │                                                                 │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+> cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+# Then use Claude Code:
+claude-code "Review this CAD data cleaning project. 1. List the directory tree for /scripts, /config, /ref, and /data directories
+2. Summarize the purpose of each Python script in /scripts
+3. Show the structure of any config files (JSON, YAML, etc.) 4. Identify which scripts handle:
+   - Call type normalization
+   - Response type mapping
+   - Address cleaning
+   - Officer field parsing
+   - ReportNumberNew generation
+5. Note any hardcoded file paths
+6. Report missing components based on the Notion project plan"
+
+● I'll review your CAD data cleaning project systematically. Let me create a todo list to track this analysis. ● Bash(tree /F /A scripts)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A config)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A ref)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A data)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Search(pattern: "scripts/**/*")
+  ⎿  Found 73 files (ctrl+o to expand)
+
+● Search(pattern: "config/**/*")
+  ⎿  Found 1 file (ctrl+o to expand)
+
+● Search(pattern: "ref/**/*")
+  ⎿  Found 33 files (ctrl+o to expand)
+
+● Search(pattern: "data/**/*")
+  ⎿  Found 58 files (ctrl+o to expand)
+
+● Read(scripts\01_validate_and_clean.py)
+  ⎿  Read 1575 lines
+
+● Read(scripts\cad_zone_merger.py)
+  ⎿  Read 69 lines
+
+● Read(scripts\list_unmapped_incidents.py)
+  ⎿  Read 27 lines
+
+● Read(scripts\audit_post_fix.py)
+  ⎿  Read 103 lines
+
+● Read(scripts\build_calltype_master.py)
+  ⎿  Read 365 lines
+
+● Read(config\config_enhanced.json)
+  ⎿  Read 15 lines
+
+● Now let me create a comprehensive summary of this CAD data cleaning project. ╭─── Claude Code v2.0.37 ──────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting started                                        │
+│                  Welcome back RAC!
+
+│ Run /init to create a CLAUDE.md file with instructions for Cla… │
+│                                                    │ ─────────────────────────────────────────────────────────────── │
+│                       ▐▛███▜▌                      │ Recent activity                                                 │
+│                      ▝▜█████▛▘                     │ No recent activity                                              │
+│                        ▘▘ ▝▝                       │                                                                 │
+│                                                    │                                                                 │
+│              Sonnet 4.5 · Claude Pro               │                                                                 │
+│ C:\Users\carucci_r\OneDrive - City of Hackensack\… │                                                                 │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+────────────────────────────────────────── Ctrl+E to show 36 previous messages ─────────────────────────────────────────
+
+● Read(file_path: "C:\Users\carucci_r\OneDrive - City of
+      Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\scripts\build_calltype_master.py")
+  ⎿  Read 365 lines
+
+● Read(file_path: "C:\Users\carucci_r\OneDrive - City of
+      Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\config\config_enhanced.json")
+  ⎿  Read 15 lines
+
+∴ Thinking…
+
+  Great! Now I have all the key files read. Let me now update the todo list and provide the analysis. Let me mark the
+  second todo as completed and move to the third. ● Now let me create a comprehensive summary of this CAD data cleaning       06:50 PM  claude-sonnet-4-5-20250929
+  project. ╭─── Claude Code v2.0.37 ──────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting started                                        │
+│                  Welcome back RAC! │ Run /init to create a CLAUDE.md file with instructions for Cla… │
+│                                                    │ ─────────────────────────────────────────────────────────────── │
+│                       ▐▛███▜▌                      │ Recent activity                                                 │
+│                      ▝▜█████▛▘                     │ No recent activity                                              │
+│                        ▘▘ ▝▝                       │                                                                 │
+│                                                    │                                                                 │
+│              Sonnet 4.5 · Claude Pro               │                                                                 │
+│ C:\Users\carucci_r\OneDrive - City of Hackensack\… │                                                                 │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+> cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+# Then use Claude Code:
+claude-code "Review this CAD data cleaning project. 1. List the directory tree for /scripts, /config, /ref, and /data directories
+2. Summarize the purpose of each Python script in /scripts
+3. Show the structure of any config files (JSON, YAML, etc.) 4. Identify which scripts handle:
+   - Call type normalization
+   - Response type mapping
+   - Address cleaning
+   - Officer field parsing
+   - ReportNumberNew generation
+5. Note any hardcoded file paths
+6. Report missing components based on the Notion project plan"
+
+● I'll review your CAD data cleaning project systematically. Let me create a todo list to track this analysis. ● Bash(tree /F /A scripts)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A config)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A ref)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A data)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Search(pattern: "scripts/**/*")
+  ⎿  Found 73 files (ctrl+o to expand)
+
+● Search(pattern: "config/**/*")
+  ⎿  Found 1 file (ctrl+o to expand)
+
+● Search(pattern: "ref/**/*")
+  ⎿  Found 33 files (ctrl+o to expand)
+
+● Search(pattern: "data/**/*")
+  ⎿  Found 58 files (ctrl+o to expand)
+
+● Read(scripts\01_validate_and_clean.py)
+  ⎿  Read 1575 lines
+
+● Read(scripts\cad_zone_merger.py)
+  ⎿  Read 69 lines
+
+● Read(scripts\list_unmapped_incidents.py)
+  ⎿  Read 27 lines
+
+● Read(scripts\audit_post_fix.py)
+  ⎿  Read 103 lines
+
+● Read(scripts\build_calltype_master.py)
+  ⎿  Read 365 lines
+
+● Read(config\config_enhanced.json)
+  ⎿  Read 15 lines
+
+● Now let me create a comprehensive summary of this CAD data cleaning project. ● CAD Data Cleaning Engine - Project Review
+
+  1. Directory Structure
+
+  Scripts Directory (/scripts):
+  /scripts
+  ├── 01_validate_and_clean.py           (Main validation & cleaning script)
+  ├── cad_zone_merger.py                  (Zone/Grid backfill utility)
+  ├── list_unmapped_incidents.py          (Incident mapping diagnostics)
+  ├── audit_post_fix.py                   (Post-processing quality checks)
+  ├── build_calltype_master.py            (Call type master mapping builder)
+  ├── 01_validate_and_clean_backup_20251106.py (Backup)
+  └── /archive                            (13 archived versions)
+      └── Various old versions of validate_and_clean
+
+  Config Directory (/config):
+  /config
+  └── config_enhanced.json                (Single JSON config file)
+
+  Reference Directory (/ref):
+  /ref
+  ├── call_types/
+  │   ├── CallType_Categories.xlsx        (Primary call type mapping)
+  │   ├── CallType_Master_Mapping.csv     (Master mapping output)
+  │   ├── unmapped_incidents.csv          (Incidents needing mapping)
+  │   ├── duplicates_review.csv           (Duplicate incident review)
+  │   ├── mapping_changes.csv             (Mapping change log)
+  │   ├── suggested_clean_edits.csv       (Suggested edits)
+  │   └── /archive                        (Historical call type files)
+  ├── cad_call_source_acceptables.csv
+  ├── cad_call_source_map.csv
+  ├── cad_disposition_acceptables.csv
+  ├── cad_disposition_map.csv
+  ├── cad_how_reported_map.csv
+  ├── cad_incident_type_map.csv
+  ├── cad_pd_zone_map.csv
+  ├── cad_priority_map.csv
+  ├── facility_aliases.csv
+  ├── anomalies.csv
+  └── RAW_CAD_CALL_TYPE_EXPORT.xlsx
+
+  Data Directory (/data):
+  /data
+  ├── 01_raw/
+  │   ├── 2019_ALL_CAD.xlsx
+  │   ├── 2020_ALL_CAD.xlsx
+  │   ├── 2021_ALL_CAD.xlsx
+  │   ├── 2022_CAD_ALL.xlsx
+  │   ├── 2023_CAD_ALL.xlsx
+  │   ├── 2024_CAD_ALL.xlsx
+  │   ├── 25_01_10_All_CAD.xlsx
+  │   ├── CAD_Data_Sample.xlsx
+  │   ├── 2019_2025_11_14_cad.xlsx
+  │   └── /sample                         (1000-row samples for testing)
+  ├── 02_reports/
+  │   └── cad_validation/                 (Timestamped validation reports)
+  ├── /rms                                (RMS export files)
+  └── /ESRI_CADExport
+      └── ESRI_CADExport.xlsx
+
+  2. Python Script Summaries
+
+  01_validate_and_clean.py (Main Script - 1575 lines)
+
+  Purpose: Comprehensive CAD data validation, cleaning, and quality assessment engine
+
+  Key Functions:
+  - Data cleaning (mojibake fixes, text normalization, address standardization)
+  - Incident mapping using CallType_Categories.csv
+  - "How Reported" normalization (handles 9-1-1 Excel date bug)
+  - Stratified/systematic/random sampling for validation
+  - Validation rules (critical/important/optional severity levels)
+  - ESRI export format generation
+  - JSON validation reports with quality scoring
+  - Comprehensive unit tests (pytest)
+
+  Class: CADDataValidator
+  - Validates 13 rules across 3 severity levels
+  - Tracks unmapped incidents and address issues
+  - Generates quality score and recommendations
+
+  cad_zone_merger.py (69 lines)
+
+  Purpose: Backfills PD Zone and Grid values using address lookup table
+
+  Key Functions:
+  - Normalizes addresses (street suffix standardization)
+  - Merges zone/grid from master lookup table
+  - Processes all CAD exports recursively
+  - Outputs *_zoned.xlsx files
+
+  list_unmapped_incidents.py (27 lines)
+
+  Purpose: Identifies incidents missing Response Type mapping
+
+  Key Functions:
+  - Scans sample CSVs for blank Response Type
+  - Generates frequency report of unmapped incidents
+  - Creates seed CSV for manual mapping (missing_CallTypes_seed.csv)
+
+  audit_post_fix.py (103 lines)
+
+  Purpose: Post-processing quality assurance checks
+
+  Key Functions:
+  - Validates "How Reported" normalization (9-1-1 variants, Excel date bug)
+  - Scans for mojibake in text fields
+  - Checks incident mapping coverage (Incident_Norm presence)
+  - Verifies Response Type backfill
+  - Schema validation (column count)
+  - Exits with error code on failures
+
+  build_calltype_master.py (364 lines)
+
+  Purpose: Builds master call type mapping and audit reports
+
+  Key Functions:
+  - Unicode normalization (NFKC, control character removal)
+  - Smart title-casing (preserves acronyms like DWI, EMS, ABC)
+  - Statute extraction (e.g., "2C:39-5" from incident descriptions)
+  - Merges cleaned CallType_Categories with historical incidents
+  - Generates 6 audit reports:
+    - CallType_Master_Mapping.csv (approved + historical)
+    - duplicates_review.csv (multiple raw values → same normalized)
+    - anomalies.csv (normalizer non-idempotent cases)
+    - unmapped_incidents.csv (historical values needing review)
+    - mapping_changes.csv (proposed normalization changes)
+    - suggested_clean_edits.csv (recommended edits)
+
+  3. Config File Structure (config_enhanced.json)
+
+  {
+    "address_abbreviations": {
+      " ST ": " STREET ",
+      " AVE ": " AVENUE ",
+      " BLVD ": " BOULEVARD "
+    },
+    "validation_lists": {
+      "valid_dispositions": ["COMPLETE", "ADVISED", "ARREST", ...],
+      "valid_zones": ["5", "6", "7", "8", "9"],
+      "emergency_incidents": ["ROBBERY", "ASSAULT", "BURGLARY", ...],
+      "non_emergency_incidents": ["NOISE COMPLAINT", "PARKING VIOLATION", ...],
+      "how_reported": ["9-1-1", "WALK-IN", "PHONE", ...]
+    },
+    "min_stratum_size": 50
+  }
+
+  Usage: Loaded by CADDataValidator class with Pydantic schema validation
+
+  4. Script Responsibilities by Task
+
+  | Task                       | Primary Script           | Supporting Scripts                                   |
+  Location               |
+  |----------------------------|--------------------------|------------------------------------------------------|--
+  ----------------------|
+  | Call Type Normalization    | 01_validate_and_clean.py | build_calltype_master.py, list_unmapped_incidents.py |
+  Lines 303-427, 135-136 |
+  | Response Type Mapping      | 01_validate_and_clean.py | build_calltype_master.py                             |
+  Lines 361-384, 419-425 |
+  | Address Cleaning           | 01_validate_and_clean.py | cad_zone_merger.py                                   |
+  Lines 352-358, 28-35   |
+  | Officer Field Parsing      | 01_validate_and_clean.py | None                                                 |
+  Lines 339, 874-889     |
+  | ReportNumberNew Generation | MISSING                  | None                                                 |
+  N/A                    |
+
+  Details:
+
+  Call Type Normalization:
+  - 01_validate_and_clean.py:303-312 - Loads CallType_Categories.csv from 3 possible paths
+  - 01_validate_and_clean.py:361-384 - Applies incident mapping with mojibake fixes
+  - 01_validate_and_clean.py:386-427 - _apply_incident_mapping() merges normalized values
+  - build_calltype_master.py:93-113 - normalise_call_type() with smart title-casing
+
+  Response Type Mapping:
+  - 01_validate_and_clean.py:376-378 - Backfills Response Type from mapping table
+  - 01_validate_and_clean.py:419-425 - Fills blank Response Type with mapped values
+  - build_calltype_master.py:154-158 - Detects Response_Type column variants
+
+  Address Cleaning:
+  - 01_validate_and_clean.py:352-358 - Applies abbreviation expansion + uppercase
+  - 01_validate_and_clean.py:821-872 - Validates address completeness (house number, suffix, city/state/zip)
+  - cad_zone_merger.py:28-35 - Normalizes addresses for zone lookup
+
+  Officer Field Parsing:
+  - 01_validate_and_clean.py:339 - Normalizes to uppercase, strips whitespace
+  - 01_validate_and_clean.py:874-889 - Validates officer assignment for dispatched calls
+  - No parsing logic (e.g., extracting badge numbers, splitting multi-officer fields)
+
+  ReportNumberNew Generation:
+  - NOT IMPLEMENTED - No script generates case numbers
+  - Validation exists (01_validate_and_clean.py:755-769) for format YY-XXXXXX[A-Z]? 5. Hardcoded File Paths
+
+  Critical Paths (will break in different environments):
+
+  01_validate_and_clean.py:
+  - Line 293: r"C:\Users\carucci_r\OneDrive - City of
+  Hackensack\09_Reference\Classifications\CallTypes\CallType_Categories.csv"
+  - Line 1533: r"C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Pipeline\data\01_raw"
+
+  cad_zone_merger.py:
+  - Line 8: EXPORT_ROOT = r"C:\Users\carucci_r\OneDrive - City of Hackensack\05_EXPORTS\_CAD"
+  - Line 11: ZONE_MASTER = r"C:\TEMP\zone_grid_master.xlsx"
+
+  list_unmapped_incidents.py:
+  - Line 5: r"C:\Users\carucci_r\OneDrive - City of
+  Hackensack\02_ETL_Scripts\CAD_Data_Pipeline\data\01_raw\sample\2024_CAD_ALL_SAMPLE_1000.csv"
+  - Line 6: r"C:\Users\carucci_r\OneDrive - City of
+  Hackensack\02_ETL_Scripts\CAD_Data_Pipeline\data\02_reports\cad_validation"
+
+  audit_post_fix.py:
+  - Line 8-10: SAMPLE_DIR = Path(r"C:\Users\carucci_r\OneDrive - City of
+  Hackensack\02_ETL_Scripts\CAD_Data_Pipeline\data\01_raw\sample")
+
+  build_calltype_master.py:
+  - Line 314: Default ref/CallType_Categories_clean.xlsx (relative path - OK)
+  - Line 320: Default ref/2019_2025_10_Call_Types_Incidents.csv.txt (relative path - OK)
+
+  Recommendation: Move all hardcoded paths to config_enhanced.json or use environment variables. 6. Missing Components (Based on Typical ETL Pipeline)
+
+● Missing/Incomplete Components:
+
+  1. ReportNumberNew Generation Script
+    - Validation exists but no generation logic
+    - Need: Script to create case numbers in YY-XXXXXX format with sequence tracking
+    - Need: Supplement suffix logic (YY-XXXXXXA, YY-XXXXXXB, etc.) 2. Officer Field Parser
+    - Currently only normalizes/validates, doesn't parse
+    - Missing: Badge number extraction
+    - Missing: Multi-officer field splitting
+    - Missing: Officer roster validation lookup
+  3. Zone/Grid Backfill Integration
+    - cad_zone_merger.py exists but runs separately
+    - Should integrate into main 01_validate_and_clean.py pipeline
+    - Need: Fallback logic when address lookup fails
+  4. RMS Data Integration
+    - RMS files exist in /data/rms but no integration script
+    - Missing: CAD-RMS join logic
+    - Missing: Address backfill from RMS when CAD address is poor quality
+  5. Geocoding Module
+    - No geocoding script found
+    - Missing: Latitude/longitude population (currently hardcoded as NaN in line 574-575)
+    - Need: ESRI/Google Maps API integration or local geocoder
+  6. Automated Pipeline Orchestration
+    - Missing: Master script to run all components in sequence
+    - Missing: Dependency management between scripts
+    - Recommendation: Add main_pipeline.py or use workflow tool (Airflow, Prefect)
+  7. Error Recovery & Logging
+    - Logging exists but no centralized error handler
+    - Missing: Failed record quarantine system
+    - Missing: Retry logic for transient failures
+  8. Configuration Management
+    - Only one config file (config_enhanced.json)
+    - Missing configs for:
+        - File paths (currently hardcoded)
+      - Database connections (if applicable)
+      - API credentials for geocoding
+      - Email notifications for validation failures
+  9. Data Quality Dashboard
+    - JSON reports generated but no visualization
+    - Recommendation: Add HTML/PDF report generation
+    - Recommendation: Plotly/Dash dashboard for quality trends over time
+  10. Documentation
+    - No README.md in scripts directory
+    - Missing: Data dictionary
+    - Missing: Field mapping documentation
+    - Found: Some markdown docs in project root (based on git status)
+  11. Testing Infrastructure
+    - Unit tests exist in 01_validate_and_clean.py (lines 1356-1521)
+    - Missing: Integration tests
+    - Missing: End-to-end pipeline tests
+    - Missing: Test fixtures/sample data in dedicated /tests directory
+  12. Version Control & Deployment
+    - Multiple backup files suggest manual versioning
+    - Recommendation: Remove archive files from active directory
+    - Recommendation: Use git tags for releases
+    - Missing: requirements.txt or pyproject.toml
+
+● Summary & Recommendations
+
+  Strengths:
+  - Robust validation framework with 13 rules across 3 severity levels
+  - Comprehensive mojibake handling for encoding issues
+  - Smart incident normalization with statute extraction
+  - Well-documented validation reports (JSON with metadata)
+  - Stratified sampling for large datasets
+  - Unit test coverage for core validation functions
+  - Post-processing audit scripts for quality assurance
+
+  Critical Issues:
+  1. Hardcoded paths throughout codebase - breaks portability
+  2. No ReportNumberNew generation - only validation exists
+  3. Scattered reference files - multiple mapping CSVs need consolidation
+  4. Manual geocoding - lat/lon hardcoded as NaN
+  5. Separate zone backfill - should integrate into main pipeline
+
+  Immediate Action Items:
+  1. Create centralized path configuration in config_enhanced.json
+  2. Move all hardcoded paths to config or use relative paths from project root
+  3. Build ReportNumberNew generation script with sequence tracking
+  4. Create master pipeline orchestrator (main_pipeline.py)
+  5. Add requirements.txt for dependency management
+  6. Document field mapping in /doc directory
+
+  Code Quality Notes:
+  - 01_validate_and_clean.py is 1575 lines - consider breaking into modules
+  - Archive folder in /scripts should be moved outside active codebase
+  - Consider replacing Dask (imported but not used) with pandas for simplicity
+  - Many validation report JSONs in /scripts - should output to /data/02_reports
+
+  All analysis complete! The project has a solid foundation but needs better configuration management, pipeline
+  integration, and missing components implementation. ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+> 
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ? for shortcuts
+
+╭─── Claude Code v2.0.37 ──────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting started                                        │
+│                  Welcome back RAC! │ Run /init to create a CLAUDE.md file with instructions for Cla… │
+│                                                    │ ─────────────────────────────────────────────────────────────── │
+│                       ▐▛███▜▌                      │ Recent activity                                                 │
+│                      ▝▜█████▛▘                     │ No recent activity                                              │
+│                        ▘▘ ▝▝                       │                                                                 │
+│                                                    │                                                                 │
+│              Sonnet 4.5 · Claude Pro               │                                                                 │
+│ C:\Users\carucci_r\OneDrive - City of Hackensack\… │                                                                 │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+> cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+# Then use Claude Code:
+claude-code "Review this CAD data cleaning project. 1. List the directory tree for /scripts, /config, /ref, and /data directories
+2. Summarize the purpose of each Python script in /scripts
+3. Show the structure of any config files (JSON, YAML, etc.) 4. Identify which scripts handle:
+   - Call type normalization
+   - Response type mapping
+   - Address cleaning
+   - Officer field parsing
+   - ReportNumberNew generation
+5. Note any hardcoded file paths
+6. Report missing components based on the Notion project plan"
+
+● I'll review your CAD data cleaning project systematically. Let me create a todo list to track this analysis. ● Bash(tree /F /A scripts)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A config)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A ref)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A data)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Search(pattern: "scripts/**/*")
+  ⎿  Found 73 files (ctrl+o to expand)
+
+● Search(pattern: "config/**/*")
+  ⎿  Found 1 file (ctrl+o to expand)
+
+● Search(pattern: "ref/**/*")
+  ⎿  Found 33 files (ctrl+o to expand)
+
+● Search(pattern: "data/**/*")
+  ⎿  Found 58 files (ctrl+o to expand)
+
+● Read(scripts\01_validate_and_clean.py)
+  ⎿  Read 1575 lines
+
+● Read(scripts\cad_zone_merger.py)
+  ⎿  Read 69 lines
+
+● Read(scripts\list_unmapped_incidents.py)
+  ⎿  Read 27 lines
+
+● Read(scripts\audit_post_fix.py)
+  ⎿  Read 103 lines
+
+● Read(scripts\build_calltype_master.py)
+  ⎿  Read 365 lines
+
+● Read(config\config_enhanced.json)
+  ⎿  Read 15 lines
+
+● Now let me create a comprehensive summary of this CAD data cleaning project. ╭─── Claude Code v2.0.37 ──────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting started                                        │
+│                  Welcome back RAC! │ Run /init to create a CLAUDE.md file with instructions for Cla… │
+│                                                    │ ─────────────────────────────────────────────────────────────── │
+│                       ▐▛███▜▌                      │ Recent activity                                                 │
+│                      ▝▜█████▛▘                     │ No recent activity                                              │
+│                        ▘▘ ▝▝                       │                                                                 │
+│                                                    │                                                                 │
+│              Sonnet 4.5 · Claude Pro               │                                                                 │
+│ C:\Users\carucci_r\OneDrive - City of Hackensack\… │                                                                 │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+────────────────────────────────────────── Ctrl+E to show 36 previous messages ─────────────────────────────────────────
+
+● Read(file_path: "C:\Users\carucci_r\OneDrive - City of
+      Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\scripts\build_calltype_master.py")
+  ⎿  Read 365 lines
+
+● Read(file_path: "C:\Users\carucci_r\OneDrive - City of
+      Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\config\config_enhanced.json")
+  ⎿  Read 15 lines
+
+∴ Thinking…
+
+  Great! Now I have all the key files read. Let me now update the todo list and provide the analysis. Let me mark the
+  second todo as completed and move to the third. ● Now let me create a comprehensive summary of this CAD data cleaning       06:50 PM  claude-sonnet-4-5-20250929
+  project. ╭─── Claude Code v2.0.37 ──────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting started                                        │
+│                  Welcome back RAC! │ Run /init to create a CLAUDE.md file with instructions for Cla… │
+│                                                    │ ─────────────────────────────────────────────────────────────── │
+│                       ▐▛███▜▌                      │ Recent activity                                                 │
+│                      ▝▜█████▛▘                     │ No recent activity                                              │
+│                        ▘▘ ▝▝                       │                                                                 │
+│                                                    │                                                                 │
+│              Sonnet 4.5 · Claude Pro               │                                                                 │
+│ C:\Users\carucci_r\OneDrive - City of Hackensack\… │                                                                 │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+> cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+# Then use Claude Code:
+claude-code "Review this CAD data cleaning project. 1. List the directory tree for /scripts, /config, /ref, and /data directories
+2. Summarize the purpose of each Python script in /scripts
+3. Show the structure of any config files (JSON, YAML, etc.) 4. Identify which scripts handle:
+   - Call type normalization
+   - Response type mapping
+   - Address cleaning
+   - Officer field parsing
+   - ReportNumberNew generation
+5. Note any hardcoded file paths
+6. Report missing components based on the Notion project plan"
+
+● I'll review your CAD data cleaning project systematically. Let me create a todo list to track this analysis. ● Bash(tree /F /A scripts)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A config)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A ref)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A data)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Search(pattern: "scripts/**/*")
+  ⎿  Found 73 files (ctrl+o to expand)
+
+● Search(pattern: "config/**/*")
+  ⎿  Found 1 file (ctrl+o to expand)
+
+● Search(pattern: "ref/**/*")
+  ⎿  Found 33 files (ctrl+o to expand)
+
+● Search(pattern: "data/**/*")
+  ⎿  Found 58 files (ctrl+o to expand)
+
+● Read(scripts\01_validate_and_clean.py)
+  ⎿  Read 1575 lines
+
+● Read(scripts\cad_zone_merger.py)
+  ⎿  Read 69 lines
+
+● Read(scripts\list_unmapped_incidents.py)
+  ⎿  Read 27 lines
+
+● Read(scripts\audit_post_fix.py)
+  ⎿  Read 103 lines
+
+● Read(scripts\build_calltype_master.py)
+  ⎿  Read 365 lines
+
+● Read(config\config_enhanced.json)
+  ⎿  Read 15 lines
+
+● Now let me create a comprehensive summary of this CAD data cleaning project. ● CAD Data Cleaning Engine - Project Review
+
+  1. Directory Structure
+
+  Scripts Directory (/scripts):
+  /scripts
+  ├── 01_validate_and_clean.py           (Main validation & cleaning script)
+  ├── cad_zone_merger.py                  (Zone/Grid backfill utility)
+  ├── list_unmapped_incidents.py          (Incident mapping diagnostics)
+  ├── audit_post_fix.py                   (Post-processing quality checks)
+  ├── build_calltype_master.py            (Call type master mapping builder)
+  ├── 01_validate_and_clean_backup_20251106.py (Backup)
+  └── /archive                            (13 archived versions)
+      └── Various old versions of validate_and_clean
+
+  Config Directory (/config):
+  /config
+  └── config_enhanced.json                (Single JSON config file)
+
+  Reference Directory (/ref):
+  /ref
+  ├── call_types/
+  │   ├── CallType_Categories.xlsx        (Primary call type mapping)
+  │   ├── CallType_Master_Mapping.csv     (Master mapping output)
+  │   ├── unmapped_incidents.csv          (Incidents needing mapping)
+  │   ├── duplicates_review.csv           (Duplicate incident review)
+  │   ├── mapping_changes.csv             (Mapping change log)
+  │   ├── suggested_clean_edits.csv       (Suggested edits)
+  │   └── /archive                        (Historical call type files)
+  ├── cad_call_source_acceptables.csv
+  ├── cad_call_source_map.csv
+  ├── cad_disposition_acceptables.csv
+  ├── cad_disposition_map.csv
+  ├── cad_how_reported_map.csv
+  ├── cad_incident_type_map.csv
+  ├── cad_pd_zone_map.csv
+  ├── cad_priority_map.csv
+  ├── facility_aliases.csv
+  ├── anomalies.csv
+  └── RAW_CAD_CALL_TYPE_EXPORT.xlsx
+
+  Data Directory (/data):
+  /data
+  ├── 01_raw/
+  │   ├── 2019_ALL_CAD.xlsx
+  │   ├── 2020_ALL_CAD.xlsx
+  │   ├── 2021_ALL_CAD.xlsx
+  │   ├── 2022_CAD_ALL.xlsx
+  │   ├── 2023_CAD_ALL.xlsx
+  │   ├── 2024_CAD_ALL.xlsx
+  │   ├── 25_01_10_All_CAD.xlsx
+  │   ├── CAD_Data_Sample.xlsx
+  │   ├── 2019_2025_11_14_cad.xlsx
+  │   └── /sample                         (1000-row samples for testing)
+  ├── 02_reports/
+  │   └── cad_validation/                 (Timestamped validation reports)
+  ├── /rms                                (RMS export files)
+  └── /ESRI_CADExport
+      └── ESRI_CADExport.xlsx
+
+  2.
+
+Python Script Summaries
+
+  01_validate_and_clean.py (Main Script - 1575 lines)
+
+  Purpose: Comprehensive CAD data validation, cleaning, and quality assessment engine
+
+  Key Functions:
+  - Data cleaning (mojibake fixes, text normalization, address standardization)
+  - Incident mapping using CallType_Categories.csv
+  - "How Reported" normalization (handles 9-1-1 Excel date bug)
+  - Stratified/systematic/random sampling for validation
+  - Validation rules (critical/important/optional severity levels)
+  - ESRI export format generation
+  - JSON validation reports with quality scoring
+  - Comprehensive unit tests (pytest)
+
+  Class: CADDataValidator
+  - Validates 13 rules across 3 severity levels
+  - Tracks unmapped incidents and address issues
+  - Generates quality score and recommendations
+
+  cad_zone_merger.py (69 lines)
+
+  Purpose: Backfills PD Zone and Grid values using address lookup table
+
+  Key Functions:
+  - Normalizes addresses (street suffix standardization)
+  - Merges zone/grid from master lookup table
+  - Processes all CAD exports recursively
+  - Outputs *_zoned.xlsx files
+
+  list_unmapped_incidents.py (27 lines)
+
+  Purpose: Identifies incidents missing Response Type mapping
+
+  Key Functions:
+  - Scans sample CSVs for blank Response Type
+  - Generates frequency report of unmapped incidents
+  - Creates seed CSV for manual mapping (missing_CallTypes_seed.csv)
+
+  audit_post_fix.py (103 lines)
+
+  Purpose: Post-processing quality assurance checks
+
+  Key Functions:
+  - Validates "How Reported" normalization (9-1-1 variants, Excel date bug)
+  - Scans for mojibake in text fields
+  - Checks incident mapping coverage (Incident_Norm presence)
+  - Verifies Response Type backfill
+  - Schema validation (column count)
+  - Exits with error code on failures
+
+  build_calltype_master.py (364 lines)
+
+  Purpose: Builds master call type mapping and audit reports
+
+  Key Functions:
+  - Unicode normalization (NFKC, control character removal)
+  - Smart title-casing (preserves acronyms like DWI, EMS, ABC)
+  - Statute extraction (e.g., "2C:39-5" from incident descriptions)
+  - Merges cleaned CallType_Categories with historical incidents
+  - Generates 6 audit reports:
+    - CallType_Master_Mapping.csv (approved + historical)
+    - duplicates_review.csv (multiple raw values → same normalized)
+    - anomalies.csv (normalizer non-idempotent cases)
+    - unmapped_incidents.csv (historical values needing review)
+    - mapping_changes.csv (proposed normalization changes)
+    - suggested_clean_edits.csv (recommended edits)
+
+  3. Config File Structure (config_enhanced.json)
+
+  {
+    "address_abbreviations": {
+      " ST ": " STREET ",
+      " AVE ": " AVENUE ",
+      " BLVD ": " BOULEVARD "
+    },
+    "validation_lists": {
+      "valid_dispositions": ["COMPLETE", "ADVISED", "ARREST", ...],
+      "valid_zones": ["5", "6", "7", "8", "9"],
+      "emergency_incidents": ["ROBBERY", "ASSAULT", "BURGLARY", ...],
+      "non_emergency_incidents": ["NOISE COMPLAINT", "PARKING VIOLATION", ...],
+      "how_reported": ["9-1-1", "WALK-IN", "PHONE", ...]
+    },
+    "min_stratum_size": 50
+  }
+
+  Usage: Loaded by CADDataValidator class with Pydantic schema validation
+
+  4. Script Responsibilities by Task
+
+  | Task                       | Primary Script           | Supporting Scripts                                   |
+  Location               |
+  |----------------------------|--------------------------|------------------------------------------------------|--
+  ----------------------|
+  | Call Type Normalization    | 01_validate_and_clean.py | build_calltype_master.py, list_unmapped_incidents.py |
+  Lines 303-427, 135-136 |
+  | Response Type Mapping      | 01_validate_and_clean.py | build_calltype_master.py                             |
+  Lines 361-384, 419-425 |
+  | Address Cleaning           | 01_validate_and_clean.py | cad_zone_merger.py                                   |
+  Lines 352-358, 28-35   |
+  | Officer Field Parsing      | 01_validate_and_clean.py | None                                                 |
+  Lines 339, 874-889     |
+  | ReportNumberNew Generation | MISSING                  | None                                                 |
+  N/A                    |
+
+  Details:
+
+  Call Type Normalization:
+  - 01_validate_and_clean.py:303-312 - Loads CallType_Categories.csv from 3 possible paths
+  - 01_validate_and_clean.py:361-384 - Applies incident mapping with mojibake fixes
+  - 01_validate_and_clean.py:386-427 - _apply_incident_mapping() merges normalized values
+  - build_calltype_master.py:93-113 - normalise_call_type() with smart title-casing
+
+  Response Type Mapping:
+  - 01_validate_and_clean.py:376-378 - Backfills Response Type from mapping table
+  - 01_validate_and_clean.py:419-425 - Fills blank Response Type with mapped values
+  - build_calltype_master.py:154-158 - Detects Response_Type column variants
+
+  Address Cleaning:
+  - 01_validate_and_clean.py:352-358 - Applies abbreviation expansion + uppercase
+  - 01_validate_and_clean.py:821-872 - Validates address completeness (house number, suffix, city/state/zip)
+  - cad_zone_merger.py:28-35 - Normalizes addresses for zone lookup
+
+  Officer Field Parsing:
+  - 01_validate_and_clean.py:339 - Normalizes to uppercase, strips whitespace
+  - 01_validate_and_clean.py:874-889 - Validates officer assignment for dispatched calls
+  - No parsing logic (e.g., extracting badge numbers, splitting multi-officer fields)
+
+  ReportNumberNew Generation:
+  - NOT IMPLEMENTED - No script generates case numbers
+  - Validation exists (01_validate_and_clean.py:755-769) for format YY-XXXXXX[A-Z]? 5. Hardcoded File Paths
+
+  Critical Paths (will break in different environments):
+
+  01_validate_and_clean.py:
+  - Line 293: r"C:\Users\carucci_r\OneDrive - City of
+  Hackensack\09_Reference\Classifications\CallTypes\CallType_Categories.csv"
+  - Line 1533: r"C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Pipeline\data\01_raw"
+
+  cad_zone_merger.py:
+  - Line 8: EXPORT_ROOT = r"C:\Users\carucci_r\OneDrive - City of Hackensack\05_EXPORTS\_CAD"
+  - Line 11: ZONE_MASTER = r"C:\TEMP\zone_grid_master.xlsx"
+
+  list_unmapped_incidents.py:
+  - Line 5: r"C:\Users\carucci_r\OneDrive - City of
+  Hackensack\02_ETL_Scripts\CAD_Data_Pipeline\data\01_raw\sample\2024_CAD_ALL_SAMPLE_1000.csv"
+  - Line 6: r"C:\Users\carucci_r\OneDrive - City of
+  Hackensack\02_ETL_Scripts\CAD_Data_Pipeline\data\02_reports\cad_validation"
+
+  audit_post_fix.py:
+  - Line 8-10: SAMPLE_DIR = Path(r"C:\Users\carucci_r\OneDrive - City of
+  Hackensack\02_ETL_Scripts\CAD_Data_Pipeline\data\01_raw\sample")
+
+  build_calltype_master.py:
+  - Line 314: Default ref/CallType_Categories_clean.xlsx (relative path - OK)
+  - Line 320: Default ref/2019_2025_10_Call_Types_Incidents.csv.txt (relative path - OK)
+
+  Recommendation: Move all hardcoded paths to config_enhanced.json or use environment variables. 6. Missing Components (Based on Typical ETL Pipeline)
+
+● Missing/Incomplete Components:
+
+  1. ReportNumberNew Generation Script
+    - Validation exists but no generation logic
+    - Need: Script to create case numbers in YY-XXXXXX format with sequence tracking
+    - Need: Supplement suffix logic (YY-XXXXXXA, YY-XXXXXXB, etc.) 2. Officer Field Parser
+    - Currently only normalizes/validates, doesn't parse
+    - Missing: Badge number extraction
+    - Missing: Multi-officer field splitting
+    - Missing: Officer roster validation lookup
+  3. Zone/Grid Backfill Integration
+    - cad_zone_merger.py exists but runs separately
+    - Should integrate into main 01_validate_and_clean.py pipeline
+    - Need: Fallback logic when address lookup fails
+  4. RMS Data Integration
+    - RMS files exist in /data/rms but no integration script
+    - Missing: CAD-RMS join logic
+    - Missing: Address backfill from RMS when CAD address is poor quality
+  5. Geocoding Module
+    - No geocoding script found
+    - Missing: Latitude/longitude population (currently hardcoded as NaN in line 574-575)
+    - Need: ESRI/Google Maps API integration or local geocoder
+  6. Automated Pipeline Orchestration
+    - Missing: Master script to run all components in sequence
+    - Missing: Dependency management between scripts
+    - Recommendation: Add main_pipeline.py or use workflow tool (Airflow, Prefect)
+  7. Error Recovery & Logging
+    - Logging exists but no centralized error handler
+    - Missing: Failed record quarantine system
+    - Missing: Retry logic for transient failures
+  8. Configuration Management
+    - Only one config file (config_enhanced.json)
+    - Missing configs for:
+        - File paths (currently hardcoded)
+      - Database connections (if applicable)
+      - API credentials for geocoding
+      - Email notifications for validation failures
+  9. Data Quality Dashboard
+    - JSON reports generated but no visualization
+    - Recommendation: Add HTML/PDF report generation
+    - Recommendation: Plotly/Dash dashboard for quality trends over time
+  10. Documentation
+    - No README.md in scripts directory
+    - Missing: Data dictionary
+    - Missing: Field mapping documentation
+    - Found: Some markdown docs in project root (based on git status)
+  11. Testing Infrastructure
+    - Unit tests exist in 01_validate_and_clean.py (lines 1356-1521)
+    - Missing: Integration tests
+    - Missing: End-to-end pipeline tests
+    - Missing: Test fixtures/sample data in dedicated /tests directory
+  12. Version Control & Deployment
+    - Multiple backup files suggest manual versioning
+    - Recommendation: Remove archive files from active directory
+    - Recommendation: Use git tags for releases
+    - Missing: requirements.txt or pyproject.toml
+
+● Summary & Recommendations
+
+  Strengths:
+  - Robust validation framework with 13 rules across 3 severity levels
+  - Comprehensive mojibake handling for encoding issues
+  - Smart incident normalization with statute extraction
+  - Well-documented validation reports (JSON with metadata)
+  - Stratified sampling for large datasets
+  - Unit test coverage for core validation functions
+  - Post-processing audit scripts for quality assurance
+
+  Critical Issues:
+  1. Hardcoded paths throughout codebase - breaks portability
+  2. No ReportNumberNew generation - only validation exists
+  3. Scattered reference files - multiple mapping CSVs need consolidation
+  4. Manual geocoding - lat/lon hardcoded as NaN
+  5. Separate zone backfill - should integrate into main pipeline
+
+  Immediate Action Items:
+  1. Create centralized path configuration in config_enhanced.json
+  2. Move all hardcoded paths to config or use relative paths from project root
+  3. Build ReportNumberNew generation script with sequence tracking
+  4. Create master pipeline orchestrator (main_pipeline.py)
+  5. Add requirements.txt for dependency management
+  6. Document field mapping in /doc directory
+
+  Code Quality Notes:
+  - 01_validate_and_clean.py is 1575 lines - consider breaking into modules
+  - Archive folder in /scripts should be moved outside active codebase
+  - Consider replacing Dask (imported but not used) with pandas for simplicity
+  - Many validation report JSONs in /scripts - should output to /data/02_reports
+
+  All analysis complete! The project has a solid foundation but needs better configuration management, pipeline
+  integration, and missing components implementation. ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+> 
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ? for shortcuts
+
+╭─── Claude Code v2.0.37 ──────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting started                                        │
+│                  Welcome back RAC! │ Run /init to create a CLAUDE.md file with instructions for Cla… │
+│                                                    │ ─────────────────────────────────────────────────────────────── │
+│                       ▐▛███▜▌                      │ Recent activity                                                 │
+│                      ▝▜█████▛▘                     │ No recent activity                                              │
+│                        ▘▘ ▝▝                       │                                                                 │
+│                                                    │                                                                 │
+│              Sonnet 4.5 · Claude Pro               │                                                                 │
+│ C:\Users\carucci_r\OneDrive - City of Hackensack\… │                                                                 │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+> cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+# Then use Claude Code:
+claude-code "Review this CAD data cleaning project. 1. List the directory tree for /scripts, /config, /ref, and /data directories
+2. Summarize the purpose of each Python script in /scripts
+3. Show the structure of any config files (JSON, YAML, etc.) 4. Identify which scripts handle:
+   - Call type normalization
+   - Response type mapping
+   - Address cleaning
+   - Officer field parsing
+   - ReportNumberNew generation
+5. Note any hardcoded file paths
+6. Report missing components based on the Notion project plan"
+
+● I'll review your CAD data cleaning project systematically. Let me create a todo list to track this analysis. ● Bash(tree /F /A scripts)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A config)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A ref)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A data)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Search(pattern: "scripts/**/*")
+  ⎿  Found 73 files (ctrl+o to expand)
+
+● Search(pattern: "config/**/*")
+  ⎿  Found 1 file (ctrl+o to expand)
+
+● Search(pattern: "ref/**/*")
+  ⎿  Found 33 files (ctrl+o to expand)
+
+● Search(pattern: "data/**/*")
+  ⎿  Found 58 files (ctrl+o to expand)
+
+● Read(scripts\01_validate_and_clean.py)
+  ⎿  Read 1575 lines
+
+● Read(scripts\cad_zone_merger.py)
+  ⎿  Read 69 lines
+
+● Read(scripts\list_unmapped_incidents.py)
+  ⎿  Read 27 lines
+
+● Read(scripts\audit_post_fix.py)
+  ⎿  Read 103 lines
+
+● Read(scripts\build_calltype_master.py)
+  ⎿  Read 365 lines
+
+● Read(config\config_enhanced.json)
+  ⎿  Read 15 lines
+
+● Now let me create a comprehensive summary of this CAD data cleaning project. ╭─── Claude Code v2.0.37 ──────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting started                                        │
+│                  Welcome back RAC! │ Run /init to create a CLAUDE.md file with instructions for Cla… │
+│                                                    │ ─────────────────────────────────────────────────────────────── │
+│                       ▐▛███▜▌                      │ Recent activity                                                 │
+│                      ▝▜█████▛▘                     │ No recent activity                                              │
+│                        ▘▘ ▝▝                       │                                                                 │
+│                                                    │                                                                 │
+│              Sonnet 4.5 · Claude Pro               │                                                                 │
+│ C:\Users\carucci_r\OneDrive - City of Hackensack\… │                                                                 │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+────────────────────────────────────────── Ctrl+E to show 36 previous messages ─────────────────────────────────────────
+
+● Read(file_path: "C:\Users\carucci_r\OneDrive - City of
+      Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\scripts\build_calltype_master.py")
+  ⎿  Read 365 lines
+
+● Read(file_path: "C:\Users\carucci_r\OneDrive - City of
+      Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\config\config_enhanced.json")
+  ⎿  Read 15 lines
+
+∴ Thinking…
+
+  Great! Now I have all the key files read. Let me now update the todo list and provide the analysis. Let me mark the
+  second todo as completed and move to the third. ● Now let me create a comprehensive summary of this CAD data cleaning       06:50 PM  claude-sonnet-4-5-20250929
+  project. ╭─── Claude Code v2.0.37 ──────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting started                                        │
+│                  Welcome back RAC! │ Run /init to create a CLAUDE.md file with instructions for Cla… │
+│                                                    │ ─────────────────────────────────────────────────────────────── │
+│                       ▐▛███▜▌                      │ Recent activity                                                 │
+│                      ▝▜█████▛▘                     │ No recent activity                                              │
+│                        ▘▘ ▝▝                       │                                                                 │
+│                                                    │                                                                 │
+│              Sonnet 4.5 · Claude Pro               │                                                                 │
+│ C:\Users\carucci_r\OneDrive - City of Hackensack\… │                                                                 │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+> cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+# Then use Claude Code:
+claude-code "Review this CAD data cleaning project. 1. List the directory tree for /scripts, /config, /ref, and /data directories
+2. Summarize the purpose of each Python script in /scripts
+3. Show the structure of any config files (JSON, YAML, etc.) 4. Identify which scripts handle:
+   - Call type normalization
+   - Response type mapping
+   - Address cleaning
+   - Officer field parsing
+   - ReportNumberNew generation
+5. Note any hardcoded file paths
+6. Report missing components based on the Notion project plan"
+
+● I'll review your CAD data cleaning project systematically. Let me create a todo list to track this analysis. ● Bash(tree /F /A scripts)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A config)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A ref)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A data)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Search(pattern: "scripts/**/*")
+  ⎿  Found 73 files (ctrl+o to expand)
+
+● Search(pattern: "config/**/*")
+  ⎿  Found 1 file (ctrl+o to expand)
+
+● Search(pattern: "ref/**/*")
+  ⎿  Found 33 files (ctrl+o to expand)
+
+● Search(pattern: "data/**/*")
+  ⎿  Found 58 files (ctrl+o to expand)
+
+● Read(scripts\01_validate_and_clean.py)
+  ⎿  Read 1575 lines
+
+● Read(scripts\cad_zone_merger.py)
+  ⎿  Read 69 lines
+
+● Read(scripts\list_unmapped_incidents.py)
+  ⎿  Read 27 lines
+
+● Read(scripts\audit_post_fix.py)
+  ⎿  Read 103 lines
+
+● Read(scripts\build_calltype_master.py)
+  ⎿  Read 365 lines
+
+● Read(config\config_enhanced.json)
+  ⎿  Read 15 lines
+
+● Now let me create a comprehensive summary of this CAD data cleaning project. ● CAD Data Cleaning Engine - Project Review
+
+  1. Directory Structure
+
+  Scripts Directory (/scripts):
+  /scripts
+  ├── 01_validate_and_clean.py           (Main validation & cleaning script)
+  ├── cad_zone_merger.py                  (Zone/Grid backfill utility)
+  ├── list_unmapped_incidents.py          (Incident mapping diagnostics)
+  ├── audit_post_fix.py                   (Post-processing quality checks)
+  ├── build_calltype_master.py            (Call type master mapping builder)
+  ├── 01_validate_and_clean_backup_20251106.py (Backup)
+  └── /archive                            (13 archived versions)
+      └── Various old versions of validate_and_clean
+
+  Config Directory (/config):
+  /config
+  └── config_enhanced.json                (Single JSON config file)
+
+  Reference Directory (/ref):
+  /ref
+  ├── call_types/
+  │   ├── CallType_Categories.xlsx        (Primary call type mapping)
+  │   ├── CallType_Master_Mapping.csv     (Master mapping output)
+  │   ├── unmapped_incidents.csv          (Incidents needing mapping)
+  │   ├── duplicates_review.csv           (Duplicate incident review)
+  │   ├── mapping_changes.csv             (Mapping change log)
+  │   ├── suggested_clean_edits.csv       (Suggested edits)
+  │   └── /archive                        (Historical call type files)
+  ├── cad_call_source_acceptables.csv
+  ├── cad_call_source_map.csv
+  ├── cad_disposition_acceptables.csv
+  ├── cad_disposition_map.csv
+  ├── cad_how_reported_map.csv
+  ├── cad_incident_type_map.csv
+  ├── cad_pd_zone_map.csv
+  ├── cad_priority_map.csv
+  ├── facility_aliases.csv
+  ├── anomalies.csv
+  └── RAW_CAD_CALL_TYPE_EXPORT.xlsx
+
+  Data Directory (/data):
+  /data
+  ├── 01_raw/
+  │   ├── 2019_ALL_CAD.xlsx
+  │   ├── 2020_ALL_CAD.xlsx
+  │   ├── 2021_ALL_CAD.xlsx
+  │   ├── 2022_CAD_ALL.xlsx
+  │   ├── 2023_CAD_ALL.xlsx
+  │   ├── 2024_CAD_ALL.xlsx
+  │   ├── 25_01_10_All_CAD.xlsx
+  │   ├── CAD_Data_Sample.xlsx
+  │   ├── 2019_2025_11_14_cad.xlsx
+  │   └── /sample                         (1000-row samples for testing)
+  ├── 02_reports/
+  │   └── cad_validation/                 (Timestamped validation reports)
+  ├── /rms                                (RMS export files)
+  └── /ESRI_CADExport
+      └── ESRI_CADExport.xlsx
+
+  2. Python Script Summaries
+
+  01_validate_and_clean.py (Main Script - 1575 lines)
+
+  Purpose: Comprehensive CAD data validation, cleaning, and quality assessment engine
+
+  Key Functions:
+  - Data cleaning (mojibake fixes, text normalization, address standardization)
+  - Incident mapping using CallType_Categories.csv
+  - "How Reported" normalization (handles 9-1-1 Excel date bug)
+  - Stratified/systematic/random sampling for validation
+  - Validation rules (critical/important/optional severity levels)
+  - ESRI export format generation
+  - JSON validation reports with quality scoring
+  - Comprehensive unit tests (pytest)
+
+  Class: CADDataValidator
+  - Validates 13 rules across 3 severity levels
+  - Tracks unmapped incidents and address issues
+  - Generates quality score and recommendations
+
+  cad_zone_merger.py (69 lines)
+
+  Purpose: Backfills PD Zone and Grid values using address lookup table
+
+  Key Functions:
+  - Normalizes addresses (street suffix standardization)
+  - Merges zone/grid from master lookup table
+  - Processes all CAD exports recursively
+  - Outputs *_zoned.xlsx files
+
+  list_unmapped_incidents.py (27 lines)
+
+  Purpose: Identifies incidents missing Response Type mapping
+
+  Key Functions:
+  - Scans sample CSVs for blank Response Type
+  - Generates frequency report of unmapped incidents
+  - Creates seed CSV for manual mapping (missing_CallTypes_seed.csv)
+
+  audit_post_fix.py (103 lines)
+
+  Purpose: Post-processing quality assurance checks
+
+  Key Functions:
+  - Validates "How Reported" normalization (9-1-1 variants, Excel date bug)
+  - Scans for mojibake in text fields
+  - Checks incident mapping coverage (Incident_Norm presence)
+  - Verifies Response Type backfill
+  - Schema validation (column count)
+  - Exits with error code on failures
+
+  build_calltype_master.py (364 lines)
+
+  Purpose: Builds master call type mapping and audit reports
+
+  Key Functions:
+  - Unicode normalization (NFKC, control character removal)
+  - Smart title-casing (preserves acronyms like DWI, EMS, ABC)
+  - Statute extraction (e.g., "2C:39-5" from incident descriptions)
+  - Merges cleaned CallType_Categories with historical incidents
+  - Generates 6 audit reports:
+    - CallType_Master_Mapping.csv (approved + historical)
+    - duplicates_review.csv (multiple raw values → same normalized)
+    - anomalies.csv (normalizer non-idempotent cases)
+    - unmapped_incidents.csv (historical values needing review)
+    - mapping_changes.csv (proposed normalization changes)
+    - suggested_clean_edits.csv (recommended edits)
+
+  3. Config File Structure (config_enhanced.json)
+
+  {
+    "address_abbreviations": {
+      " ST ": " STREET ",
+      " AVE ": " AVENUE ",
+      " BLVD ": " BOULEVARD "
+    },
+    "validation_lists": {
+      "valid_dispositions": ["COMPLETE", "ADVISED", "ARREST", ...],
+      "valid_zones": ["5", "6", "7", "8", "9"],
+      "emergency_incidents": ["ROBBERY", "ASSAULT", "BURGLARY", ...],
+      "non_emergency_incidents": ["NOISE COMPLAINT", "PARKING VIOLATION", ...],
+      "how_reported": ["9-1-1", "WALK-IN", "PHONE", ...]
+    },
+    "min_stratum_size": 50
+  }
+
+  Usage: Loaded by CADDataValidator class with Pydantic schema validation
+
+  4. Script Responsibilities by Task
+
+  | Task                       | Primary Script           | Supporting Scripts                                   |
+  Location               |
+  |----------------------------|--------------------------|------------------------------------------------------|--
+  ----------------------|
+  | Call Type Normalization    | 01_validate_and_clean.py | build_calltype_master.py, list_unmapped_incidents.py |
+  Lines 303-427, 135-136 |
+  | Response Type Mapping      | 01_validate_and_clean.py | build_calltype_master.py                             |
+  Lines 361-384, 419-425 |
+  | Address Cleaning           | 01_validate_and_clean.py | cad_zone_merger.py                                   |
+  Lines 352-358, 28-35   |
+  | Officer Field Parsing      | 01_validate_and_clean.py | None                                                 |
+  Lines 339, 874-889     |
+  | ReportNumberNew Generation | MISSING                  | None                                                 |
+  N/A                    |
+
+  Details:
+
+  Call Type Normalization:
+  - 01_validate_and_clean.py:303-312 - Loads CallType_Categories.csv from 3 possible paths
+  - 01_validate_and_clean.py:361-384 - Applies incident mapping with mojibake fixes
+  - 01_validate_and_clean.py:386-427 - _apply_incident_mapping() merges normalized values
+  - build_calltype_master.py:93-113 - normalise_call_type() with smart title-casing
+
+  Response Type Mapping:
+  - 01_validate_and_clean.py:376-378 - Backfills Response Type from mapping table
+  - 01_validate_and_clean.py:419-425 - Fills blank Response Type with mapped values
+  - build_calltype_master.py:154-158 - Detects Response_Type column variants
+
+  Address Cleaning:
+  - 01_validate_and_clean.py:352-358 - Applies abbreviation expansion + uppercase
+  - 01_validate_and_clean.py:821-872 - Validates address completeness (house number, suffix, city/state/zip)
+  - cad_zone_merger.py:28-35 - Normalizes addresses for zone lookup
+
+  Officer Field Parsing:
+  - 01_validate_and_clean.py:339 - Normalizes to uppercase, strips whitespace
+  - 01_validate_and_clean.py:874-889 - Validates officer assignment for dispatched calls
+  - No parsing logic (e.g., extracting badge numbers, splitting multi-officer fields)
+
+  ReportNumberNew Generation:
+  - NOT IMPLEMENTED - No script generates case numbers
+  - Validation exists (01_validate_and_clean.py:755-769) for format YY-XXXXXX[A-Z]? 5. Hardcoded File Paths
+
+  Critical Paths (will break in different environments):
+
+  01_validate_and_clean.py:
+  - Line 293: r"C:\Users\carucci_r\OneDrive - City of
+  Hackensack\09_Reference\Classifications\CallTypes\CallType_Categories.csv"
+  - Line 1533: r"C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Pipeline\data\01_raw"
+
+  cad_zone_merger.py:
+  - Line 8: EXPORT_ROOT = r"C:\Users\carucci_r\OneDrive - City of Hackensack\05_EXPORTS\_CAD"
+  - Line 11: ZONE_MASTER = r"C:\TEMP\zone_grid_master.xlsx"
+
+  list_unmapped_incidents.py:
+  - Line 5: r"C:\Users\carucci_r\OneDrive - City of
+  Hackensack\02_ETL_Scripts\CAD_Data_Pipeline\data\01_raw\sample\2024_CAD_ALL_SAMPLE_1000.csv"
+  - Line 6: r"C:\Users\carucci_r\OneDrive - City of
+  Hackensack\02_ETL_Scripts\CAD_Data_Pipeline\data\02_reports\cad_validation"
+
+  audit_post_fix.py:
+  - Line 8-10: SAMPLE_DIR = Path(r"C:\Users\carucci_r\OneDrive - City of
+  Hackensack\02_ETL_Scripts\CAD_Data_Pipeline\data\01_raw\sample")
+
+  build_calltype_master.py:
+  - Line 314: Default ref/CallType_Categories_clean.xlsx (relative path - OK)
+  - Line 320: Default ref/2019_2025_10_Call_Types_Incidents.csv.txt (relative path - OK)
+
+  Recommendation: Move all hardcoded paths to config_enhanced.json or use environment variables. 6. Missing Components (Based on Typical ETL Pipeline)
+
+● Missing/Incomplete Components:
+
+  1. ReportNumberNew Generation Script
+    - Validation exists but no generation logic
+    - Need: Script to create case numbers in YY-XXXXXX format with sequence tracking
+    - Need: Supplement suffix logic (YY-XXXXXXA, YY-XXXXXXB, etc.) 2. Officer Field Parser
+    - Currently only normalizes/validates, doesn't parse
+    - Missing: Badge number extraction
+    - Missing: Multi-officer field splitting
+    - Missing: Officer roster validation lookup
+  3. Zone/Grid Backfill Integration
+    - cad_zone_merger.py exists but runs separately
+    - Should integrate into main 01_validate_and_clean.py pipeline
+    - Need: Fallback logic when address lookup fails
+  4.
+
+RMS Data Integration
+    - RMS files exist in /data/rms but no integration script
+    - Missing: CAD-RMS join logic
+    - Missing: Address backfill from RMS when CAD address is poor quality
+  5. Geocoding Module
+    - No geocoding script found
+    - Missing: Latitude/longitude population (currently hardcoded as NaN in line 574-575)
+    - Need: ESRI/Google Maps API integration or local geocoder
+  6. Automated Pipeline Orchestration
+    - Missing: Master script to run all components in sequence
+    - Missing: Dependency management between scripts
+    - Recommendation: Add main_pipeline.py or use workflow tool (Airflow, Prefect)
+  7. Error Recovery & Logging
+    - Logging exists but no centralized error handler
+    - Missing: Failed record quarantine system
+    - Missing: Retry logic for transient failures
+  8. Configuration Management
+    - Only one config file (config_enhanced.json)
+    - Missing configs for:
+        - File paths (currently hardcoded)
+      - Database connections (if applicable)
+      - API credentials for geocoding
+      - Email notifications for validation failures
+  9. Data Quality Dashboard
+    - JSON reports generated but no visualization
+    - Recommendation: Add HTML/PDF report generation
+    - Recommendation: Plotly/Dash dashboard for quality trends over time
+  10. Documentation
+    - No README.md in scripts directory
+    - Missing: Data dictionary
+    - Missing: Field mapping documentation
+    - Found: Some markdown docs in project root (based on git status)
+  11. Testing Infrastructure
+    - Unit tests exist in 01_validate_and_clean.py (lines 1356-1521)
+    - Missing: Integration tests
+    - Missing: End-to-end pipeline tests
+    - Missing: Test fixtures/sample data in dedicated /tests directory
+  12. Version Control & Deployment
+    - Multiple backup files suggest manual versioning
+    - Recommendation: Remove archive files from active directory
+    - Recommendation: Use git tags for releases
+    - Missing: requirements.txt or pyproject.toml
+
+● Summary & Recommendations
+
+  Strengths:
+  - Robust validation framework with 13 rules across 3 severity levels
+  - Comprehensive mojibake handling for encoding issues
+  - Smart incident normalization with statute extraction
+  - Well-documented validation reports (JSON with metadata)
+  - Stratified sampling for large datasets
+  - Unit test coverage for core validation functions
+  - Post-processing audit scripts for quality assurance
+
+  Critical Issues:
+  1. Hardcoded paths throughout codebase - breaks portability
+  2. No ReportNumberNew generation - only validation exists
+  3. Scattered reference files - multiple mapping CSVs need consolidation
+  4. Manual geocoding - lat/lon hardcoded as NaN
+  5. Separate zone backfill - should integrate into main pipeline
+
+  Immediate Action Items:
+  1. Create centralized path configuration in config_enhanced.json
+  2. Move all hardcoded paths to config or use relative paths from project root
+  3. Build ReportNumberNew generation script with sequence tracking
+  4. Create master pipeline orchestrator (main_pipeline.py)
+  5. Add requirements.txt for dependency management
+  6. Document field mapping in /doc directory
+
+  Code Quality Notes:
+  - 01_validate_and_clean.py is 1575 lines - consider breaking into modules
+  - Archive folder in /scripts should be moved outside active codebase
+  - Consider replacing Dask (imported but not used) with pandas for simplicity
+  - Many validation report JSONs in /scripts - should output to /data/02_reports
+
+  All analysis complete! The project has a solid foundation but needs better configuration management, pipeline
+  integration, and missing components implementation. ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+> 
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ? for shortcuts
+
+╭─── Claude Code v2.0.37 ──────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting started                                        │
+│                  Welcome back RAC! │ Run /init to create a CLAUDE.md file with instructions for Cla… │
+│                                                    │ ─────────────────────────────────────────────────────────────── │
+│                       ▐▛███▜▌                      │ Recent activity                                                 │
+│                      ▝▜█████▛▘                     │ No recent activity                                              │
+│                        ▘▘ ▝▝                       │                                                                 │
+│                                                    │                                                                 │
+│              Sonnet 4.5 · Claude Pro               │                                                                 │
+│ C:\Users\carucci_r\OneDrive - City of Hackensack\… │                                                                 │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+> cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+# Then use Claude Code:
+claude-code "Review this CAD data cleaning project. 1. List the directory tree for /scripts, /config, /ref, and /data directories
+2. Summarize the purpose of each Python script in /scripts
+3. Show the structure of any config files (JSON, YAML, etc.) 4. Identify which scripts handle:
+   - Call type normalization
+   - Response type mapping
+   - Address cleaning
+   - Officer field parsing
+   - ReportNumberNew generation
+5. Note any hardcoded file paths
+6. Report missing components based on the Notion project plan"
+
+● I'll review your CAD data cleaning project systematically. Let me create a todo list to track this analysis. ● Bash(tree /F /A scripts)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A config)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A ref)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A data)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Search(pattern: "scripts/**/*")
+  ⎿  Found 73 files (ctrl+o to expand)
+
+● Search(pattern: "config/**/*")
+  ⎿  Found 1 file (ctrl+o to expand)
+
+● Search(pattern: "ref/**/*")
+  ⎿  Found 33 files (ctrl+o to expand)
+
+● Search(pattern: "data/**/*")
+  ⎿  Found 58 files (ctrl+o to expand)
+
+● Read(scripts\01_validate_and_clean.py)
+  ⎿  Read 1575 lines
+
+● Read(scripts\cad_zone_merger.py)
+  ⎿  Read 69 lines
+
+● Read(scripts\list_unmapped_incidents.py)
+  ⎿  Read 27 lines
+
+● Read(scripts\audit_post_fix.py)
+  ⎿  Read 103 lines
+
+● Read(scripts\build_calltype_master.py)
+  ⎿  Read 365 lines
+
+● Read(config\config_enhanced.json)
+  ⎿  Read 15 lines
+
+● Now let me create a comprehensive summary of this CAD data cleaning project. ╭─── Claude Code v2.0.37 ──────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting started                                        │
+│                  Welcome back RAC! │ Run /init to create a CLAUDE.md file with instructions for Cla… │
+│                                                    │ ─────────────────────────────────────────────────────────────── │
+│                       ▐▛███▜▌                      │ Recent activity                                                 │
+│                      ▝▜█████▛▘                     │ No recent activity                                              │
+│                        ▘▘ ▝▝                       │                                                                 │
+│                                                    │                                                                 │
+│              Sonnet 4.5 · Claude Pro               │                                                                 │
+│ C:\Users\carucci_r\OneDrive - City of Hackensack\… │                                                                 │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+────────────────────────────────────────── Ctrl+E to show 36 previous messages ─────────────────────────────────────────
+
+● Read(file_path: "C:\Users\carucci_r\OneDrive - City of
+      Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\scripts\build_calltype_master.py")
+  ⎿  Read 365 lines
+
+● Read(file_path: "C:\Users\carucci_r\OneDrive - City of
+      Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine\config\config_enhanced.json")
+  ⎿  Read 15 lines
+
+∴ Thinking…
+
+  Great! Now I have all the key files read. Let me now update the todo list and provide the analysis. Let me mark the
+  second todo as completed and move to the third. ● Now let me create a comprehensive summary of this CAD data cleaning       06:50 PM  claude-sonnet-4-5-20250929
+  project. ╭─── Claude Code v2.0.37 ──────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting started                                        │
+│                  Welcome back RAC! │ Run /init to create a CLAUDE.md file with instructions for Cla… │
+│                                                    │ ─────────────────────────────────────────────────────────────── │
+│                       ▐▛███▜▌                      │ Recent activity                                                 │
+│                      ▝▜█████▛▘                     │ No recent activity                                              │
+│                        ▘▘ ▝▝                       │                                                                 │
+│                                                    │                                                                 │
+│              Sonnet 4.5 · Claude Pro               │                                                                 │
+│ C:\Users\carucci_r\OneDrive - City of Hackensack\… │                                                                 │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+> cd "C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Cleaning_Engine"
+
+# Then use Claude Code:
+claude-code "Review this CAD data cleaning project. 1. List the directory tree for /scripts, /config, /ref, and /data directories
+2. Summarize the purpose of each Python script in /scripts
+3. Show the structure of any config files (JSON, YAML, etc.) 4. Identify which scripts handle:
+   - Call type normalization
+   - Response type mapping
+   - Address cleaning
+   - Officer field parsing
+   - ReportNumberNew generation
+5. Note any hardcoded file paths
+6. Report missing components based on the Notion project plan"
+
+● I'll review your CAD data cleaning project systematically. Let me create a todo list to track this analysis. ● Bash(tree /F /A scripts)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A config)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A ref)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Bash(tree /F /A data)
+  ⎿  Error: Exit code 127
+     /usr/bin/bash: line 1: tree: command not found
+
+● Search(pattern: "scripts/**/*")
+  ⎿  Found 73 files (ctrl+o to expand)
+
+● Search(pattern: "config/**/*")
+  ⎿  Found 1 file (ctrl+o to expand)
+
+● Search(pattern: "ref/**/*")
+  ⎿  Found 33 files (ctrl+o to expand)
+
+● Search(pattern: "data/**/*")
+  ⎿  Found 58 files (ctrl+o to expand)
+
+● Read(scripts\01_validate_and_clean.py)
+  ⎿  Read 1575 lines
+
+● Read(scripts\cad_zone_merger.py)
+  ⎿  Read 69 lines
+
+● Read(scripts\list_unmapped_incidents.py)
+  ⎿  Read 27 lines
+
+● Read(scripts\audit_post_fix.py)
+  ⎿  Read 103 lines
+
+● Read(scripts\build_calltype_master.py)
+  ⎿  Read 365 lines
+
+● Read(config\config_enhanced.json)
+  ⎿  Read 15 lines
+
+● Now let me create a comprehensive summary of this CAD data cleaning project. ● CAD Data Cleaning Engine - Project Review
+
+  1. Directory Structure
+
+  Scripts Directory (/scripts):
+  /scripts
+  ├── 01_validate_and_clean.py           (Main validation & cleaning script)
+  ├── cad_zone_merger.py                  (Zone/Grid backfill utility)
+  ├── list_unmapped_incidents.py          (Incident mapping diagnostics)
+  ├── audit_post_fix.py                   (Post-processing quality checks)
+  ├── build_calltype_master.py            (Call type master mapping builder)
+  ├── 01_validate_and_clean_backup_20251106.py (Backup)
+  └── /archive                            (13 archived versions)
+      └── Various old versions of validate_and_clean
+
+  Config Directory (/config):
+  /config
+  └── config_enhanced.json                (Single JSON config file)
+
+  Reference Directory (/ref):
+  /ref
+  ├── call_types/
+  │   ├── CallType_Categories.xlsx        (Primary call type mapping)
+  │   ├── CallType_Master_Mapping.csv     (Master mapping output)
+  │   ├── unmapped_incidents.csv          (Incidents needing mapping)
+  │   ├── duplicates_review.csv           (Duplicate incident review)
+  │   ├── mapping_changes.csv             (Mapping change log)
+  │   ├── suggested_clean_edits.csv       (Suggested edits)
+  │   └── /archive                        (Historical call type files)
+  ├── cad_call_source_acceptables.csv
+  ├── cad_call_source_map.csv
+  ├── cad_disposition_acceptables.csv
+  ├── cad_disposition_map.csv
+  ├── cad_how_reported_map.csv
+  ├── cad_incident_type_map.csv
+  ├── cad_pd_zone_map.csv
+  ├── cad_priority_map.csv
+  ├── facility_aliases.csv
+  ├── anomalies.csv
+  └── RAW_CAD_CALL_TYPE_EXPORT.xlsx
+
+  Data Directory (/data):
+  /data
+  ├── 01_raw/
+  │   ├── 2019_ALL_CAD.xlsx
+  │   ├── 2020_ALL_CAD.xlsx
+  │   ├── 2021_ALL_CAD.xlsx
+  │   ├── 2022_CAD_ALL.xlsx
+  │   ├── 2023_CAD_ALL.xlsx
+  │   ├── 2024_CAD_ALL.xlsx
+  │   ├── 25_01_10_All_CAD.xlsx
+  │   ├── CAD_Data_Sample.xlsx
+  │   ├── 2019_2025_11_14_cad.xlsx
+  │   └── /sample                         (1000-row samples for testing)
+  ├── 02_reports/
+  │   └── cad_validation/                 (Timestamped validation reports)
+  ├── /rms                                (RMS export files)
+  └── /ESRI_CADExport
+      └── ESRI_CADExport.xlsx
+
+  2. Python Script Summaries
+
+  01_validate_and_clean.py (Main Script - 1575 lines)
+
+  Purpose: Comprehensive CAD data validation, cleaning, and quality assessment engine
+
+  Key Functions:
+  - Data cleaning (mojibake fixes, text normalization, address standardization)
+  - Incident mapping using CallType_Categories.csv
+  - "How Reported" normalization (handles 9-1-1 Excel date bug)
+  - Stratified/systematic/random sampling for validation
+  - Validation rules (critical/important/optional severity levels)
+  - ESRI export format generation
+  - JSON validation reports with quality scoring
+  - Comprehensive unit tests (pytest)
+
+  Class: CADDataValidator
+  - Validates 13 rules across 3 severity levels
+  - Tracks unmapped incidents and address issues
+  - Generates quality score and recommendations
+
+  cad_zone_merger.py (69 lines)
+
+  Purpose: Backfills PD Zone and Grid values using address lookup table
+
+  Key Functions:
+  - Normalizes addresses (street suffix standardization)
+  - Merges zone/grid from master lookup table
+  - Processes all CAD exports recursively
+  - Outputs *_zoned.xlsx files
+
+  list_unmapped_incidents.py (27 lines)
+
+  Purpose: Identifies incidents missing Response Type mapping
+
+  Key Functions:
+  - Scans sample CSVs for blank Response Type
+  - Generates frequency report of unmapped incidents
+  - Creates seed CSV for manual mapping (missing_CallTypes_seed.csv)
+
+  audit_post_fix.py (103 lines)
+
+  Purpose: Post-processing quality assurance checks
+
+  Key Functions:
+  - Validates "How Reported" normalization (9-1-1 variants, Excel date bug)
+  - Scans for mojibake in text fields
+  - Checks incident mapping coverage (Incident_Norm presence)
+  - Verifies Response Type backfill
+  - Schema validation (column count)
+  - Exits with error code on failures
+
+  build_calltype_master.py (364 lines)
+
+  Purpose: Builds master call type mapping and audit reports
+
+  Key Functions:
+  - Unicode normalization (NFKC, control character removal)
+  - Smart title-casing (preserves acronyms like DWI, EMS, ABC)
+  - Statute extraction (e.g., "2C:39-5" from incident descriptions)
+  - Merges cleaned CallType_Categories with historical incidents
+  - Generates 6 audit reports:
+    - CallType_Master_Mapping.csv (approved + historical)
+    - duplicates_review.csv (multiple raw values → same normalized)
+    - anomalies.csv (normalizer non-idempotent cases)
+    - unmapped_incidents.csv (historical values needing review)
+    - mapping_changes.csv (proposed normalization changes)
+    - suggested_clean_edits.csv (recommended edits)
+
+  3. Config File Structure (config_enhanced.json)
+
+  {
+    "address_abbreviations": {
+      " ST ": " STREET ",
+      " AVE ": " AVENUE ",
+      " BLVD ": " BOULEVARD "
+    },
+    "validation_lists": {
+      "valid_dispositions": ["COMPLETE", "ADVISED", "ARREST", ...],
+      "valid_zones": ["5", "6", "7", "8", "9"],
+      "emergency_incidents": ["ROBBERY", "ASSAULT", "BURGLARY", ...],
+      "non_emergency_incidents": ["NOISE COMPLAINT", "PARKING VIOLATION", ...],
+      "how_reported": ["9-1-1", "WALK-IN", "PHONE", ...]
+    },
+    "min_stratum_size": 50
+  }
+
+  Usage: Loaded by CADDataValidator class with Pydantic schema validation
+
+  4. Script Responsibilities by Task
+
+  | Task                       | Primary Script           | Supporting Scripts                                   |
+  Location               |
+  |----------------------------|--------------------------|------------------------------------------------------|--
+  ----------------------|
+  | Call Type Normalization    | 01_validate_and_clean.py | build_calltype_master.py, list_unmapped_incidents.py |
+  Lines 303-427, 135-136 |
+  | Response Type Mapping      | 01_validate_and_clean.py | build_calltype_master.py                             |
+  Lines 361-384, 419-425 |
+  | Address Cleaning           | 01_validate_and_clean.py | cad_zone_merger.py                                   |
+  Lines 352-358, 28-35   |
+  | Officer Field Parsing      | 01_validate_and_clean.py | None                                                 |
+  Lines 339, 874-889     |
+  | ReportNumberNew Generation | MISSING                  | None                                                 |
+  N/A                    |
+
+  Details:
+
+  Call Type Normalization:
+  - 01_validate_and_clean.py:303-312 - Loads CallType_Categories.csv from 3 possible paths
+  - 01_validate_and_clean.py:361-384 - Applies incident mapping with mojibake fixes
+  - 01_validate_and_clean.py:386-427 - _apply_incident_mapping() merges normalized values
+  - build_calltype_master.py:93-113 - normalise_call_type() with smart title-casing
+
+  Response Type Mapping:
+  - 01_validate_and_clean.py:376-378 - Backfills Response Type from mapping table
+  - 01_validate_and_clean.py:419-425 - Fills blank Response Type with mapped values
+  - build_calltype_master.py:154-158 - Detects Response_Type column variants
+
+  Address Cleaning:
+  - 01_validate_and_clean.py:352-358 - Applies abbreviation expansion + uppercase
+  - 01_validate_and_clean.py:821-872 - Validates address completeness (house number, suffix, city/state/zip)
+  - cad_zone_merger.py:28-35 - Normalizes addresses for zone lookup
+
+  Officer Field Parsing:
+  - 01_validate_and_clean.py:339 - Normalizes to uppercase, strips whitespace
+  - 01_validate_and_clean.py:874-889 - Validates officer assignment for dispatched calls
+  - No parsing logic (e.g., extracting badge numbers, splitting multi-officer fields)
+
+  ReportNumberNew Generation:
+  - NOT IMPLEMENTED - No script generates case numbers
+  - Validation exists (01_validate_and_clean.py:755-769) for format YY-XXXXXX[A-Z]? 5. Hardcoded File Paths
+
+  Critical Paths (will break in different environments):
+
+  01_validate_and_clean.py:
+  - Line 293: r"C:\Users\carucci_r\OneDrive - City of
+  Hackensack\09_Reference\Classifications\CallTypes\CallType_Categories.csv"
+  - Line 1533: r"C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\CAD_Data_Pipeline\data\01_raw"
+
+  cad_zone_merger.py:
+  - Line 8: EXPORT_ROOT = r"C:\Users\carucci_r\OneDrive - City of Hackensack\05_EXPORTS\_CAD"
+  - Line 11: ZONE_MASTER = r"C:\TEMP\zone_grid_master.xlsx"
+
+  list_unmapped_incidents.py:
+  - Line 5: r"C:\Users\carucci_r\OneDrive - City of
+  Hackensack\02_ETL_Scripts\CAD_Data_Pipeline\data\01_raw\sample\2024_CAD_ALL_SAMPLE_1000.csv"
+  - Line 6: r"C:\Users\carucci_r\OneDrive - City of
+  Hackensack\02_ETL_Scripts\CAD_Data_Pipeline\data\02_reports\cad_validation"
+
+  audit_post_fix.py:
+  - Line 8-10: SAMPLE_DIR = Path(r"C:\Users\carucci_r\OneDrive - City of
+  Hackensack\02_ETL_Scripts\CAD_Data_Pipeline\data\01_raw\sample")
+
+  build_calltype_master.py:
+  - Line 314: Default ref/CallType_Categories_clean.xlsx (relative path - OK)
+  - Line 320: Default ref/2019_2025_10_Call_Types_Incidents.csv.txt (relative path - OK)
+
+  Recommendation: Move all hardcoded paths to config_enhanced.json or use environment variables. 6. Missing Components (Based on Typical ETL Pipeline)
+
+● Missing/Incomplete Components:
+
+  1. ReportNumberNew Generation Script
+    - Validation exists but no generation logic
+    - Need: Script to create case numbers in YY-XXXXXX format with sequence tracking
+    - Need: Supplement suffix logic (YY-XXXXXXA, YY-XXXXXXB, etc.) 2. Officer Field Parser
+    - Currently only normalizes/validates, doesn't parse
+    - Missing: Badge number extraction
+    - Missing: Multi-officer field splitting
+    - Missing: Officer roster validation lookup
+  3. Zone/Grid Backfill Integration
+    - cad_zone_merger.py exists but runs separately
+    - Should integrate into main 01_validate_and_clean.py pipeline
+    - Need: Fallback logic when address lookup fails
+  4. RMS Data Integration
+    - RMS files exist in /data/rms but no integration script
+    - Missing: CAD-RMS join logic
+    - Missing: Address backfill from RMS when CAD address is poor quality
+  5. Geocoding Module
+    - No geocoding script found
+    - Missing: Latitude/longitude population (currently hardcoded as NaN in line 574-575)
+    - Need: ESRI/Google Maps API integration or local geocoder
+  6. Automated Pipeline Orchestration
+    - Missing: Master script to run all components in sequence
+    - Missing: Dependency management between scripts
+    - Recommendation: Add main_pipeline.py or use workflow tool (Airflow, Prefect)
+  7. Error Recovery & Logging
+    - Logging exists but no centralized error handler
+    - Missing: Failed record quarantine system
+    - Missing: Retry logic for transient failures
+  8. Configuration Management
+    - Only one config file (config_enhanced.json)
+    - Missing configs for:
+        - File paths (currently hardcoded)
+      - Database connections (if applicable)
+      - API credentials for geocoding
+      - Email notifications for validation failures
+  9. Data Quality Dashboard
+    - JSON reports generated but no visualization
+    - Recommendation: Add HTML/PDF report generation
+    - Recommendation: Plotly/Dash dashboard for quality trends over time
+  10. Documentation
+    - No README.md in scripts directory
+    - Missing: Data dictionary
+    - Missing: Field mapping documentation
+    - Found: Some markdown docs in project root (based on git status)
+  11. Testing Infrastructure
+    - Unit tests exist in 01_validate_and_clean.py (lines 1356-1521)
+    - Missing: Integration tests
+    - Missing: End-to-end pipeline tests
+    - Missing: Test fixtures/sample data in dedicated /tests directory
+  12. Version Control & Deployment
+    - Multiple backup files suggest manual versioning
+    - Recommendation: Remove archive files from active directory
+    - Recommendation: Use git tags for releases
+    - Missing: requirements.txt or pyproject.toml
+
+● Summary & Recommendations
+
+  Strengths:
+  - Robust validation framework with 13 rules across 3 severity levels
+  - Comprehensive mojibake handling for encoding issues
+  - Smart incident normalization with statute extraction
+  - Well-documented validation reports (JSON with metadata)
+  - Stratified sampling for large datasets
+  - Unit test coverage for core validation functions
+  - Post-processing audit scripts for quality assurance
+
+  Critical Issues:
+  1. Hardcoded paths throughout codebase - breaks portability
+  2. No ReportNumberNew generation - only validation exists
+  3. Scattered reference files - multiple mapping CSVs need consolidation
+  4. Manual geocoding - lat/lon hardcoded as NaN
+  5. Separate zone backfill - should integrate into main pipeline
+
+  Immediate Action Items:
+  1. Create centralized path configuration in config_enhanced.json
+  2. Move all hardcoded paths to config or use relative paths from project root
+  3. Build ReportNumberNew generation script with sequence tracking
+  4. Create master pipeline orchestrator (main_pipeline.py)
+  5. Add requirements.txt for dependency management
+  6. Document field mapping in /doc directory
+
+  Code Quality Notes:
+  - 01_validate_and_clean.py is 1575 lines - consider breaking into modules
+  - Archive folder in /scripts should be moved outside active codebase
+  - Consider replacing Dask (imported but not used) with pandas for simplicity
+  - Many validation report JSONs in /scripts - should output to /data/02_reports
+
+  All analysis complete! The project has a solid foundation but needs better configuration management, pipeline
+  integration, and missing components implementation. ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+> 
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ? for shortcuts
+
