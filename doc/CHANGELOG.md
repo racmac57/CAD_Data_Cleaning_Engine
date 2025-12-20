@@ -2,6 +2,72 @@
 
 All notable changes to the CAD Data Cleaning Engine project.
 
+## [2025-12-19] - Enhanced Output Generation & Bug Fixes
+
+### Added
+- **Enhanced ESRI Output Generator** (`scripts/enhanced_esri_output_generator.py`):
+  - Pre-geocoding polished output generation (allows separate geocoding runs)
+  - Null value CSV reports by column (one CSV per column with nulls, includes full record context)
+  - Comprehensive processing summary markdown report with statistics and recommendations
+  - Data quality directory structure (`data/02_reports/data_quality/`)
+  
+- **New Utility Scripts**:
+  - `scripts/convert_excel_to_csv.py`: Convert large Excel files to CSV for 5-10x faster loading
+  - `scripts/test_formatting_fix.py`: Automated test for processing summary formatting
+  - `scripts/check_pipeline_completion.py`: Verify pipeline outputs and completion status
+  - `scripts/tidy_scripts_directory.py`: Organize scripts directory (moves reports and old scripts)
+
+- **Documentation**:
+  - `doc/DATA_DIRECTORY_STRUCTURE.md`: Complete directory structure documentation
+  - `doc/PIPELINE_COMPLETION_GUIDE.md`: Step-by-step completion instructions
+  - `doc/BUG_FIX_SUMMARY.md`: Technical details on formatting bug fix
+  - `doc/CLAUDE_AI_FOLLOWUP_PROMPT.md`: Collaboration prompt for future enhancements
+  - `doc/CLAUDE_AI_COLLAB_PROMPT.md`: Quick collaboration reference
+  - `doc/READY_TO_COMPLETE.md`: Quick reference for pipeline completion
+  - `doc/RUNTIME_ESTIMATES.md`: Performance estimates for different scenarios
+  - `doc/TROUBLESHOOTING_SLOW_LOADING.md`: Solutions for slow Excel file loading
+  - `doc/SCRIPTS_DIRECTORY_TIDY_SUMMARY.md`: Summary of directory organization
+
+### Fixed
+- **Processing Summary Formatting Bug**: Resolved `ValueError: Cannot specify ',' with 's'.`
+  - Added type checking before applying numeric format specifiers
+  - Corrected stats key from `'matched_records'` to `'matches_found'`
+  - Handles None/missing/string values gracefully
+  - Applied to all stat sections (validation, RMS backfill, geocoding)
+
+- **Windows Console Compatibility**: Fixed Unicode encoding errors
+  - Replaced Unicode symbols (✓, ⚠️, ✅) with ASCII-safe text ([OK], [WARN], [SUCCESS])
+  - Fixed in: `scripts/master_pipeline.py`, `scripts/enhanced_esri_output_generator.py`, `scripts/convert_excel_to_csv.py`
+
+- **Directory Organization**: Cleaned up scripts directory
+  - Moved 54 JSON validation reports to `data/02_reports/cad_validation/`
+  - Archived 13 old/backup scripts to `scripts/archive/`
+  - Reduced scripts directory from 151 files to 84 files
+
+### Changed
+- **Output Directory Structure**:
+  - ESRI outputs: `data/ESRI_CADExport/` (production files)
+  - Data quality reports: `data/02_reports/data_quality/` (diagnostic files)
+  - Clear separation between production and diagnostic outputs
+
+- **Pipeline Outputs**:
+  - Added pre-geocoding polished output (`CAD_ESRI_POLISHED_PRE_GEOCODE_*.xlsx`)
+  - Added null value CSV reports (one per column with nulls)
+  - Added processing summary markdown report
+
+- **Dependencies**: Added `tqdm>=4.65.0` to `requirements.txt` for progress bars
+
+### Performance Impact
+- **Additional Processing Time**: ~7-10 seconds for enhanced outputs (null analysis + reports)
+- **Total Overhead**: <2% of pipeline time for 710K records
+- **Loading Optimization**: CSV files load 5-10x faster than Excel (30-60s → 5-10s)
+
+### Technical Details
+- **Type-Safe Formatting**: All numeric formatting now checks type before applying `:,` specifier
+- **Stats Key Mapping**: Handles multiple possible stat key names for backwards compatibility
+- **Error Recovery**: Pipeline can resume from pre-geocode output if interrupted
+- **Progress Tracking**: Enhanced logging with timing information and file sizes
+
 ## [2025-12-17] - ETL Pipeline Refinement & Performance Optimizations
 
 ### Added

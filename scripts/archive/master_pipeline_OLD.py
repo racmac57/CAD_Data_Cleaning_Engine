@@ -164,9 +164,9 @@ class CADETLPipeline:
         
         load_time = (datetime.now() - start_load).total_seconds()
         self.stats['input_rows'] = len(df)
-        logger.info(f"  [OK] Loaded {len(df):,} records with {len(df.columns)} columns in {load_time:.1f} seconds")
+        logger.info(f"  ✓ Loaded {len(df):,} records with {len(df.columns)} columns in {load_time:.1f} seconds")
         if load_time > 60:
-            logger.info(f"  [WARN] Slow loading detected! Consider converting to CSV for 5-10x faster loading.")
+            logger.info(f"  ⚠️  Slow loading detected! Consider converting to CSV for 5-10x faster loading.")
         self.stats['steps_completed'].append('load')
         
         # Step 2: Validate and clean
@@ -352,7 +352,7 @@ def main():
             format=args.format
         )
         
-        print("\n[SUCCESS] Pipeline completed successfully!")
+        print("\n✅ Pipeline completed successfully!")
         return 0
     except Exception as e:
         logger.error(f"Pipeline failed: {e}", exc_info=True)

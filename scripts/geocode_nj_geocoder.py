@@ -259,12 +259,17 @@ class NJGeocoder:
             
             results_df = pd.DataFrame(results_data)
             
+            # CRITICAL FIX: Deduplicate results_df to prevent Cartesian product in merge
+            # If results_df has duplicate addresses, the merge would create duplicate rows
+            # Keep first occurrence of each address
+            results_df = results_df.drop_duplicates(subset=['address'], keep='first')
+            
             # Create temporary normalized address column for matching
             temp_addr_col = '_geocode_address_match_'
             df[temp_addr_col] = df[address_column].astype(str).str.strip()
             results_df['address'] = results_df['address'].astype(str).str.strip()
             
-            # Merge geocoding results
+            # Merge geocoding results (left join preserves all rows from df)
             df = df.merge(
                 results_df,
                 left_on=temp_addr_col,

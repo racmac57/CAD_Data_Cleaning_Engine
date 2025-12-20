@@ -2,7 +2,7 @@
 
 **Date**: December 17, 2025  
 **Status**: ✅ Complete Implementation  
-**Last Updated**: December 17, 2025
+**Last Updated**: December 19, 2025
 
 ## Overview
 
@@ -75,8 +75,28 @@ python scripts/unified_rms_backfill.py \
 - `PDZone`: From RMS Zone (only if CAD is null/blank)
 - `Officer`: From RMS Officer of Record (only if CAD is null/blank)
 
-### 3. `scripts/generate_esri_output.py`
+### 3. `scripts/generate_esri_output.py` (Original)
 **Purpose**: Generate draft and polished ESRI outputs with strict column ordering.
+
+**Note**: Enhanced version available at `scripts/enhanced_esri_output_generator.py` with additional features.
+
+### 3a. `scripts/enhanced_esri_output_generator.py` (Enhanced - NEW)
+**Purpose**: Enhanced ESRI output generator with comprehensive data quality reporting.
+
+**Features**:
+- Pre-geocoding polished output (generated after RMS backfill, before geocoding)
+- Null value CSV reports (one per column with nulls, includes full record context)
+- Comprehensive processing summary markdown report
+- Type-safe numeric formatting (prevents ValueError crashes)
+- Geographic coordinate validation (NJ bounds checking)
+- Data quality scoring and recommendations
+
+**Output Files**:
+- `CAD_ESRI_DRAFT_*.xlsx`: All cleaned data with validation flags
+- `CAD_ESRI_POLISHED_PRE_GEOCODE_*.xlsx`: Polished output before geocoding
+- `CAD_ESRI_POLISHED_*.xlsx`: Final polished output (after geocoding)
+- `CAD_NULL_VALUES_[ColumnName]_*.csv`: Null value reports (in `data/02_reports/data_quality/`)
+- `PROCESSING_SUMMARY_*.md`: Comprehensive markdown report (in `data/02_reports/data_quality/`)
 
 **Features**:
 - **Draft Output**: All cleaned data with validation flags and internal review columns
