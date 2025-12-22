@@ -2,6 +2,35 @@
 
 All notable changes to the CAD Data Cleaning Engine project.
 
+## [2025-12-22] - Reverse geocoding validation and ESRI polished dataset validator
+
+### Added
+- Unique address reverse geocoding validator (`scripts/validation/validate_geocoding_unique_addresses.py`).
+- Address uniqueness analysis helper (`scripts/validation/analyze_address_uniqueness.py`).
+- Validation diagnostics (`scripts/validation/analyze_validation_results.py`).
+- ESRI polished dataset validator (`scripts/validation/validate_esri_polished_dataset.py`):
+  - Validates schema compliance using unified data dictionary.
+  - Checks field completeness, data types, and domain values.
+  - Generates markdown summary report and CSV issues file.
+  - Robust CSV loading with encoding fallbacks for large files.
+- Highway alias configuration (`scripts/validation/highway_aliases.json`).
+- Validation documentation in `doc/validation/`:
+  - `VALIDATION_STATUS_AND_NEXT_STEPS.md`.
+  - `VISUAL_QA_CONFIRMATION.md`.
+  - `ARCGIS_PRO_VISUAL_QA_INSTRUCTIONS.md`.
+  - `FULL_VALIDATION_COMMAND.md`.
+
+### Changed
+- README updated with validation overview and pointers to new docs.
+- New `SUMMARY.md` added with a concise project overview and validation notes.
+
+### Known limitations
+- A 10K sample validation run was attempted on `data/ESRI_CADExport/CAD_ESRI_POLISHED_20251219_184105.xlsx`.
+- The file currently has `latitude` and `longitude` columns present but empty for all 710,625 records.
+- The validator stopped during the unique address analysis step with `ZeroDivisionError` when computing duplication rate on zero coordinate records.
+- Full dataset validation requires running the forward geocoding step first so that `latitude` and `longitude` are populated.
+- Once the polished ESRI file is geocoded, the same validation scripts can be run on either a 10K sample or the full dataset.
+
 ## [2025-12-19] - Enhanced Output Generation & Bug Fixes
 
 ### Added

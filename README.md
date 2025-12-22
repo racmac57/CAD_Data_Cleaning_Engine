@@ -2,6 +2,31 @@
 
 Here's the comprehensive code for CAD data processing that you can provide to an AI assistant.
 
+## Recent Updates (2025-12-22)
+
+### **Reverse geocoding validation and ESRI polished dataset validator**
+
+- **Unique address validation engine** (`scripts/validation/validate_geocoding_unique_addresses.py`):
+  - Validates coordinates by reverse geocoding only unique addresses, then maps results back to all records.
+  - Supports highway aliases, intersection handling, apartment stripping, temporal leniency, and bounds checks.
+  - Designed to work on geocoded CAD exports that already have `latitude` and `longitude` populated.
+- **ESRI polished dataset validator** (`scripts/validation/validate_esri_polished_dataset.py`):
+  - Validates schema compliance using unified data dictionary from `cad_fields_schema_latest.json` and `cad_field_map_latest.json`.
+  - Checks field completeness, data types (datetime parsing), and domain values (PDZone, Disposition, How Reported).
+  - Generates markdown summary report and CSV issues file for supervisor review.
+  - Robust CSV loading with encoding fallbacks (UTF-8, latin1) and error handling for large files.
+- **Validation workflow and diagnostics**:
+  - `scripts/validation/analyze_address_uniqueness.py`: Estimates speedup from unique address strategy.
+  - `scripts/validation/analyze_validation_results.py`: Breaks down match quality and mismatch patterns.
+  - `doc/validation/VALIDATION_STATUS_AND_NEXT_STEPS.md`: End to end status and next steps.
+  - `doc/validation/VISUAL_QA_CONFIRMATION.md`: Visual QA findings from ArcGIS Pro.
+  - `doc/validation/ARCGIS_PRO_VISUAL_QA_INSTRUCTIONS.md`: How to add XY data and review flagged points.
+- **Current limitation**:
+  - The polished ESRI export (`data/ESRI_CADExport/CAD_ESRI_POLISHED_20251219_184105.xlsx`) does not yet have coordinates filled.
+  - Full dataset validation must wait until forward geocoding populates `latitude` and `longitude` on that file or on a derived CSV.
+
+See `doc/CHANGELOG.md` for full details of what changed on 2025-12-22.
+
 ## Recent Updates (2025-12-19)
 
 ### **Enhanced Output Generation & Data Quality Reporting**
