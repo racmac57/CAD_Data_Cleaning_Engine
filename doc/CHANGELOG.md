@@ -4,6 +4,19 @@ All notable changes to the CAD Data Cleaning Engine project.
 
 ## [Unreleased]
 
+## [2025-12-24] - Hour_Calc Field Fix
+
+### Fixed
+- **Hour_Calc Null Values**: Fixed Hour_Calc field extraction in `enhanced_esri_output_generator.py` to properly populate hour values (0-23) from Time of Call datetime
+  - Issue: Hour_Calc was showing null values when Time of Call had valid datetime values
+  - Root cause: Code needed to check if Time of Call column was already datetime type before conversion
+  - Solution: Added datetime type check using `pd.api.types.is_datetime64_any_dtype()` before extracting hour, avoiding unnecessary conversion and preserving existing datetime objects
+  - Result: Hour_Calc now properly populated for all 710,625 records (100% coverage) with integer values 0-23 per Notion documentation specification
+  - Verification: Created `scripts/verify_hour_calc.py` to validate Hour_Calc population
+
+### Changed
+- **Master Pipeline**: Fixed validator import path in `master_pipeline.py` to correctly locate `validate_cad_export_parallel.py` from scripts directory
+
 ## [2025-12-22] - RMS Backfill Fix & Project Organization
 
 ### Fixed

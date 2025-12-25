@@ -2,6 +2,16 @@
 
 Here's the comprehensive code for CAD data processing that you can provide to an AI assistant.
 
+## Recent Updates (2025-12-24)
+
+### **Hour_Calc Field Fix**
+
+- **Fixed Hour_Calc Null Values**: Resolved issue where Hour_Calc field was not being populated from Time of Call datetime values
+  - Added proper datetime type checking before hour extraction
+  - Hour_Calc now correctly populated for all records (100% coverage, integer values 0-23)
+  - Created verification script `scripts/verify_hour_calc.py` to validate field population
+  - Verified on 710,625 record dataset: all Hour_Calc values properly extracted from Time of Call
+
 ## Recent Updates (2025-12-22)
 
 ### **RMS Backfill Fix & Project Organization**

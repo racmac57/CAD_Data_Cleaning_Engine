@@ -25,6 +25,14 @@
 - `scripts/validation/analyze_address_uniqueness.py` - Address uniqueness and runtime savings estimator.
 - `scripts/validation/analyze_validation_results.py` - Post run diagnostics for validation output.
 
+## What changed in 2025-12-24
+
+### Hour_Calc Field Fix
+- Fixed Hour_Calc field extraction to properly populate hour values (0-23) from Time of Call datetime
+- Added datetime type checking to avoid unnecessary conversion and preserve existing datetime objects
+- Hour_Calc now correctly populated for all 710,625 records (100% coverage)
+- Created verification script to validate field population
+
 ## What changed in 2025-12-22
 
 ### RMS Backfill Fix & Project Organization
